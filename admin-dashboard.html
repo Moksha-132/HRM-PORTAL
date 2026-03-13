@@ -6,6 +6,7 @@
   <title>Admin Dashboard – shnoor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="admin.css" />
 </head>
 <body>
@@ -20,31 +21,31 @@
 
     <nav class="sidebar-nav">
       <a href="#" class="sidebar-link active" id="nav-dashboard">
-        <span class="nav-icon">⊞</span> Dashboard
+        <span class="nav-icon"><i class="fas fa-th-large"></i></span> Dashboard
       </a>
       <a href="#" class="sidebar-link" id="nav-companies">
-        <span class="nav-icon">🏢</span> Companies
+        <span class="nav-icon"><i class="fas fa-building"></i></span> Companies
       </a>
       <a href="#" class="sidebar-link" id="nav-subscriptions">
-        <span class="nav-icon">💳</span> Subscriptions
+        <span class="nav-icon"><i class="fas fa-credit-card"></i></span> Subscriptions
       </a>
       <a href="#" class="sidebar-link" id="nav-transactions">
-        <span class="nav-icon">📄</span> Transactions
+        <span class="nav-icon"><i class="fas fa-file-invoice-dollar"></i></span> Transactions
       </a>
       <a href="#" class="sidebar-link" id="nav-offline">
-        <span class="nav-icon">📥</span> Offline Requests
+        <span class="nav-icon"><i class="fas fa-download"></i></span> Offline Requests
       </a>
       <a href="#" class="sidebar-link" id="nav-email">
-        <span class="nav-icon">✉️</span> Email Queries
+        <span class="nav-icon"><i class="fas fa-envelope"></i></span> Email Queries
       </a>
       <a href="#" class="sidebar-link" id="nav-superadmin">
-        <span class="nav-icon">👤</span> Super Admin Management
+        <span class="nav-icon"><i class="fas fa-user-shield"></i></span> Super Admin Management
       </a>
       <a href="#" class="sidebar-link" id="nav-website">
-        <span class="nav-icon">🌐</span> Website Settings
+        <span class="nav-icon"><i class="fas fa-globe"></i></span> Website Settings
       </a>
       <a href="#" class="sidebar-link" id="nav-system">
-        <span class="nav-icon">⚙️</span> System Settings
+        <span class="nav-icon"><i class="fas fa-cog"></i></span> System Settings
       </a>
     </nav>
 
@@ -73,81 +74,401 @@
     <main class="main-content" id="main-content">
 
       <!-- Dashboard view (default) -->
+      <!-- Dashboard view (default) -->
       <div class="view" id="view-dashboard">
         <div class="page-header">
           <h1 class="page-h1">Dashboard</h1>
           <p class="page-sub">Overview of your platform</p>
         </div>
-        <!-- stat cards -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="skel skel-stat-label"></div>
-            <div class="skel skel-stat-val"></div>
-            <div class="skel skel-stat-sub"></div>
+            <div class="stat-label">Total Companies</div>
+            <div class="stat-val" id="stat-companies">0</div>
+            <div class="stat-sub">Active organizations</div>
           </div>
           <div class="stat-card">
-            <div class="skel skel-stat-label"></div>
-            <div class="skel skel-stat-val"></div>
-            <div class="skel skel-stat-sub"></div>
+            <div class="stat-label">Active Subscriptions</div>
+            <div class="stat-val" id="stat-subs">0</div>
+            <div class="stat-sub">Monthly recurring</div>
           </div>
           <div class="stat-card">
-            <div class="skel skel-stat-label"></div>
-            <div class="skel skel-stat-val"></div>
-            <div class="skel skel-stat-sub"></div>
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-val" id="stat-revenue">$0</div>
+            <div class="stat-sub">Past 30 days</div>
           </div>
           <div class="stat-card">
-            <div class="skel skel-stat-label"></div>
-            <div class="skel skel-stat-val"></div>
-            <div class="skel skel-stat-sub"></div>
+            <div class="stat-label">Pending Queries</div>
+            <div class="stat-val" id="stat-queries">0</div>
+            <div class="stat-sub">Require attention</div>
           </div>
         </div>
-        <!-- chart placeholder -->
-        <div class="row-2">
-          <div class="panel">
-            <div class="panel-head"><div class="skel skel-panel-title"></div></div>
-            <div class="skel skel-chart"></div>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><div class="skel skel-panel-title"></div></div>
-            <div class="skel skel-chart skel-chart-sm"></div>
-          </div>
-        </div>
-        <!-- recent table -->
         <div class="panel mt">
-          <div class="panel-head">
-            <div class="skel skel-panel-title"></div>
-            <div class="skel skel-panel-btn"></div>
-          </div>
-          <div class="table-wrap">
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
+          <div class="panel-head"><div class="panel-title">Recent Activities</div></div>
+          <div class="panel-body">
+             <p style="color:var(--text-light); padding:20px; text-align:center;">Real-time activity feed coming soon...</p>
           </div>
         </div>
       </div>
 
-      <!-- Generic placeholder view for all other nav items -->
-      <div class="view hidden" id="view-placeholder">
+      <!-- Companies View -->
+      <div class="view hidden" id="view-companies">
         <div class="page-header">
-          <h1 class="page-h1" id="placeholder-title">Section</h1>
-          <p class="page-sub" id="placeholder-sub">Manage your data here</p>
+          <h1 class="page-h1">Companies</h1>
+          <p class="page-sub">Manage registered organizations</p>
+        </div>
+
+        <div class="grid-2" style="display:grid; grid-template-columns: 1fr 2fr; gap:24px;">
+          <!-- Add Company Panel -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Add New Company</div>
+            </div>
+            <div class="panel-body" style="padding: 24px;">
+              <form id="add-company-form">
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Company Name</label>
+                  <input type="text" id="comp-name-input" name="name" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Email Address</label>
+                  <input type="email" id="comp-email-input" name="email" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Location</label>
+                  <input type="text" id="comp-loc-input" name="location" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 24px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Status</label>
+                  <select id="comp-status-input" name="status" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-solid" style="width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">Add Company</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- All Companies Panel -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">All Companies</div>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr style="text-align:left; border-bottom:1px solid var(--border);">
+                    <th style="padding:12px;">Company Info</th>
+                    <th style="padding:12px;">Location</th>
+                    <th style="padding:12px;">Status</th>
+                    <th style="padding:12px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="companies-list">
+                  <tr><td colspan="4" style="padding:20px; text-align:center; color:var(--text-light);">Loading companies...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscriptions View -->
+      <div class="view hidden" id="view-subscriptions">
+        <div class="page-header">
+          <h1 class="page-h1">Subscriptions</h1>
+          <p class="page-sub">Manage plan enrollments</p>
         </div>
         <div class="panel">
-          <div class="panel-head">
-            <div class="skel skel-panel-title"></div>
-            <div class="skel skel-panel-btn"></div>
+          <div class="panel-head"><div class="panel-title">Active Subscriptions</div></div>
+          <div class="panel-body"><p style="padding:20px; color:var(--text-light);">Subscription management logic coming soon.</p></div>
+        </div>
+      </div>
+
+      <!-- Transactions View -->
+      <div class="view hidden" id="view-transactions">
+        <div class="page-header">
+          <h1 class="page-h1">Transactions</h1>
+          <p class="page-sub">Monitor all payments</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Recent Transactions</div></div>
+          <div class="panel-body"><p style="padding:20px; color:var(--text-light);">Transaction history coming soon.</p></div>
+        </div>
+      </div>
+
+      <!-- Offline Requests View -->
+      <div class="view hidden" id="view-offline">
+        <div class="page-header">
+          <h1 class="page-h1">Offline Requests</h1>
+          <p class="page-sub">Pending manual approvals</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Requests</div></div>
+          <div class="panel-body"><p style="padding:20px; color:var(--text-light);">No pending offline requests.</p></div>
+        </div>
+      </div>
+
+      <!-- Email Queries View -->
+      <div class="view hidden" id="view-email">
+        <div class="page-header">
+          <h1 class="page-h1">Email Queries</h1>
+          <p class="page-sub">Messages from contact form</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">All Queries</div></div>
+          <div class="panel-body"><p style="padding:20px; color:var(--text-light);">No messages found.</p></div>
+        </div>
+      </div>
+
+      <!-- Super Admin View -->
+      <div class="view hidden" id="view-superadmin">
+        <div class="page-header">
+          <h1 class="page-h1">Super Admin Management</h1>
+          <p class="page-sub">Manage platform administrators</p>
+        </div>
+        
+        <div class="grid-2" style="display:grid; grid-template-columns: 1fr 2fr; gap:24px;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Add New Admin</div></div>
+            <div class="panel-body" style="padding:20px;">
+              <form id="add-admin-form">
+                <div class="form-group mb" style="margin-bottom:12px;">
+                  <label style="display:block; margin-bottom:5px;">Full Name</label>
+                  <input type="text" id="admin-name-input" class="input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px;" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom:12px;">
+                  <label style="display:block; margin-bottom:5px;">Email</label>
+                  <input type="email" id="admin-email-input" class="input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px;" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom:12px;">
+                  <label style="display:block; margin-bottom:5px;">Password</label>
+                  <input type="password" id="admin-password-input" class="input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px;" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom:16px;">
+                  <label style="display:block; margin-bottom:5px;">Role</label>
+                  <select id="admin-role-input" class="input" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px;">
+                    <option value="Super Admin">Super Admin</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-solid" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:4px; font-weight:600; cursor:pointer;">Create Admin</button>
+              </form>
+            </div>
           </div>
-          <div class="table-wrap">
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
-            <div class="skel skel-table-row"></div>
+          
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Existing Administrators</div></div>
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr style="text-align:left; border-bottom:1px solid var(--border);">
+                    <th style="padding:12px;">Name</th>
+                    <th style="padding:12px;">Role</th>
+                    <th style="padding:12px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admins-list">
+                  <!-- Injected via admin.js -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- System Settings View -->
+      <div class="view hidden" id="view-system">
+        <div class="page-header">
+          <h1 class="page-h1">System Settings</h1>
+          <p class="page-sub">Global configuration</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">General Settings</div></div>
+          <div class="panel-body"><p style="padding:20px; color:var(--text-light);">System configuration options coming soon.</p></div>
+        </div>
+      </div>
+
+      <div class="view hidden" id="view-website-settings">
+        <div class="page-header">
+          <h1 class="page-h1">Website Settings</h1>
+          <p class="page-sub">Configure your public website sections</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Header Settings</div>
+          </div>
+          <div class="panel-body" style="padding: 24px;">
+            <form id="header-settings-form">
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-title" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Title</label>
+                <input type="text" id="header-title" name="title" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-subtitle" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Sub Title</label>
+                <input type="text" id="header-subtitle" name="subtitle" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-desc" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Description</label>
+                <textarea id="header-desc" name="description" class="input" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);"></textarea>
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-bg" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Background Image</label>
+                <input type="file" id="header-bg" name="backgroundImage" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <div id="current-bg-preview" style="margin-top:10px;"></div>
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-btn-text" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Button Text</label>
+                <input type="text" id="header-btn-text" name="buttonText" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label for="header-btn-link" style="display:block; margin-bottom: 8px; font-weight: 500;">Header Button Link</label>
+                <input type="text" id="header-btn-link" name="buttonLink" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+              </div>
+              <div class="form-group mb" style="margin-bottom: 24px;">
+                <label for="header-show-btn" style="display:flex; align-items:center; gap:8px; font-weight: 500;">
+                  <input type="checkbox" id="header-show-btn" name="showButton" checked>
+                  Show Header Button
+                </label>
+              </div>
+              <button type="submit" class="btn btn-solid" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Save Header Settings</button>
+            </form>
+        </div>
+
+        <div class="panel mt">
+          <div class="panel-head">
+            <div class="panel-title">About Settings</div>
+          </div>
+          <div class="panel-body" style="padding: 24px;">
+            <form id="about-settings-form">
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label style="display:block; margin-bottom: 8px; font-weight: 500;">About Title</label>
+                <input type="text" id="about-title-input" name="title" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label style="display:block; margin-bottom: 8px; font-weight: 500;">About Description</label>
+                <textarea id="about-desc-input" name="description" class="input" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);"></textarea>
+              </div>
+              <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Our Mission</label>
+                  <textarea id="about-mission-input" name="mission" class="input" rows="3" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);"></textarea>
+                </div>
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Our Vision</label>
+                  <textarea id="about-vision-input" name="vision" class="input" rows="3" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);"></textarea>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-solid" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Save About Settings</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel mt">
+          <div class="panel-head">
+            <div class="panel-title">Contact & Social Settings</div>
+          </div>
+          <div class="panel-body" style="padding: 24px;">
+            <form id="contact-settings-form">
+              <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Email Address</label>
+                  <input type="email" id="contact-email-input" name="email" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Phone Number</label>
+                  <input type="text" id="contact-phone-input" name="phone" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+              </div>
+              <div class="form-group mb" style="margin-bottom: 16px;">
+                <label style="display:block; margin-bottom: 8px; font-weight: 500;">Physical Address</label>
+                <textarea id="contact-address-input" name="address" class="input" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);"></textarea>
+              </div>
+              <h4 style="margin: 20px 0 10px 0; font-size: 1rem; color: var(--text);">Social Media Links</h4>
+              <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Facebook URL</label>
+                  <input type="text" id="contact-fb-input" name="facebook" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Twitter URL</label>
+                  <input type="text" id="contact-tw-input" name="twitter" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">LinkedIn URL</label>
+                  <input type="text" id="contact-in-input" name="linkedin" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+                <div class="form-group mb">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Instagram URL</label>
+                  <input type="text" id="contact-ig-input" name="instagram" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-solid" style="padding: 10px 24px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Save Contact Settings</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+          <!-- Features Panel -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Add Feature</div>
+            </div>
+            <div class="panel-body" style="padding: 24px;">
+              <form id="add-feature-form">
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Icon (Emoji)</label>
+                  <input type="text" id="feat-icon" name="icon" class="input" placeholder="e.g. 🏢" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Title</label>
+                  <input type="text" id="feat-title" name="title" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Description</label>
+                  <textarea id="feat-desc" name="description" class="input" rows="2" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-solid" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Add Feature</button>
+              </form>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
+              <ul id="admin-features-list" style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px;"></ul>
+            </div>
+          </div>
+
+          <!-- Pricing Panel -->
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-title">Add Pricing Plan</div>
+            </div>
+            <div class="panel-body" style="padding: 24px;">
+              <form id="add-pricing-form">
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Plan Name</label>
+                  <input type="text" id="price-name" name="planName" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Price ($)</label>
+                  <input type="number" id="price-amount" name="price" class="input" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:block; margin-bottom: 8px; font-weight: 500;">Features (comma separated)</label>
+                  <textarea id="price-features" name="features" class="input" rows="2" placeholder="Item 1, Item 2, Item 3" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);" required></textarea>
+                </div>
+                <div class="form-group mb" style="margin-bottom: 16px;">
+                  <label style="display:flex; align-items:center; gap:8px; font-weight: 500;">
+                    <input type="checkbox" id="price-popular" name="isPopular"> Mark as Popular
+                  </label>
+                </div>
+                <button type="submit" class="btn btn-solid" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600;">Add Plan</button>
+              </form>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
+              <ul id="admin-pricing-list" style="list-style:none; padding:0; display:flex; flex-direction:column; gap:10px;"></ul>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </main>

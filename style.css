@@ -179,6 +179,52 @@ select { font-family: inherit; }
 
 .skel-visual  { width: 100%; max-width: 880px; height: clamp(200px, 36vw, 420px); border-radius: 12px; border: 1px solid var(--border); }
 
+/* ── Hero Text Replacements ── */
+.hero-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(79, 110, 247, 0.1);
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 999px;
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  color: var(--text);
+  margin-bottom: 24px;
+  max-width: 800px;
+}
+
+.hero-desc {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--text-light);
+  margin-bottom: 40px;
+  max-width: 600px;
+}
+
+.hero-visual {
+  width: 100%;
+  max-width: 900px;
+  height: clamp(200px, 36vw, 420px);
+  border-radius: 16px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s ease-in-out;
+}
+
 /* logos */
 .logos { padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .logos-row { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 32px; }
