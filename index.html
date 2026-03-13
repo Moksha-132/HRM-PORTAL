@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shnoor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">shnoor</a>
+
+      <nav class="nav-links">
+        <a href="#home"     class="nav-link active">Home</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#pricing"  class="nav-link">Pricing</a>
+        <a href="#contact"  class="nav-link">Contact</a>
+      </nav>
+
+      <div class="nav-right">
+        <div class="lang-wrap">
+          <span>🌐</span>
+          <select id="lang">
+            <option value="en">EN</option>
+            <option value="ar">AR</option>
+            <option value="fr">FR</option>
+            <option value="ur">UR</option>
+          </select>
+        </div>
+        <a href="#register" class="btn btn-outline">Register</a>
+        <a href="#login"    class="btn btn-solid">Login</a>
+      </div>
+
+      <button class="hamburger" id="hamburger">&#9776;</button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="section hero" id="home">
+    <div class="container center">
+      <div class="skel skel-badge"></div>
+      <div class="skel skel-h1"></div>
+      <div class="skel skel-p"></div>
+      <div class="btn-row">
+        <div class="skel skel-btn"></div>
+        <div class="skel skel-btn skel-btn-sm"></div>
+      </div>
+      <div class="skel skel-visual"></div>
+    </div>
+  </section>
+
+  <!-- LOGOS -->
+  <section class="section logos" id="trusted">
+    <div class="container">
+      <div class="logos-row">
+        <div class="skel skel-logo"></div>
+        <div class="skel skel-logo"></div>
+        <div class="skel skel-logo"></div>
+        <div class="skel skel-logo"></div>
+        <div class="skel skel-logo"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container center">
+      <div class="skel skel-label"></div>
+      <div class="skel skel-h2"></div>
+      <div class="skel skel-p skel-p-sm"></div>
+      <div class="grid-3">
+        <div class="card" id="feat-1">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+        <div class="card" id="feat-2">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+        <div class="card" id="feat-3">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+        <div class="card" id="feat-4">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+        <div class="card" id="feat-5">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+        <div class="card" id="feat-6">
+          <div class="skel skel-icon"></div>
+          <div class="skel skel-card-title"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section bg-light" id="pricing">
+    <div class="container center">
+      <div class="skel skel-label"></div>
+      <div class="skel skel-h2"></div>
+      <div class="skel skel-p skel-p-sm"></div>
+      <div class="skel skel-toggle"></div>
+      <div class="grid-3">
+        <div class="card" id="plan-basic">
+          <div class="skel skel-plan-name"></div>
+          <div class="skel skel-price"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <hr class="divider" />
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-btn skel-full mt"></div>
+        </div>
+        <div class="card card-featured" id="plan-pro">
+          <div class="skel skel-plan-name"></div>
+          <div class="skel skel-price"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <hr class="divider" />
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-btn skel-full mt"></div>
+        </div>
+        <div class="card" id="plan-enterprise">
+          <div class="skel skel-plan-name"></div>
+          <div class="skel skel-price"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <hr class="divider" />
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text"></div>
+          <div class="skel skel-card-text skel-short"></div>
+          <div class="skel skel-btn skel-full mt"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section" id="contact">
+    <div class="container contact-layout">
+      <div class="contact-left">
+        <div class="skel skel-label"></div>
+        <div class="skel skel-h2 skel-h2-sm"></div>
+        <div class="skel skel-card-text"></div>
+        <div class="skel skel-card-text skel-short"></div>
+        <div class="contact-items">
+          <div class="contact-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel skel-card-text"></div>
+          </div>
+          <div class="contact-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel skel-card-text"></div>
+          </div>
+          <div class="contact-row">
+            <div class="skel skel-icon"></div>
+            <div class="skel skel-card-text"></div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-right">
+        <div class="skel skel-input"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-textarea"></div>
+        <div class="skel skel-btn"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section class="section bg-light" id="register">
+    <div class="container center">
+      <div class="auth-card">
+        <div class="skel skel-icon skel-round mx-auto"></div>
+        <div class="skel skel-auth-title mx-auto"></div>
+        <div class="skel skel-auth-sub mx-auto"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-input"></div>
+        <div class="skel skel-btn skel-full"></div>
+        <div class="skel skel-auth-link mx-auto"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN -->
+  <section class="section" id="login">
+    <div class="container center">
+      <div class="auth-card">
+        <div class="auth-logo-wrap">
+          <span class="auth-brand">shnoor</span>
+        </div>
+        <h2 class="auth-heading">Welcome back</h2>
+        <p class="auth-sub-text">Sign in to your account</p>
+
+        <div id="login-error" class="login-error" style="display:none;">
+          Invalid email or password.
+        </div>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email"
+                   placeholder="you@example.com" autocomplete="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password"
+                   placeholder="••••••••" autocomplete="current-password" required />
+          </div>
+          <div class="auth-row" style="margin-bottom:20px;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="remember-me" /> Remember me
+            </label>
+            <a href="#" class="link-small">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn btn-solid btn-block" id="login-submit">
+            Sign In
+          </button>
+        </form>
+
+        <p class="auth-foot-text">
+          Don't have an account? <a href="#register" class="link-small">Register</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo">shnoor</span>
+        <div class="skel skel-card-text skel-short"></div>
+        <div class="social-row">
+          <div class="skel skel-social"></div>
+          <div class="skel skel-social"></div>
+          <div class="skel skel-social"></div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <div class="skel skel-col-title"></div>
+        <div class="skel skel-card-text skel-short"></div>
+        <div class="skel skel-card-text"></div>
+        <div class="skel skel-card-text skel-short"></div>
+      </div>
+      <div class="footer-col">
+        <div class="skel skel-col-title"></div>
+        <div class="skel skel-card-text skel-short"></div>
+        <div class="skel skel-card-text"></div>
+        <div class="skel skel-card-text skel-short"></div>
+      </div>
+      <div class="footer-col">
+        <div class="skel skel-col-title"></div>
+        <div class="skel skel-card-text skel-short"></div>
+        <div class="skel skel-card-text"></div>
+        <div class="skel skel-card-text skel-short"></div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="skel skel-copy mx-auto"></div>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
