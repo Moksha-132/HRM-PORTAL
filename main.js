@@ -177,7 +177,12 @@ loginForm?.addEventListener('submit', async (e) => {
       sessionStorage.setItem('shnoor_admin', 'true');
       sessionStorage.setItem('shnoor_token', data.token);
       sessionStorage.setItem('shnoor_admin_email', data.user.email);
-      window.location.href = 'admin-dashboard.html';
+      
+      if (data.user.role === 'Manager') {
+        window.location.href = 'manager-dashboard.html';
+      } else {
+        window.location.href = 'admin-dashboard.html';
+      }
     } else {
       loginError.textContent = data.error || 'Invalid email or password.';
       loginError.style.display = 'block';
