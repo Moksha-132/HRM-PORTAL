@@ -33,6 +33,13 @@ const importData = async () => {
             role: 'Manager'
         });
 
+        await SuperAdmin.create({
+            name: 'Shnoor Employee',
+            email: 'emp@shnoor.com',
+            password: 'Emp@1234',
+            role: 'Employee'
+        });
+
         await HeaderSetting.destroy({ where: {} });
         await HeaderSetting.create({
             title: 'Shnoor International LLc',

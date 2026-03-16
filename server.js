@@ -68,6 +68,10 @@ app.get('/manager-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'manager-dashboard.html'));
 });
 
+app.get('/employee-dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'employee-dashboard.html'));
+});
+
 // Fallback error handler
 app.use((err, req, res, next) => {
     console.error(err.stack);
