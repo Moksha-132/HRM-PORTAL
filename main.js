@@ -180,6 +180,8 @@ loginForm?.addEventListener('submit', async (e) => {
       
       if (data.user.role === 'Manager') {
         window.location.href = 'manager-dashboard.html';
+      } else if (data.user.role === 'Employee') {
+        window.location.href = 'employee-dashboard.html';
       } else {
         window.location.href = 'admin-dashboard.html';
       }
