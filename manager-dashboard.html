@@ -8,17 +8,47 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="admin.css" />
+  <style>
+    .grid { display: grid; gap: 24px; padding: 24px; }
+    .grid-2 { grid-template-columns: 1fr 2fr; }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .stat-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .stat-label { color: var(--text-light); font-size: 0.95rem; font-weight: 500; }
+    .hidden { display: none !important; }
+    .panel { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
+    .panel-head { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-weight: 600; font-size: 1.1rem; }
+    .panel-body { padding: 24px; }
+    th { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg-light); color: var(--text-light); }
+    td { padding: 12px; border-bottom: 1px solid var(--border); }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+    .bg-green { background: #dcfce7; color: #166534; }
+    .bg-yellow { background: #fef08a; color: #854d0e; }
+    .bg-red { background: #fee2e2; color: #991b1b; }
+    .input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 16px; font-family: 'Inter', sans-serif;}
+    .btn { padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; }
+    .btn-solid { background: var(--primary); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+    .action-btn { background: none; border: none; cursor: pointer; padding: 4px; font-size: 1.1rem; }
+    .edit-btn { color: var(--primary); }
+    .delete-btn { color: var(--danger); }
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: white; padding: 32px; border-radius: var(--radius-md); width: 100%; max-width: 500px; box-shadow: var(--shadow-lg); }
+    .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text-dark); }
+  </style>
 </head>
 <body>
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
-
     <div class="sidebar-top">
       <span class="sidebar-brand">shnoor</span>
       <span class="sidebar-tag">Manager</span>
     </div>
-
     <nav class="sidebar-nav">
       <a href="#" class="sidebar-link active" id="nav-dashboard">
         <span class="nav-icon"><i class="fas fa-th-large"></i></span> Dashboard
@@ -42,7 +72,7 @@
         <span class="nav-icon"><i class="fas fa-award"></i></span> Appreciations
       </a>
       <a href="#" class="sidebar-link" id="nav-policies">
-        <span class="nav-icon"><i class="fas fa-file-contract"></i></span> Company Policies
+        <span class="nav-icon"><i class="fas fa-file-contract"></i></span> Policies
       </a>
       <a href="#" class="sidebar-link" id="nav-offboardings">
         <span class="nav-icon"><i class="fas fa-user-minus"></i></span> Offboardings
@@ -50,20 +80,19 @@
       <a href="#" class="sidebar-link" id="nav-finance">
         <span class="nav-icon"><i class="fas fa-wallet"></i></span> Finance
       </a>
+      <a href="#" class="sidebar-link" id="nav-holidays">
+        <span class="nav-icon"><i class="fas fa-calendar-star"></i></span> Holidays
+      </a>
     </nav>
-
     <div class="sidebar-bottom">
       <a href="index.html#login" class="sidebar-link sidebar-logout" id="nav-logout">
         <span class="nav-icon">↩</span> Logout
       </a>
     </div>
-
   </aside>
 
   <!-- MAIN -->
   <div class="main-wrap">
-
-    <!-- TOP BAR -->
     <header class="topbar">
       <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
       <div class="topbar-title" id="page-title">Dashboard</div>
@@ -73,36 +102,413 @@
       </div>
     </header>
 
-    <!-- CONTENT AREA -->
     <main class="main-content" id="main-content">
 
-      <!-- Dashboard View -->
+      <!-- VIEW: DASHBOARD -->
       <div class="view" id="view-dashboard">
         <div class="page-header">
-          <h1 class="page-h1">Dashboard</h1>
-          <p class="page-sub">Manager Overview</p>
+          <h1 class="page-h1">Dashboard Overview</h1>
+          <p class="page-sub">Real-time stats from the system</p>
+        </div>
+        <div class="grid grid-4" style="padding:0; margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-val" id="d-tot-emp">0</div>
+            <div class="stat-label">Total Employees</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="d-act-emp">0</div>
+            <div class="stat-label">Active Employees</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="d-pend-leaves">0</div>
+            <div class="stat-label">Pending Leaves</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="d-tod-att">0</div>
+            <div class="stat-label">Today's Attendance</div>
+          </div>
         </div>
         <div class="panel">
-          <div class="panel-body">
-            <p style="padding:40px; text-align:center; color:var(--text-light);">Dashboard content coming soon...</p>
+          <div class="panel-head">
+            <div class="panel-title">Recent Activities (Leave Requests)</div>
+          </div>
+          <div class="table-wrap">
+            <table style="width:100%; border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Leave Type</th>
+                  <th>Dates</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-list">
+                <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- Placeholder for other views -->
-      <div class="view hidden" id="view-placeholder">
+      <!-- VIEW: EMPLOYEES -->
+      <div class="view hidden" id="view-employees">
         <div class="page-header">
-          <h1 class="page-h1" id="placeholder-title">Page</h1>
-          <p class="page-sub" id="placeholder-sub">Content for this section</p>
+          <h1 class="page-h1">Employees Management</h1>
+        </div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Add Employee</div></div>
+            <div class="panel-body">
+              <form id="form-emp">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="emp-name" class="input" placeholder="Enter Full Name" required>
+                
+                <label class="form-label">Email Address</label>
+                <input type="email" id="emp-email" class="input" placeholder="Enter Email" required>
+                
+                <label class="form-label">Phone Number</label>
+                <input type="text" id="emp-phone" class="input" placeholder="Enter Phone">
+                
+                <label class="form-label">Department</label>
+                <input type="text" id="emp-dept" class="input" placeholder="Enter Department">
+                
+                <label class="form-label">Designation</label>
+                <input type="text" id="emp-desig" class="input" placeholder="Enter Designation">
+                
+                <label class="form-label">Joining Date</label>
+                <input type="date" id="emp-join" class="input">
+                <button type="submit" class="btn btn-solid" style="width:100%;">Save Employee</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">All Employees</div></div>
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Name</th><th>Dept</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="emp-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: ATTENDANCE -->
+      <div class="view hidden" id="view-attendance">
+        <div class="page-header"><h1 class="page-h1">Attendance Tracking</h1></div>
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title">Add Attendance Record</div></div>
+            <div class="panel-body">
+              <form id="form-att" style="display:flex; flex-wrap:wrap; gap:16px; align-items: flex-end;">
+                <div style="flex:1; min-width:150px;">
+                  <label class="form-label">Select Employee</label>
+                  <select id="att-emp-id" class="input" style="margin-bottom:0;" required>
+                    <option value="">Choose...</option>
+                  </select>
+                </div>
+                <div style="flex:1; min-width:150px;">
+                  <label class="form-label">Date</label>
+                  <input type="date" id="att-date" class="input" style="margin-bottom:0;" required>
+                </div>
+                <div style="flex:1; min-width:150px;">
+                  <label class="form-label">Clock In</label>
+                  <input type="datetime-local" id="att-in" class="input" style="margin-bottom:0;" required>
+                </div>
+                <div style="flex:1; min-width:150px;">
+                  <label class="form-label">Clock Out</label>
+                  <input type="datetime-local" id="att-out" class="input" style="margin-bottom:0;">
+                </div>
+                <button type="submit" class="btn btn-solid" style="height:42px;">Save Record</button>
+              </form>
+            </div>
         </div>
         <div class="panel">
-          <div class="panel-body">
-            <p style="padding:40px; text-align:center; color:var(--text-light);">Skeleton for manager panel.</p>
+          <div class="table-wrap">
+            <table style="width:100%; border-collapse:collapse;">
+              <thead><tr><th>Emp ID</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="att-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: LEAVES -->
+      <div class="view hidden" id="view-leaves">
+        <div class="page-header"><h1 class="page-h1">Leave Management</h1></div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table style="width:100%; border-collapse:collapse;">
+              <thead><tr><th>Leave ID</th><th>Emp ID</th><th>Type</th><th>Duration</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="lv-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: ASSETS -->
+      <div class="view hidden" id="view-assets">
+        <div class="page-header"><h1 class="page-h1">Assets Management</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Assign Asset</div></div>
+            <div class="panel-body">
+              <form id="form-ass">
+                <label class="form-label">Asset Name</label>
+                <input type="text" id="ass-name" class="input" placeholder="e.g. MacBook Pro" required>
+                
+                <label class="form-label">Asset Category</label>
+                <input type="text" id="ass-cat" class="input" placeholder="e.g. Hardware/Laptop" required>
+                
+                <label class="form-label">Serial Number</label>
+                <input type="text" id="ass-sn" class="input" placeholder="Enter Serial Number">
+                
+                <label class="form-label">Assign To Employee</label>
+                <select id="ass-emp" class="input">
+                  <option value="">Available (Unassigned)</option>
+                </select>
+                
+                <label class="form-label">Assignment Date</label>
+                <input type="date" id="ass-date" class="input">
+                <button type="submit" class="btn btn-solid" style="width:100%;">Assign Asset</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Name</th><th>S/N</th><th>Emp</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="ass-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: PAYROLL -->
+      <div class="view hidden" id="view-payroll">
+        <div class="page-header"><h1 class="page-h1">Payroll (Salary & Payslips)</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Generate Payslip</div></div>
+            <div class="panel-body">
+              <form id="form-pay">
+                <label class="form-label">Target Employee</label>
+                <select id="pay-emp" class="input" required>
+                  <option value="">Select Employee</option>
+                </select>
+                
+                <label class="form-label">Basic Salary</label>
+                <input type="number" id="pay-base" class="input" placeholder="Enter Amount" required>
+                
+                <label class="form-label">Total Allowances</label>
+                <input type="number" id="pay-allow" class="input" value="0">
+                
+                <label class="form-label">Total Deductions</label>
+                <input type="number" id="pay-deduct" class="input" value="0">
+                
+                <label class="form-label">Payment Date</label>
+                <input type="date" id="pay-date" class="input">
+                <button type="submit" class="btn btn-solid" style="width:100%;">Generate Payslip</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Emp ID</th><th>Basic</th><th>Net</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="pay-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: APPRECIATIONS -->
+      <div class="view hidden" id="view-appreciations">
+        <div class="page-header"><h1 class="page-h1">Appreciations & Awards</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Give Award</div></div>
+            <div class="panel-body">
+              <form id="form-app">
+                <label class="form-label">Select Recipient</label>
+                <select id="app-emp" class="input" required>
+                  <option value="">Choose Employee</option>
+                </select>
+                
+                <label class="form-label">Award/Appreciation Title</label>
+                <input type="text" id="app-title" class="input" placeholder="e.g. Employee of the Month" required>
+                
+                <label class="form-label">Appreciation Message</label>
+                <textarea id="app-desc" class="input" placeholder="Enter award description..."></textarea>
+                
+                <label class="form-label">Award Date</label>
+                <input type="date" id="app-date" class="input" required>
+                <button type="submit" class="btn btn-solid" style="width:100%;">Issue Award</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Emp ID</th><th>Award</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="app-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: POLICIES -->
+      <div class="view hidden" id="view-policies">
+        <div class="page-header"><h1 class="page-h1">Company Policies</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Upload Policy</div></div>
+            <div class="panel-body">
+              <form id="form-pol">
+                <label class="form-label">Policy Title</label>
+                <input type="text" id="pol-title" class="input" placeholder="e.g. Leave Policy" required>
+                
+                <label class="form-label">Short Description</label>
+                <textarea id="pol-desc" class="input" placeholder="Policy details..."></textarea>
+                
+                <label class="form-label">Attach Document (Optional)</label>
+                <input type="file" id="pol-file" class="input">
+                
+                <label class="form-label">External Link (Optional)</label>
+                <input type="text" id="pol-url" class="input" placeholder="https://external-doc.com">
+                <button type="submit" class="btn btn-solid" style="width:100%;">Publish Policy</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Title</th><th>Uploaded</th><th>Link</th><th>Actions</th></tr></thead>
+                <tbody id="pol-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: OFFBOARDINGS -->
+      <div class="view hidden" id="view-offboardings">
+        <div class="page-header"><h1 class="page-h1">Offboarding Management</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Initiate Resignation</div></div>
+            <div class="panel-body">
+              <form id="form-off">
+                <label class="form-label">Employee</label>
+                <select id="off-emp" class="input" required>
+                  <option value="">Select Member</option>
+                </select>
+                
+                <label class="form-label">Reason for Departure</label>
+                <textarea id="off-reason" class="input" placeholder="e.g. Resignation/Contract End" required></textarea>
+                
+                <label class="form-label">Last Working Date</label>
+                <input type="date" id="off-date" class="input" required>
+                <button type="submit" class="btn btn-solid" style="width:100%;">Confirm Offboarding</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Emp ID</th><th>Employee Name</th><th>Reason</th><th>Last Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="off-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: FINANCE -->
+      <div class="view hidden" id="view-finance">
+        <div class="page-header"><h1 class="page-h1">Finance & Expenses</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Log Expense</div></div>
+            <div class="panel-body">
+              <form id="form-exp">
+                <label class="form-label">Expense Title</label>
+                <input type="text" id="exp-title" class="input" placeholder="e.g. Office Supplies" required>
+                
+                <label class="form-label">Claiming Employee</label>
+                <select id="exp-emp" class="input" required>
+                  <option value="">Choose Employee</option>
+                </select>
+                
+                <label class="form-label">Amount ($)</label>
+                <input type="number" id="exp-amt" class="input" placeholder="0.00" step="0.01" required>
+                
+                <label class="form-label">Category</label>
+                <input type="text" id="exp-cat" class="input" placeholder="e.g. Travel/Hardware">
+                <button type="submit" class="btn btn-solid" style="width:100%;">Submit Expense</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Title</th><th>Emp ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="exp-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: HOLIDAYS -->
+      <div class="view hidden" id="view-holidays">
+        <div class="page-header"><h1 class="page-h1">Holiday Management</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Add Holiday</div></div>
+            <div class="panel-body">
+              <form id="form-holi">
+                <label class="form-label">Holiday Title</label>
+                <input type="text" id="holi-title" class="input" placeholder="e.g. Christmas Day" required>
+                
+                <label class="form-label">Date</label>
+                <input type="date" id="holi-date" class="input" required>
+                
+                <label class="form-label">Description (Optional)</label>
+                <textarea id="holi-desc" class="input" placeholder="Optional details..."></textarea>
+                <button type="submit" class="btn btn-solid" style="width:100%;">Save Holiday</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>S.No</th><th>Date</th><th>Title</th><th>Actions</th></tr></thead>
+                <tbody id="holi-list"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
     </main>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="modal-title">Edit Record</h2>
+        <button onclick="closeModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="edit-form"></form>
+      <div style="margin-top:20px; text-align:right;">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-solid" id="modal-save-btn">Update</button>
+      </div>
+    </div>
   </div>
 
   <script src="manager.js"></script>

@@ -35,6 +35,10 @@ const Attendance = sequelize.define('Attendance', {
     work_duration: {
         type: DataTypes.FLOAT, // In hours or minutes
         allowNull: true
+    },
+    status: {
+        type: DataTypes.STRING, // e.g., 'Present', 'Absent', 'Half Day'
+        defaultValue: 'Present'
     }
 }, {
     tableName: 'attendance',

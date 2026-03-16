@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/db');
 
 const Employee = sequelize.define('Employee', {
@@ -16,12 +17,25 @@ const Employee = sequelize.define('Employee', {
         allowNull: false,
         unique: true
     },
-    department_id: {
-        type: DataTypes.INTEGER, // References Department
+    password: {
+        type: DataTypes.STRING,
+        allowNull: true, // Allow null if created by manager without initial password, but for login it's needed
+        defaultValue: 'Emp@1234' // Default password for new employees
+    },
+    role: {
+        type: DataTypes.STRING,
+        defaultValue: 'Employee'
+    },
+    phone: {
+        type: DataTypes.STRING,
         allowNull: true
     },
-    designation_id: {
-        type: DataTypes.INTEGER,
+    department: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    designation: {
+        type: DataTypes.STRING,
         allowNull: true
     },
     joining_date: {
@@ -40,7 +54,26 @@ const Employee = sequelize.define('Employee', {
     tableName: 'employees',
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: false
+    updatedAt: false,
+    hooks: {
+        beforeCreate: async (emp) => {
+            if (emp.password) {
+                const salt = await bcrypt.genSalt(10);
+                emp.password = await bcrypt.hash(emp.password, salt);
+            }
+        },
+        beforeUpdate: async (emp) => {
+            if (emp.changed('password')) {
+                const salt = await bcrypt.genSalt(10);
+                emp.password = await bcrypt.hash(emp.password, salt);
+            }
+        }
+    }
 });
+
+// Match user entered password to hashed password in database
+Employee.prototype.matchPassword = async function(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = Employee;

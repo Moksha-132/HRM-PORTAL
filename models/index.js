@@ -15,6 +15,11 @@ const Leave = require('./LeaveModel');
 const Asset = require('./AssetModel');
 const Payroll = require('./PayrollModel');
 const Expense = require('./ExpenseModel');
+const Appreciation = require('./AppreciationModel');
+const CompanyPolicy = require('./CompanyPolicyModel');
+const Offboarding = require('./OffboardingModel');
+const Payslip = require('./PayslipModel');
+const Holiday = require('./HolidayModel');
 
 // Define Associations here if necessary
 // e.g.
@@ -23,22 +28,31 @@ Department.hasMany(Employee, { foreignKey: 'department_id' });
 
 Employee.belongsTo(Employee, { as: 'Manager', foreignKey: 'manager_id' });
 
-Attendance.belongsTo(Employee, { foreignKey: 'employee_id' });
-Employee.hasMany(Attendance, { foreignKey: 'employee_id' });
+Attendance.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Attendance, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Leave.belongsTo(Employee, { foreignKey: 'employee_id' });
-Employee.hasMany(Leave, { foreignKey: 'employee_id' });
+Leave.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Leave, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Asset.belongsTo(Employee, { foreignKey: 'assigned_employee' });
-Employee.hasMany(Asset, { foreignKey: 'assigned_employee' });
+Asset.belongsTo(Employee, { foreignKey: 'assigned_employee', onDelete: 'SET NULL' });
+Employee.hasMany(Asset, { foreignKey: 'assigned_employee', onDelete: 'SET NULL' });
 
-Payroll.belongsTo(Employee, { foreignKey: 'employee_id' });
-Employee.hasMany(Payroll, { foreignKey: 'employee_id' });
+Payroll.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Payroll, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Expense.belongsTo(Employee, { foreignKey: 'employee_id' });
-Employee.hasMany(Expense, { foreignKey: 'employee_id' });
+Expense.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Expense, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+
+Appreciation.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Appreciation, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+
+Offboarding.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Offboarding, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+
+Payslip.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
-    Department, Employee, Attendance, Leave, Asset, Payroll, Expense
+    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday
 };

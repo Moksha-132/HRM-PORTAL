@@ -49,6 +49,8 @@ app.use('/api/v1/settings', require('./routes/settingsRoutes'));
 app.use('/api/v1/companies', require('./routes/companyRoutes'));
 // app.use('/api/v1/subscriptions', require('./routes/subscriptionRoutes'));
 app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
+app.use('/api/v1/manager', require('./routes/managerRoutes'));
+app.use('/api/v1/employee', require('./routes/employeeRoutes'));
 // app.use('/api/v1/email-queries', require('./routes/emailQueryRoutes'));
 // app.use('/api/v1/offline-requests', require('./routes/offlineRequestRoutes'));
 
@@ -70,6 +72,11 @@ app.get('/manager-dashboard', (req, res) => {
 
 app.get('/employee-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'employee-dashboard.html'));
+});
+
+// 404 handler for API
+app.use('/api', (req, res) => {
+    res.status(404).json({ success: false, error: `Route ${req.originalUrl} not found` });
 });
 
 // Fallback error handler

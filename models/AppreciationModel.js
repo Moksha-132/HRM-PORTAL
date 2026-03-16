@@ -1,8 +1,8 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const Expense = sequelize.define('Expense', {
-    expense_id: {
+const Appreciation = sequelize.define('Appreciation', {
+    appreciation_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -15,27 +15,19 @@ const Expense = sequelize.define('Expense', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    category: {
-        type: DataTypes.STRING,
+    description: {
+        type: DataTypes.TEXT,
         allowNull: true
     },
-    amount: {
-        type: DataTypes.DECIMAL(10, 2),
+    date: {
+        type: DataTypes.DATEONLY,
         allowNull: false
-    },
-    receipt: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    status: {
-        type: DataTypes.ENUM('Pending', 'Approved', 'Rejected'),
-        defaultValue: 'Pending'
     }
 }, {
-    tableName: 'expenses',
+    tableName: 'appreciations',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: false
 });
 
-module.exports = Expense;
+module.exports = Appreciation;

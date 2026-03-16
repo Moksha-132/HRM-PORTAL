@@ -1,14 +1,18 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const Payroll = sequelize.define('Payroll', {
-    payroll_id: {
+const Payslip = sequelize.define('Payslip', {
+    payslip_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
     employee_id: {
-        type: DataTypes.INTEGER, // References Employee
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    payroll_id: {
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     basic_salary: {
@@ -17,11 +21,11 @@ const Payroll = sequelize.define('Payroll', {
     },
     allowances: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0.00
+        defaultValue: 0
     },
     deductions: {
         type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0.00
+        defaultValue: 0
     },
     net_salary: {
         type: DataTypes.DECIMAL(10, 2),
@@ -29,11 +33,17 @@ const Payroll = sequelize.define('Payroll', {
     },
     payment_date: {
         type: DataTypes.DATEONLY,
+        allowNull: false
+    },
+    pdf_url: {
+        type: DataTypes.STRING,
         allowNull: true
     }
 }, {
-    tableName: 'payroll',
-    timestamps: false
+    tableName: 'payslips',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false
 });
 
-module.exports = Payroll;
+module.exports = Payslip;

@@ -1,19 +1,26 @@
 const SuperAdmin = require('../models/SuperAdmin');
+const Employee = require('../models/EmployeeModel');
 const jwt = require('jsonwebtoken');
 
 const sendTokenResponse = (user, statusCode, res) => {
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    // Include role in payload to help middleware distinguish between tables if necessary
+    const token = jwt.sign({ id: user.id || user.employee_id, role: user.role }, process.env.JWT_SECRET, {
         expiresIn: '30d'
     });
 
     res.status(statusCode).json({
         success: true,
         token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role }
+        user: { 
+            id: user.id || user.employee_id, 
+            name: user.name || user.employee_name, 
+            email: user.email, 
+            role: user.role 
+        }
     });
 };
 
-// @desc    Login Super Admin
+// @desc    Login User (Super Admin, Manager, or Employee)
 // @route   POST /api/v1/auth/login
 exports.login = async (req, res) => {
     try {
@@ -23,7 +30,15 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Please provide email and password' });
         }
 
-        const user = await SuperAdmin.findOne({ where: { email } });
+        // 1. Check SuperAdmin table (Super Admin, Admin, Manager)
+        let user = await SuperAdmin.findOne({ where: { email } });
+        let isEmployee = false;
+
+        if (!user) {
+            // 2. Check Employee table
+            user = await Employee.findOne({ where: { email } });
+            isEmployee = true;
+        }
 
         if (!user) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
