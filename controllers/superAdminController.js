@@ -74,3 +74,36 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 };
+
+// @desc    Get current logged in user
+// @route   GET /api/v1/auth/me
+exports.getMe = async (req, res) => {
+    try {
+        const user = await SuperAdmin.findByPk(req.user.id);
+        res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Update user details
+// @route   PUT /api/v1/auth/updatedetails
+exports.updateDetails = async (req, res) => {
+    try {
+        const fieldsToUpdate = {
+            name: req.body.name,
+            email: req.body.email
+        };
+        // Option to include other basic details, but for now name and email.
+
+        const user = await SuperAdmin.findByPk(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        await user.update(fieldsToUpdate);
+
+        res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+};

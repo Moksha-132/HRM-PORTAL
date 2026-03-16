@@ -65,8 +65,11 @@ allLinks.forEach(link => {
     const targetView = document.getElementById(map.view);
     if (targetView) {
       targetView.classList.remove('hidden');
-      if (map.view === 'view-superadmin') fetchAdmins();
-      if (map.view === 'view-companies') fetchCompanies();
+      if (map.view === 'view-superadmin') window.fetchAdmins();
+      if (map.view === 'view-companies') window.fetchCompanies();
+      if (map.view === 'view-transactions') { window.fetchCompaniesForTransactions(); window.fetchTransactions(); }
+      if (map.view === 'view-system') window.fetchProfile();
+      if (map.view === 'view-subscriptions') window.fetchSubscriptions();
     }
 
     // Auto-close sidebar on mobile
@@ -88,18 +91,70 @@ document.addEventListener('DOMContentLoaded', async () => {
   const adminEmailDisplay = document.getElementById('admin-email-display');
   if (adminEmailDisplay) adminEmailDisplay.textContent = sessionStorage.getItem('shnoor_admin_email') || 'admin@shnoor.com';
 
-  // Fetch Dashboard Stats (Mock)
-  async function fetchStats() {
-    // In a real app, you'd fetch /api/v1/dashboard/stats
-    document.getElementById('stat-companies').textContent = '12';
-    document.getElementById('stat-subs').textContent = '8';
-    document.getElementById('stat-revenue').textContent = '$4,250';
-    document.getElementById('stat-queries').textContent = '3';
+  // Fetch Dashboard Stats
+  window.fetchStats = async function() {
+    try {
+      const res = await fetch('/api/v1/companies', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const comps = data.data;
+        document.getElementById('stat-companies').textContent = comps.length;
+        document.getElementById('stat-active-companies').textContent = comps.filter(c => c.status === 'Active').length;
+        document.getElementById('stat-inactive-companies').textContent = comps.filter(c => c.status === 'Inactive').length;
+        document.getElementById('stat-pending-companies').textContent = comps.filter(c => c.status === 'Pending').length;
+
+        const recentBody = document.getElementById('recent-activities-body');
+        if (recentBody) {
+            const recent = comps.slice(0, 5);
+            recentBody.innerHTML = recent.map(comp => {
+                let statusColor = comp.status === 'Active' ? 'green' : (comp.status === 'Inactive' ? 'red' : 'orange');
+                return `
+                  <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:12px;"><strong>${comp.name}</strong><br/><small style="color:var(--text-light)">${comp.email}</small></td>
+                    <td style="padding:12px;">${comp.location}</td>
+                    <td style="padding:12px;"><span style="color:${statusColor}; font-weight:600;">${comp.status}</span></td>
+                  </tr>
+                `;
+            }).join('');
+            if (recent.length === 0) recentBody.innerHTML = '<tr><td colspan="3" style="padding:20px; text-align:center; color:var(--text-light);">No companies found.</td></tr>';
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching stats:', e);
+    }
   }
-  fetchStats();
+  window.fetchStats();
+
+  window.fetchSubscriptions = async function() {
+    try {
+      const res = await fetch('/api/v1/companies', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const list = document.getElementById('subscriptions-list');
+        if (list) {
+            list.innerHTML = data.data.map(comp => {
+                let statusColor = comp.status === 'Active' ? 'green' : (comp.status === 'Inactive' ? 'red' : 'orange');
+                return `
+                  <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:12px;"><strong>${comp.name}</strong></td>
+                    <td style="padding:12px;">${comp.email}</td>
+                    <td style="padding:12px;">${comp.subscriptionPlan || 'No Plan'}</td>
+                    <td style="padding:12px;"><span style="color:${statusColor}; font-weight:600;">${comp.status}</span></td>
+                  </tr>
+                `;
+            }).join('');
+            if (data.data.length === 0) list.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:var(--text-light);">No subscriptions found.</td></tr>';
+        }
+      }
+    } catch(e) { console.error('Error fetching subscriptions:', e); }
+  }
 
   // Manage Admins
-  async function fetchAdmins() {
+  window.fetchAdmins = async function() {
     try {
       const res = await fetch('/api/v1/auth/users', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -112,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td style="padding:12px;">${user.name}<br/><small style="color:var(--text-light)">${user.email}</small></td>
             <td style="padding:12px;"><span class="admin-badge" style="background:var(--primary-light); color:var(--primary);">${user.role}</span></td>
             <td style="padding:12px;">
-              <button onclick="deleteAdmin('${user._id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;" title="Delete">🗑️</button>
+              <button onclick="deleteAdmin('${user.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;" title="Delete">🗑️</button>
             </td>
           </tr>
         `).join('');
@@ -127,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchAdmins();
+      if (res.ok) window.fetchAdmins();
     } catch (e) { console.error(e); }
   };
 
@@ -154,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.ok) {
         alert('Admin created successfully!');
         addAdminForm.reset();
-        fetchAdmins();
+        window.fetchAdmins();
       } else {
         alert('Error: ' + data.error);
       }
@@ -162,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // --- Real Companies Logic ---
-  async function fetchCompanies() {
+  window.fetchCompanies = async function() {
     try {
       const res = await fetch('/api/v1/companies', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -179,9 +234,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             <tr style="border-bottom:1px solid var(--border);">
               <td style="padding:12px;"><strong>${comp.name}</strong><br/><small style="color:var(--text-light)">${comp.email}</small></td>
               <td style="padding:12px;">${comp.location}</td>
+              <td style="padding:12px;">${comp.subscriptionPlan || 'N/A'}</td>
               <td style="padding:12px;"><span style="color:${statusColor}; font-weight:600;">${comp.status}</span></td>
               <td style="padding:12px;">
-                <button onclick="deleteCompany('${comp._id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;" title="Delete">🗑️</button>
+                <button onclick="deleteCompany('${comp.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;" title="Delete">🗑️</button>
               </td>
             </tr>
           `;
@@ -202,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchCompanies();
+      if (res.ok) { window.fetchCompanies(); window.fetchStats(); }
     } catch (e) { console.error(e); }
   };
 
@@ -213,6 +269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       name: document.getElementById('comp-name-input').value,
       email: document.getElementById('comp-email-input').value,
       location: document.getElementById('comp-loc-input').value,
+      subscriptionPlan: document.getElementById('comp-plan-input').value,
       status: document.getElementById('comp-status-input').value
     };
 
@@ -229,7 +286,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (res.ok) {
         alert('Company added successfully!');
         addCompanyForm.reset();
-        fetchCompanies();
+        window.fetchCompanies();
+        window.fetchStats();
       } else {
         alert('Error: ' + data.error);
       }
@@ -481,10 +539,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           const data = await res.json();
           alert('Error: ' + data.error);
         }
-      } catch (e) { console.error(e); }
-    });
-  }
-});
+      } catch (e) {
+        console.error(e);
+      }
+    }); // close addEventListener
+  } // close if (addPricingForm)
 
 // Global helpers purely for the admin list deletes
 window.deleteFeature = async (id) => {
@@ -504,3 +563,152 @@ window.deletePricing = async (id) => {
     if(res.ok) window.location.reload();
   } catch(e) { console.error(e); }
 };
+
+// --- Transactions Logic ---
+window.fetchCompaniesForTransactions = async function() {
+  const token = sessionStorage.getItem('shnoor_token');
+  try {
+    const res = await fetch('/api/v1/companies', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if(res.ok && data.success) {
+      const select = document.getElementById('trans-company-input');
+      select.innerHTML = '<option value="">Select a company</option>' + data.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+  } catch(e) { console.error(e); }
+};
+
+window.fetchTransactions = async function() {
+  const token = sessionStorage.getItem('shnoor_token');
+  try {
+    const res = await fetch('/api/v1/transactions', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const list = document.getElementById('transactions-list');
+      list.innerHTML = data.data.map(t => {
+        let sc = t.status === 'Success' ? 'green' : (t.status === 'Failed' ? 'red' : 'orange');
+        let cd = new Date(t.transactionDate).toLocaleDateString();
+        let nd = t.nextPaymentDate ? new Date(t.nextPaymentDate).toLocaleDateString() : 'N/A';
+        return `
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:12px;">${cd}</td>
+            <td style="padding:12px;">${t.Company ? t.Company.name : 'Unknown'}</td>
+            <td style="padding:12px;">$${t.amount}</td>
+            <td style="padding:12px;">${nd}</td>
+            <td style="padding:12px;">${t.paymentMethod || 'N/A'}</td>
+            <td style="padding:12px;"><span style="color:${sc}; font-weight:600;">${t.status}</span></td>
+            <td style="padding:12px;">
+              <button onclick="editTransaction(${t.id})" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:1.1rem; margin-right:8px;" title="Edit">✏️</button>
+              <button onclick="deleteTransaction(${t.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.1rem;" title="Delete">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      if(data.data.length === 0) list.innerHTML = '<tr><td colspan="7" style="padding:20px; text-align:center; color:var(--text-light);">No transactions found.</td></tr>';
+      
+      // Store globally for editing
+      window.allTransactions = data.data; 
+    }
+  } catch(e) { console.error(e); }
+};
+
+window.deleteTransaction = async (id) => {
+  if(!confirm('Delete this transaction?')) return;
+  const token = sessionStorage.getItem('shnoor_token');
+  try {
+    const res = await fetch(`/api/v1/transactions/${id}`, { method: 'DELETE', headers:{'Authorization': `Bearer ${token}`} });
+    if(res.ok) fetchTransactions();
+  } catch(e) { console.error(e); }
+};
+
+window.editTransaction = async (id) => {
+  const t = window.allTransactions.find(x => x.id === id);
+  if(!t) return;
+  document.getElementById('trans-id-input').value = t.id;
+  document.getElementById('trans-company-input').value = t.companyId;
+  document.getElementById('trans-amount-input').value = t.amount;
+  document.getElementById('trans-date-input').value = t.transactionDate.split('T')[0];
+  if(t.nextPaymentDate) document.getElementById('trans-next-date-input').value = t.nextPaymentDate.split('T')[0];
+  document.getElementById('trans-method-input').value = t.paymentMethod || '';
+  document.getElementById('trans-status-input').value = t.status;
+  document.getElementById('trans-cancel-btn').classList.remove('hidden');
+};
+
+document.getElementById('trans-cancel-btn')?.addEventListener('click', () => {
+  document.getElementById('add-transaction-form').reset();
+  document.getElementById('trans-id-input').value = '';
+  document.getElementById('trans-cancel-btn').classList.add('hidden');
+});
+
+document.getElementById('add-transaction-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = sessionStorage.getItem('shnoor_token');
+  const id = document.getElementById('trans-id-input').value;
+  const body = {
+    companyId: document.getElementById('trans-company-input').value,
+    amount: document.getElementById('trans-amount-input').value,
+    transactionDate: document.getElementById('trans-date-input').value || new Date().toISOString(),
+    nextPaymentDate: document.getElementById('trans-next-date-input').value || null,
+    paymentMethod: document.getElementById('trans-method-input').value,
+    status: document.getElementById('trans-status-input').value
+  };
+
+  try {
+    let url = '/api/v1/transactions';
+    let method = 'POST';
+    if(id) { url += `/${id}`; method = 'PUT'; }
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    if(res.ok) {
+      document.getElementById('add-transaction-form').reset();
+      document.getElementById('trans-id-input').value = '';
+      document.getElementById('trans-cancel-btn').classList.add('hidden');
+      fetchTransactions();
+      fetchStats();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + data.error);
+    }
+  } catch(err) { console.error(err); }
+});
+
+// --- Profile Settings Logic ---
+window.fetchProfile = async function() {
+  const token = sessionStorage.getItem('shnoor_token');
+  try {
+    const res = await fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if(res.ok && data.success) {
+      document.getElementById('profile-name-input').value = data.data.name;
+      document.getElementById('profile-email-input').value = data.data.email;
+    }
+  } catch(e) { console.error(e); }
+};
+
+document.getElementById('profile-settings-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = sessionStorage.getItem('shnoor_token');
+  const body = {
+    name: document.getElementById('profile-name-input').value,
+    email: document.getElementById('profile-email-input').value
+  };
+  try {
+    const res = await fetch('/api/v1/auth/updatedetails', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(res.ok && data.success) {
+      alert('Profile updated successfully!');
+      // Update sidebar/topbar if needed
+      sessionStorage.setItem('shnoor_admin_email', data.data.email);
+      document.getElementById('admin-email-display').textContent = data.data.email;
+    } else { alert('Error: ' + data.error); }
+  } catch(err) { console.error(err); }
+});
+
+});

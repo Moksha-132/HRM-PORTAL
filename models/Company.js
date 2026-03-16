@@ -34,6 +34,10 @@ const Company = sequelize.define('Company', {
     status: {
         type: DataTypes.ENUM('Active', 'Pending', 'Inactive'),
         defaultValue: 'Pending'
+    },
+    subscriptionPlan: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     timestamps: true // Adds createdAt and updatedAt

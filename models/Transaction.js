@@ -19,7 +19,7 @@ const Transaction = sequelize.define('Transaction', {
     },
     subscriptionId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: Subscription,
             key: 'id'
@@ -40,6 +40,14 @@ const Transaction = sequelize.define('Transaction', {
     transactionDate: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
+    },
+    nextPaymentDate: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    paymentMethod: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     timestamps: true // Adds createdAt and updatedAt

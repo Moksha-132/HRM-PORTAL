@@ -48,7 +48,7 @@ app.use('/api/v1/auth', require('./routes/superAdminRoutes'));
 app.use('/api/v1/settings', require('./routes/settingsRoutes'));
 app.use('/api/v1/companies', require('./routes/companyRoutes'));
 // app.use('/api/v1/subscriptions', require('./routes/subscriptionRoutes'));
-// app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
+app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
 // app.use('/api/v1/email-queries', require('./routes/emailQueryRoutes'));
 // app.use('/api/v1/offline-requests', require('./routes/offlineRequestRoutes'));
 
