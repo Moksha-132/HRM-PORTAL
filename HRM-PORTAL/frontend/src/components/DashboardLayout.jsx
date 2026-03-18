@@ -1,0 +1,54 @@
+import React, { useEffect, useState } from 'react';
+import Sidebar from './Sidebar';
+import Topbar from './Topbar';
+
+const DashboardLayout = ({ roleLabel, email, navItems, activeId, onSelect, onLogout, title, children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 900) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleToggle = () => {
+    if (window.innerWidth <= 900) {
+      setSidebarOpen((prev) => !prev);
+    } else {
+      setSidebarCollapsed((prev) => !prev);
+    }
+  };
+
+  const handleSelect = (id) => {
+    onSelect(id);
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
+  };
+
+  return (
+    <div className="app-root">
+      <Sidebar
+        brand="shnoor"
+        tag={roleLabel}
+        navItems={navItems}
+        activeId={activeId}
+        onSelect={handleSelect}
+        onLogout={onLogout}
+        isOpen={sidebarOpen}
+        isCollapsed={sidebarCollapsed}
+      />
+      <div className={`main-wrap${sidebarCollapsed ? ' expanded' : ''}`}>
+        <Topbar title={title} roleLabel={roleLabel} email={email} onToggle={handleToggle} />
+        <main className="main-content">{children}</main>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardLayout;
