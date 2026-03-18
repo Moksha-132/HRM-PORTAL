@@ -608,6 +608,32 @@ document.addEventListener('DOMContentLoaded', () => {
         window.fetchExpenses();
     });
 
+    document.getElementById('form-pol')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('title', document.getElementById('pol-title').value);
+        formData.append('description', document.getElementById('pol-desc').value);
+        
+        const fileInput = document.getElementById('pol-file');
+        if (fileInput.files.length > 0) {
+            formData.append('file', fileInput.files[0]);
+        }
+        
+        const externalUrl = document.getElementById('pol-url').value;
+        if (externalUrl) {
+            formData.append('external_url', externalUrl);
+        }
+
+        try {
+            await apiCall('policies', 'POST', formData, true);
+            alert('Policy published successfully');
+            document.getElementById('form-pol').reset();
+            window.fetchPolicies();
+        } catch (err) {
+            alert('Publish failed: ' + err.message);
+        }
+    });
+
     window.fetchHolidays = async () => {
         window.refreshTable('holi-list');
         const res = await apiCall('holidays');
@@ -617,8 +643,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${h.date}</td>
                 <td><strong>${h.holiday_name}</strong></td>
                 <td>
-                    <button onclick="editHoliday(${h.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteRecord('holidays', ${h.id}, 'fetchHolidays')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                    <button onclick="editHoliday(${h.holiday_id || h.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteRecord('holidays', ${h.holiday_id || h.id}, 'fetchHolidays')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -626,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.editHoliday = async (id) => {
         const res = await apiCall('holidays');
-        const item = res.data.find(x => x.id == id);
+        const item = res.data.find(x => (x.holiday_id || x.id) == id);
         if(!item) return;
         openEditModal('Holiday', id, [
             { label: 'Title', key: 'holiday_name', value: item.holiday_name, type: 'text' },

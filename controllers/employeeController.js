@@ -24,8 +24,8 @@ exports.getDashboardStats = async (req, res) => {
         // Recent Appreciations
         const recentAppreciations = await Appreciation.findAll({ where: { employee_id: empId }, limit: 5, order: [['date', 'DESC']] });
 
-        // Assigned Assets
-        const assignedAssets = await Asset.count({ where: { assigned_employee: empId } });
+        // Assigned Assets (Only count those currently 'Assigned')
+        const assignedAssets = await Asset.count({ where: { assigned_employee: empId, status: 'Assigned' } });
 
         // Recent Leave Activity
         const recentLeaves = await Leave.findAll({ where: { employee_id: empId }, limit: 5, order: [['leave_id', 'DESC']] });
@@ -61,8 +61,9 @@ exports.clockIn = async (req, res) => {
         const empId = req.user.employee_id;
         const today = new Date().toISOString().split('T')[0];
 
-        const existing = await Attendance.findOne({ where: { employee_id: empId, date: today } });
-        if (existing) return res.status(400).json({ success: false, error: 'Already clocked in today' });
+        // Check if there's an active (unclosed) clock-in
+        const active = await Attendance.findOne({ where: { employee_id: empId, clock_out: null } });
+        if (active) return res.status(400).json({ success: false, error: 'You are already clocked in. Please clock out first before clocking in again.' });
 
         const record = await Attendance.create({
             employee_id: empId,
@@ -78,10 +79,14 @@ exports.clockIn = async (req, res) => {
 exports.clockOut = async (req, res) => {
     try {
         const empId = req.user.employee_id;
-        const today = new Date().toISOString().split('T')[0];
 
-        const record = await Attendance.findOne({ where: { employee_id: empId, date: today, clock_out: null } });
-        if (!record) return res.status(400).json({ success: false, error: 'No active clock-in found for today' });
+        // Find the most recent active clock-in session (even if from a previous day)
+        const record = await Attendance.findOne({ 
+            where: { employee_id: empId, clock_out: null },
+            order: [['clock_in', 'DESC']]
+        });
+        
+        if (!record) return res.status(400).json({ success: false, error: 'No active clock-in found. Please clock in first.' });
 
         const clockOutTime = new Date();
         const duration = (clockOutTime - new Date(record.clock_in)) / (1000 * 60 * 60); // In hours
@@ -161,7 +166,7 @@ exports.submitResignation = async (req, res) => {
 
 exports.getMyOffboardings = async (req, res) => {
     try {
-        const list = await Offboarding.findAll({ where: { employee_id: req.user.employee_id } });
+        const list = await Offboarding.findAll({ where: { employee_id: req.user.employee_id }, order: [['created_at', 'DESC']] });
         res.status(200).json({ success: true, data: list });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
@@ -185,8 +190,12 @@ exports.getMyExpenses = async (req, res) => {
 // --- PAYROLL / PAYSLIPS ---
 exports.getMyPayroll = async (req, res) => {
     try {
-        const pay = await Payroll.findAll({ where: { employee_id: req.user.employee_id }, order: [['payment_date', 'DESC']] });
-        res.status(200).json({ success: true, data: pay });
+        // Display only payroll records that have an associated Payslip (meaning they are "published")
+        const slips = await Payslip.findAll({ 
+            where: { employee_id: req.user.employee_id }, 
+            order: [['payment_date', 'DESC']] 
+        });
+        res.status(200).json({ success: true, data: slips });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 
@@ -194,6 +203,70 @@ exports.getMyPayslips = async (req, res) => {
     try {
         const slips = await Payslip.findAll({ where: { employee_id: req.user.employee_id }, order: [['payment_date', 'DESC']] });
         res.status(200).json({ success: true, data: slips });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.downloadPayslip = async (req, res) => {
+    try {
+        const slip = await Payslip.findByPk(req.params.id, { include: [Employee] });
+        if (!slip || slip.employee_id !== req.user.employee_id) {
+            return res.status(404).json({ success: false, error: "Payslip not found" });
+        }
+
+        const content = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+                .payslip-box { border: 2px solid #333; padding: 30px; max-width: 600px; margin: auto; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                .footer { margin-top: 40px; font-size: 12px; text-align: center; color: #777; }
+                .total { font-weight: bold; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="payslip-box">
+                <div class="header">
+                    <h2>OFFICIAL PAYSLIP</h2>
+                    <p>SHNOOR HRM PORTAL</p>
+                </div>
+                <div class="grid">
+                    <div>
+                        <strong>Employee Details:</strong><br>
+                        Name: ${req.user.employee_name}<br>
+                        ID: ${req.user.employee_id}
+                    </div>
+                    <div>
+                        <strong>Payment Info:</strong><br>
+                        Date: ${slip.payment_date}
+                    </div>
+                </div>
+                <div style="margin-top: 30px;">
+                    <strong>Earnings:</strong><br>
+                    Basic Salary: $${slip.basic_salary}<br>
+                    Allowances: $${slip.allowances}
+                </div>
+                <div style="margin-top: 20px;">
+                    <strong>Deductions:</strong><br>
+                    Total Deductions: $${slip.deductions}
+                </div>
+                <div class="total">
+                    NET PAYABLE: $${slip.net_salary}
+                </div>
+                <div class="footer">
+                    This is an electronically generated document. No signature required.
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Disposition', `attachment; filename=payslip_${slip.payment_date}.html`);
+        res.send(content);
+
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

@@ -31,6 +31,7 @@ router.route('/expenses')
 
 router.get('/payroll', controller.getMyPayroll);
 router.get('/payslips', controller.getMyPayslips);
+router.get('/payslips/:id/download', controller.downloadPayslip);
 
 router.route('/profile')
     .get(controller.getProfile)

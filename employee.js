@@ -127,15 +127,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await apiCall('attendance');
             const records = res.data;
             const today = new Date().toISOString().split('T')[0];
-            const todayRec = records.find(r => r.date === today);
+            
+            // Logic for multiple clock-in/out:
+            // Find if there is an ACTIVE record (clock_out is null) regardless of date
+            const activeRec = records.find(r => r.clock_out === null);
 
             const inBtn = document.getElementById('btn-clock-in');
             const outBtn = document.getElementById('btn-clock-out');
 
-            if (todayRec) {
+            if (activeRec) {
+                // If active record exists, must clock out
                 inBtn.disabled = true;
-                outBtn.disabled = !!todayRec.clock_out;
+                outBtn.disabled = false;
             } else {
+                // If no active record, can clock in
                 inBtn.disabled = false;
                 outBtn.disabled = true;
             }
@@ -204,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${a.asset_name}</td>
                     <td>${a.asset_category}</td>
                     <td>${a.serial_number || 'N/A'}</td>
-                    <td>${a.assignment_date || 'N/A'}</td>
+                    <td><span class="badge ${a.status==='Available'?'bg-green':'bg-yellow'}">${a.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="4" style="text-align:center;">No assets assigned</td></tr>';
         } catch(e) {}
@@ -301,11 +306,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${s.payment_date || 'N/A'}</td>
                     <td>$${s.net_salary}</td>
                     <td>${s.payment_date}</td>
-                    <td><button class="btn btn-outline" style="font-size:11px; padding:4px 8px;">Download</button></td>
+                    <td><button onclick="downloadPayslip(${s.payslip_id})" class="btn btn-outline" style="font-size:11px; padding:4px 8px;">Download</button></td>
                 </tr>
             `).join('') || '<tr><td colspan="4" style="text-align:center;">No payslips available</td></tr>';
         } catch(e) {}
     }
+
+    window.downloadPayslip = async (id) => {
+        try {
+            const res = await fetch(`/api/v1/employee/payslips/${id}/download`, {
+                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('shnoor_token')}` }
+            });
+            if(!res.ok) throw new Error('Download failed');
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `payslip_${id}.html`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch(err) { alert(err.message); }
+    };
 
     // --- POLICIES ---
     async function fetchPolicies() {

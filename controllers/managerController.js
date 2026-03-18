@@ -290,6 +290,8 @@ exports.createPolicy = async (req, res) => {
         const data = { ...req.body };
         if (req.file) {
             data.file_url = `/uploads/policies/${req.file.filename}`;
+        } else if (req.body.external_url) {
+            data.file_url = req.body.external_url;
         }
         const p = await CompanyPolicy.create(data);
         res.status(201).json({ success: true, data: p });
