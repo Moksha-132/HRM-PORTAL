@@ -42,7 +42,22 @@ exports.getEmployees = async (req, res) => {
 
 exports.createEmployee = async (req, res) => {
     try {
-        const emp = await Employee.create(req.body);
+        const data = { ...req.body };
+        if (req.user && req.user.role === 'Manager' && !data.manager_id) {
+            let mgrEmp = await Employee.findOne({ where: { email: req.user.email } });
+            if (!mgrEmp) {
+                mgrEmp = await Employee.create({
+                    employee_name: req.user.name || 'Manager',
+                    email: req.user.email,
+                    role: 'Employee',
+                    designation: 'Manager',
+                    department: 'Management',
+                    joining_date: new Date()
+                });
+            }
+            data.manager_id = mgrEmp.employee_id;
+        }
+        const emp = await Employee.create(data);
         res.status(201).json({ success: true, data: emp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };

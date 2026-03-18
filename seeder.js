@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 // Note: We don't import mongoose anymore. We import sequelize models directly
 const SuperAdmin = require('./models/SuperAdmin');
 const Company = require('./models/Company');
+const Employee = require('./models/EmployeeModel');
 const { HeaderSetting, AboutSetting, ContactSetting, Feature, Pricing } = require('./models/Settings');
 const { sequelize } = require('./config/db');
 
@@ -33,11 +34,15 @@ const importData = async () => {
             role: 'Manager'
         });
 
-        await SuperAdmin.create({
-            name: 'Shnoor Employee',
+        await Employee.destroy({ where: {} });
+        await Employee.create({
+            employee_name: 'Shnoor Employee',
             email: 'emp@shnoor.com',
             password: 'Emp@1234',
-            role: 'Employee'
+            role: 'Employee',
+            department: 'HR',
+            designation: 'Employee',
+            joining_date: new Date()
         });
 
         await HeaderSetting.destroy({ where: {} });

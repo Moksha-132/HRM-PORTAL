@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="chatbot/chatbot.css" />
 </head>
 <body>
 
@@ -573,6 +574,17 @@
     </main>
   </div>
 
+  <div id="chatbot-root" data-role="admin"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" src="chatbot/MessageBubble.jsx"></script>
+  <script type="text/babel" src="chatbot/ChatbotIcon.jsx"></script>
+  <script type="text/babel" src="chatbot/ChatWindow.jsx"></script>
+  <script type="text/babel" src="chatbot/AdminChatPanel.jsx"></script>
+  <script type="text/babel" src="chatbot/UserHistoryPanel.jsx"></script>
+  <script type="text/babel" src="chatbot/app.jsx"></script>
   <script src="admin.js"></script>
 </body>
 </html>

@@ -32,12 +32,18 @@ exports.login = async (req, res) => {
 
         // 1. Check SuperAdmin table (Super Admin, Admin, Manager)
         let user = await SuperAdmin.findOne({ where: { email } });
-        let isEmployee = false;
+
+        // If a SuperAdmin record exists but is marked Employee, prefer the Employee table
+        if (user && user.role === 'Employee') {
+            const emp = await Employee.findOne({ where: { email } });
+            if (emp) {
+                user = emp;
+            }
+        }
 
         if (!user) {
             // 2. Check Employee table
             user = await Employee.findOne({ where: { email } });
-            isEmployee = true;
         }
 
         if (!user) {
