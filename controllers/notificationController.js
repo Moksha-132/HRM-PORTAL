@@ -2,9 +2,11 @@ const { Notification } = require('../models');
 
 exports.getNotifications = async (req, res) => {
     try {
-        const { userId, role } = req.query;
-        if (!userId || !role) {
-            return res.status(400).json({ success: false, error: 'userId and role are required' });
+        const { role } = req.query;
+        const userId = (req.query.userId || req.user.email || '').toLowerCase();
+        
+        if (!role) {
+            return res.status(400).json({ success: false, error: 'role is required' });
         }
 
         const notifications = await Notification.findAll({
@@ -36,9 +38,11 @@ exports.markAsRead = async (req, res) => {
 
 exports.markAllAsRead = async (req, res) => {
     try {
-        const { userId, role } = req.body;
-        if (!userId || !role) {
-            return res.status(400).json({ success: false, error: 'userId and role are required' });
+        const userId = (req.body.userId || req.user.email || '').toLowerCase();
+        const role = req.body.role || req.query.role;
+
+        if (!role) {
+            return res.status(400).json({ success: false, error: 'role is required' });
         }
 
         await Notification.update(

@@ -51,6 +51,7 @@ app.use('/api/v1/companies', require('./routes/companyRoutes'));
 app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
 app.use('/api/v1/manager', require('./routes/managerRoutes'));
 app.use('/api/v1/employee', require('./routes/employeeRoutes'));
+app.use('/api/v1/chat', require('./routes/v1ChatRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminChatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));

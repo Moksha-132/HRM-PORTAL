@@ -40,11 +40,16 @@ const formatMessage = (text) => {
   return html;
 };
 
-const MessageBubble = ({ role, text, fileUrl, fileType }) => {
+const MessageBubble = ({ role, text, fileUrl, fileType, senderName }) => {
   const isImage = fileType && fileType.startsWith('image/');
 
   return (
     <div className={`cb-bubble ${role}`}>
+      {senderName && (
+        <div className="cb-sender-name" style={{ fontWeight: '600', fontSize: '11px', marginBottom: '4px', opacity: 0.8 }}>
+          {senderName}
+        </div>
+      )}
       {fileUrl && (
         <div className="cb-file-attachment" style={{ marginBottom: '8px' }}>
           {isImage ? (

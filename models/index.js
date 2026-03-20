@@ -54,6 +54,7 @@ Employee.hasMany(Offboarding, { foreignKey: 'employee_id', onDelete: 'CASCADE' }
 Payslip.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
+
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
     Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday,

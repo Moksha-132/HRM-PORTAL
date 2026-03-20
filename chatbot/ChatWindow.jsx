@@ -84,9 +84,10 @@ const ChatWindow = ({
                 text={m.text} 
                 fileUrl={m.fileUrl} 
                 fileType={m.fileType} 
+                senderName={m.senderName} 
               />
             ))}
-            {loading && <MessageBubble role="bot" text="Typing..." />}
+            {loading && <MessageBubble role="bot" text="Typing..." senderName="Assistant" />}
 
             {suggestions && suggestions.length > 0 && (
               <div className="cb-chips">

@@ -21,7 +21,17 @@ const ChatMessage = sequelize.define('ChatMessage', {
     },
     response: {
         type: DataTypes.TEXT,
-        allowNull: false
+        allowNull: true
+    },
+    sender_type: {
+        type: DataTypes.ENUM('User', 'Bot', 'Admin'),
+        allowNull: false,
+        defaultValue: 'User'
+    },
+    status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'Open'
     },
     timestamp: {
         type: DataTypes.DATE,

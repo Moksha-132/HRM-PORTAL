@@ -714,15 +714,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     notifCount.style.display = 'none';
                 }
 
-                if (data.data.length > 0) {
-                    notifList.innerHTML = data.data.map(n => `
-                        <div class="notif-item ${n.isRead ? '' : 'unread'}" style="padding:10px; border-bottom:1px solid var(--border); font-size:0.9rem; ${n.isRead ? '' : 'background:#f0f7ff;'}">
-                            <div style="font-weight:${n.isRead ? '400' : '600'};">${n.message}</div>
+                if (unread.length > 0) {
+                    notifList.innerHTML = unread.map(n => `
+                        <div class="notif-item unread" style="padding:10px; border-bottom:1px solid var(--border); font-size:0.9rem; background:#f0f7ff;">
+                            <div style="font-weight:600;">${n.message}</div>
                             <div style="font-size:0.75rem; color:var(--text-light); margin-top:4px;">${new Date(n.timestamp).toLocaleString()}</div>
                         </div>
                     `).join('');
                 } else {
-                    notifList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:10px;">No notifications</p>';
+                    notifList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:10px;">No new notifications</p>';
                 }
             }
         } catch (e) {

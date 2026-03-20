@@ -98,8 +98,17 @@ const ChatbotApp = () => {
       }
       const built = [];
       data.data.forEach((item) => {
-        built.push({ role: 'user', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType });
-        built.push({ role: 'bot', text: item.response });
+        if (item.sender_type === 'Admin') {
+          // If admin sent the message, it belongs on the 'bot' side for the user
+          built.push({ role: 'bot', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType, senderName: 'Admin' });
+        } else {
+          // Normal user message
+          built.push({ role: 'user', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType });
+          // If there's an AI or Admin response attached to this record
+          if (item.response) {
+            built.push({ role: 'bot', text: item.response, senderName: 'Assistant' });
+          }
+        }
       });
       setMessages(built);
     } catch (e) {
@@ -107,7 +116,11 @@ const ChatbotApp = () => {
     }
   };
 
-  React.useEffect(() => { fetchHistory(); }, [role]);
+  React.useEffect(() => { 
+    fetchHistory();
+    const poll = setInterval(fetchHistory, 10000);
+    return () => clearInterval(poll);
+  }, [role]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -150,7 +163,8 @@ const ChatbotApp = () => {
         role: 'bot', 
         text: data.response,
         fileUrl: data.fileUrl,
-        fileType: data.fileType
+        fileType: data.fileType,
+        senderName: 'Assistant'
       }]);
       fetchHistory();
     } catch (e) {

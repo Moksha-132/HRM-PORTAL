@@ -2,6 +2,10 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { ChatMessage, Employee, Leave, SuperAdmin, Company, HeaderSetting, AboutSetting, ContactSetting, Notification } = require('../models');
 const { callGroqChat } = require('../services/groqClient');
+const fs = require('fs');
+const path = require('path');
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
 
 const SYSTEM_PROMPTS = {
     public: 'You are a friendly help desk assistant for a HRM platform. Explain the company, platform features, and how to login or navigate. Keep responses concise and helpful.',
@@ -253,6 +257,50 @@ const handleDatabaseQuery = async ({ message, role, userId }) => {
     return { text: null, simple: false };
 };
 
+const isAdminContactRequest = (msg) => {
+    const keywords = ['contact admin', 'talk to admin', 'redirect to admin', 'human help', 'talk to human', 'human assistant', 'contact hr', 'talk to hr', 'admin help', 'help desk'];
+    return keywords.some(k => msg.toLowerCase().includes(k));
+};
+
+const extractTextFromFile = async (file) => {
+    try {
+        console.log(`[Chat] Extracting text from file: ${file.originalname} (${file.mimetype})`);
+        const filePath = file.path;
+        const mimetype = file.mimetype;
+        const ext = path.extname(file.originalname).toLowerCase();
+        let text = '';
+
+        const isText = mimetype === 'text/plain' || mimetype === 'text/csv' || mimetype === 'application/json' || ext === '.md' || ext === '.txt' || ext === '.csv' || ext === '.json';
+        const isPdf = mimetype === 'application/pdf' || ext === '.pdf';
+        const isDocx = mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || ext === '.docx';
+
+        if (isText) {
+            text = fs.readFileSync(filePath, 'utf8');
+        } else if (isPdf) {
+            const dataBuffer = fs.readFileSync(filePath);
+            const data = await pdfParse(dataBuffer);
+            text = data.text;
+        } else if (isDocx) {
+            const data = await mammoth.extractRawText({ path: filePath });
+            text = data.value;
+        } else {
+            console.warn(`[Chat] Unsupported file type for extraction: ${mimetype} (${ext})`);
+        }
+
+        if (!text || text.trim().length === 0) {
+            console.warn(`[Chat] Extracted text is empty for file: ${file.originalname}`);
+            return '';
+        }
+
+        console.log(`[Chat] Successfully extracted ${text.length} characters from ${file.originalname}`);
+        // Limit to ~5000 chars to avoid token issues while still providing enough context
+        return text.substring(0, 5000);
+    } catch (err) {
+        console.error('[Chat] File Extraction Error:', err);
+        return '';
+    }
+};
+
 exports.handleChat = async (req, res) => {
     try {
         const { message, role, userId } = req.body;
@@ -266,10 +314,19 @@ exports.handleChat = async (req, res) => {
         }
 
         let responseText = '';
-        const dataQuery = isDatabaseQuestion(message);
-        const wantsExplain = wantsExplanation(message);
+        let status = 'Open';
+        
         const companyContext = await getCompanyContext();
         const baseSystemPrompt = `${companyContext}\n${SYSTEM_PROMPTS[role]} ${FORMAT_INSTRUCTIONS}`;
+
+        const adminRedirect = isAdminContactRequest(message);
+        if (adminRedirect) {
+            responseText = "I will redirect this message to admin";
+            status = 'NeedsAdmin';
+        }
+
+        const dataQuery = !responseText && isDatabaseQuestion(message);
+        const wantsExplain = wantsExplanation(message);
 
         if (dataQuery) {
             console.log('[Chat] Database question detected:', message, 'Role:', role);
@@ -295,7 +352,16 @@ exports.handleChat = async (req, res) => {
 
         if (!responseText) {
             const systemPrompt = baseSystemPrompt;
-            responseText = await callGroqChat({ systemPrompt, userMessage: message });
+            let finalUserMessage = message;
+
+            if (req.file) {
+                const extractedText = await extractTextFromFile(req.file);
+                if (extractedText) {
+                    finalUserMessage = `[System Note: The user has attached a file named "${req.file.originalname}". Below is the extracted text content from the file to help you answer the user's query.]\n\n--- Extracted Content Begin ---\n${extractedText}\n--- Extracted Content End ---\n\nUser's Question: ${message}`;
+                }
+            }
+
+            responseText = await callGroqChat({ systemPrompt, userMessage: finalUserMessage });
             if (isSimpleQuestion(message) && !wantsExplain) {
                 responseText = responseText.split('\n')[0];
             }
@@ -306,6 +372,7 @@ exports.handleChat = async (req, res) => {
             role,
             message,
             response: responseText,
+            status,
             timestamp: new Date(),
             fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
             fileType: req.file ? req.file.mimetype : null
@@ -384,8 +451,27 @@ exports.getUserHistory = async (req, res) => {
 
 exports.getAllChats = async (req, res) => {
     try {
-        const chats = await ChatMessage.findAll({ order: [['timestamp', 'DESC']] });
-        res.status(200).json({ success: true, data: chats });
+        const chats = await ChatMessage.findAll({ 
+            order: [['timestamp', 'DESC']] 
+        });
+
+        // Manual join to avoid sync-breaking constraints
+        const userIds = [...new Set(chats.map(c => c.userId).filter(id => id && id.includes('@')))];
+        const users = await Employee.findAll({
+            where: { email: userIds },
+            attributes: ['employee_name', 'email']
+        });
+        const userMap = new Map(users.map(u => [u.email.toLowerCase(), u]));
+
+        const data = chats.map(c => {
+            const plain = c.get({ plain: true });
+            if (plain.userId && userMap.has(plain.userId.toLowerCase())) {
+                plain.user = userMap.get(plain.userId.toLowerCase());
+            }
+            return plain;
+        });
+
+        res.status(200).json({ success: true, data });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -399,7 +485,10 @@ exports.updateChatResponse = async (req, res) => {
         const { response } = req.body;
         if (!response) return res.status(400).json({ success: false, error: 'response is required' });
 
-        await chat.update({ response });
+        await chat.update({ 
+            response,
+            status: 'HandledByAdmin'
+        });
 
         // Add Notification for User
         try {
@@ -415,6 +504,106 @@ exports.updateChatResponse = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: chat });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+exports.getAdminSessions = async (req, res) => {
+    try {
+        const sessions = await ChatMessage.findAll({
+            attributes: [
+                'userId', 
+                'role', 
+                [sequelize.fn('MAX', sequelize.col('timestamp')), 'latestTimestamp'],
+                [sequelize.fn('MAX', sequelize.col('status')), 'status']
+            ],
+            group: ['userId', 'role'],
+            order: [[sequelize.fn('MAX', sequelize.col('timestamp')), 'DESC']]
+        });
+        
+        // Transform to match user's expected format if needed
+        const formatted = sessions.map(s => ({
+            id: s.userId, // use userId as session ID for now
+            user_name: s.userId.split('@')[0], 
+            user_email: s.userId,
+            role: s.role.charAt(0).toUpperCase() + s.role.slice(1),
+            status: s.get('status'),
+            latest: s.get('latestTimestamp')
+        }));
+        
+        res.status(200).json({ success: true, data: formatted });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+exports.getSessionMessages = async (req, res) => {
+    try {
+        const { session_id } = req.query; // the frontend passes session_id which we map to userId
+        if (!session_id) return res.status(400).json({ success: false, error: 'session_id is required' });
+        
+        const messages = await ChatMessage.findAll({
+            where: { userId: session_id },
+            order: [['timestamp', 'ASC']]
+        });
+        
+        // Wrap in Messages array to match user's .map logic
+        res.status(200).json({ success: true, data: { Messages: messages } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+exports.sendAdminReply = async (req, res) => {
+    try {
+        const { session_id, content, target_role } = req.body;
+        if (!session_id || !content) return res.status(400).json({ success: false, error: 'session_id and content are required' });
+
+        // Create new message from Admin
+        const msg = await ChatMessage.create({
+            userId: session_id,
+            role: target_role || 'public',
+            message: content,
+            response: null,
+            sender_type: 'Admin',
+            status: 'HandledByAdmin',
+            timestamp: new Date(),
+            fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
+            fileType: req.file ? req.file.mimetype : null
+        });
+
+        // Also update status of previous messages from this user
+        await ChatMessage.update(
+            { status: 'HandledByAdmin' },
+            { where: { userId: session_id, status: 'NeedsAdmin' } }
+        );
+
+        // Add Notification for User
+        try {
+            await Notification.create({
+                userId: session_id,
+                role: target_role === 'public' ? 'employee' : target_role,
+                message: `An admin has sent you a new message: "${content.substring(0, 30)}..."`,
+                type: 'chat_new',
+                timestamp: new Date()
+            });
+        } catch (notifyErr) {
+            console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
+        res.status(200).json({ success: true, data: msg });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+exports.closeSession = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await ChatMessage.destroy({
+            where: { userId: id }
+        });
+        res.status(200).json({ success: true, message: 'Session deleted and closed' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
