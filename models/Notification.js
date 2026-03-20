@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const ChatMessage = sequelize.define('ChatMessage', {
+const Notification = sequelize.define('Notification', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -9,36 +9,32 @@ const ChatMessage = sequelize.define('ChatMessage', {
     },
     userId: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: false
     },
     role: {
-        type: DataTypes.ENUM('public', 'employee', 'manager', 'admin'),
+        type: DataTypes.ENUM('admin', 'employee', 'manager'),
         allowNull: false
     },
     message: {
         type: DataTypes.TEXT,
         allowNull: false
     },
-    response: {
-        type: DataTypes.TEXT,
+    type: {
+        type: DataTypes.STRING,
         allowNull: false
+    },
+    isRead: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     timestamp: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
-    },
-    fileUrl: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    fileType: {
-        type: DataTypes.STRING,
-        allowNull: true
     }
 }, {
-    tableName: 'chat_messages',
+    tableName: 'notifications',
     timestamps: false
 });
 
-module.exports = ChatMessage;
+module.exports = Notification;

@@ -53,6 +53,7 @@ app.use('/api/v1/manager', require('./routes/managerRoutes'));
 app.use('/api/v1/employee', require('./routes/employeeRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminChatRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 // app.use('/api/v1/email-queries', require('./routes/emailQueryRoutes'));
 // app.use('/api/v1/offline-requests', require('./routes/offlineRequestRoutes'));
 

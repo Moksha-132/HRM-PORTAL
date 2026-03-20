@@ -40,12 +40,24 @@ const formatMessage = (text) => {
   return html;
 };
 
-const MessageBubble = ({ role, text }) => {
+const MessageBubble = ({ role, text, fileUrl, fileType }) => {
+  const isImage = fileType && fileType.startsWith('image/');
+
   return (
-    <div
-      className={`cb-bubble ${role}`}
-      dangerouslySetInnerHTML={{ __html: formatMessage(text) }}
-    />
+    <div className={`cb-bubble ${role}`}>
+      {fileUrl && (
+        <div className="cb-file-attachment" style={{ marginBottom: '8px' }}>
+          {isImage ? (
+            <img src={fileUrl} alt="Attachment" style={{ maxWidth: '100%', borderRadius: '8px', cursor: 'pointer' }} onClick={() => window.open(fileUrl, '_blank')} />
+          ) : (
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', textDecoration: 'underline' }}>
+              <i className="fas fa-file"></i> View Attachment
+            </a>
+          )}
+        </div>
+      )}
+      <div dangerouslySetInnerHTML={{ __html: formatMessage(text) }} />
+    </div>
   );
 };
 

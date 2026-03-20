@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const { ChatMessage, Employee, Leave, SuperAdmin } = require('../models');
+const { ChatMessage, Employee, Leave, SuperAdmin, Company, HeaderSetting, AboutSetting, ContactSetting, Notification } = require('../models');
 const { callGroqChat } = require('../services/groqClient');
 
 const SYSTEM_PROMPTS = {
@@ -12,11 +12,36 @@ const SYSTEM_PROMPTS = {
 
 const FORMAT_INSTRUCTIONS = 'Give concise answers. Use one line for simple queries. Use bullets for lists. Avoid unnecessary explanations unless asked. Highlight important values with **bold**.';
 
+const getCompanyContext = async () => {
+    try {
+        const [header, about, contact] = await Promise.all([
+            HeaderSetting.findOne(),
+            AboutSetting.findOne(),
+            ContactSetting.findOne()
+        ]);
+
+        let context = 'Company Information:\n';
+        context += `Name: ${header?.title || 'Shnoor International LLC'}\n`;
+        context += `Tagline: ${header?.subtitle || 'Empowering Next-Gen Workforce'}\n`;
+        context += `Description: ${about?.description || 'A cutting-edge HRM platform for modern enterprises.'}\n`;
+        context += `Mission: ${about?.mission || 'To empower organizations with an intuitive platform.'}\n`;
+        context += `Contact Email: ${contact?.email || 'contact@shnoor.com'}\n`;
+        context += `Contact Phone: ${contact?.phone || '+1 (555) 123-4567'}\n`;
+        context += `Address: ${contact?.address || '123 Business Avenue, Suite 100, New York, NY 10001'}\n`;
+        
+        return context;
+    } catch (err) {
+        console.error('[Chat] Failed to fetch company context:', err);
+        return 'Company: Shnoor International LLC\nEmail: contact@shnoor.com\nPhone: +1 (555) 123-4567\n';
+    }
+};
+
 const normalize = (text) => (text || '').toLowerCase().trim();
 
 const isSimpleQuestion = (message) => {
     const msg = normalize(message);
-    return msg.startsWith('how many') || msg.startsWith('count') || msg.includes('how many ') || msg.includes('count ');
+    const keywords = ['how many', 'count', 'total', 'number of'];
+    return keywords.some(k => msg.includes(k));
 };
 
 const wantsExplanation = (message) => {
@@ -27,7 +52,8 @@ const wantsExplanation = (message) => {
 const isDatabaseQuestion = (message) => {
     const msg = normalize(message);
     const keywords = [
-        'employee', 'employees', 'team', 'team members', 'under me',
+        'employee', 'employees', 'team', 'team members', 'under me', 'active employees',
+        'company', 'companies', 'active companies',
         'leave', 'leaves', 'on leave', 'leave balance', 'leave today',
         'attendance', 'report', 'reports'
     ];
@@ -115,17 +141,22 @@ const handleDatabaseQuery = async ({ message, role, userId }) => {
     }
 
     // Team / employee count
-    if (msg.includes('how many') && (msg.includes('employee') || msg.includes('employees') || msg.includes('team'))) {
+    if ((msg.includes('how many') || msg.includes('count') || msg.includes('total') || msg.includes('number of')) && (msg.includes('employee') || msg.includes('team'))) {
+        let where = {};
         if (role === 'manager') {
             if (!employee) return { text: 'I could not find your employee record to locate your team.', simple: true };
-            const count = await Employee.count({ where: { manager_id: employee.employee_id } });
-            return { text: `You have **${count}** team members.`, simple: true };
+            where.manager_id = employee.employee_id;
         }
-        if (role === 'admin') {
-            const count = await Employee.count();
-            return { text: `There are **${count}** employees in total.`, simple: true };
+        
+        if (msg.includes('active')) {
+            where.status = 'Active';
         }
-        return { text: 'You do not have team access for this request.', simple: true };
+
+        const count = await Employee.count({ where });
+        const scope = (role === 'manager') ? 'team members' : 'employees in total';
+        const type = (msg.includes('active')) ? 'active ' : '';
+        
+        return { text: `You have **${count}** ${type}${scope}.`, simple: true };
     }
 
     // Team list
@@ -142,6 +173,21 @@ const handleDatabaseQuery = async ({ message, role, userId }) => {
             return { text: buildList('All employees:', items), simple: false };
         }
         return { text: 'You do not have team access for this request.', simple: false };
+    }
+
+    // Company count (Admin only)
+    if ((msg.includes('how many') || msg.includes('count') || msg.includes('total') || msg.includes('number of')) && (msg.includes('company') || msg.includes('companies'))) {
+        console.log('[Chat] Company count query matched:', msg, 'Role:', role);
+        if (role === 'admin') {
+            let where = {};
+            if (msg.includes('active')) {
+                where.status = 'Active';
+            }
+            const count = await Company.count({ where });
+            const type = (msg.includes('active')) ? 'active ' : '';
+            return { text: `There are **${count}** ${type}companies on the platform.`, simple: true };
+        }
+        return { text: 'You do not have access to company data.', simple: true };
     }
 
     // Who is on leave today
@@ -222,29 +268,33 @@ exports.handleChat = async (req, res) => {
         let responseText = '';
         const dataQuery = isDatabaseQuestion(message);
         const wantsExplain = wantsExplanation(message);
+        const companyContext = await getCompanyContext();
+        const baseSystemPrompt = `${companyContext}\n${SYSTEM_PROMPTS[role]} ${FORMAT_INSTRUCTIONS}`;
 
         if (dataQuery) {
+            console.log('[Chat] Database question detected:', message, 'Role:', role);
             const dbResult = await handleDatabaseQuery({ message, role, userId });
             if (dbResult.text) {
                 if (wantsExplain) {
-                    const systemPrompt = `${SYSTEM_PROMPTS[role]} ${FORMAT_INSTRUCTIONS}`;
+                    const systemPrompt = baseSystemPrompt;
                     const userMessage = `User asked: "${message}".\nHere are the exact data results:\n${dbResult.text}\nProvide a concise explanation only (no restating the list).`;
                     const explanation = await callGroqChat({ systemPrompt, userMessage });
                     responseText = `${dbResult.text}\n\n${explanation}`;
                 } else {
                     responseText = dbResult.text;
                     if (!dbResult.simple && isSimpleQuestion(message)) {
-                        // keep one line if caller asked for a simple count
                         responseText = dbResult.text.split('\n')[0];
                     }
                 }
             } else {
-                responseText = 'I could not find matching data for that request.';
+                // STRICT DATA MODE: If it's a data query but we couldn't match the specific logic,
+                // don't let it fall through to LLM which might hallucinate.
+                responseText = "I found your question related to system data, but I couldn't calculate that specific metric. Please try asking 'total companies' or 'list employees'.";
             }
         }
 
         if (!responseText) {
-            const systemPrompt = `${SYSTEM_PROMPTS[role]} ${FORMAT_INSTRUCTIONS}`;
+            const systemPrompt = baseSystemPrompt;
             responseText = await callGroqChat({ systemPrompt, userMessage: message });
             if (isSimpleQuestion(message) && !wantsExplain) {
                 responseText = responseText.split('\n')[0];
@@ -256,14 +306,35 @@ exports.handleChat = async (req, res) => {
             role,
             message,
             response: responseText,
-            timestamp: new Date()
+            timestamp: new Date(),
+            fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
+            fileType: req.file ? req.file.mimetype : null
         });
+
+        // Add Notification for Admin if user is not admin
+        if (role !== 'admin') {
+            try {
+                const admins = await SuperAdmin.findAll({ where: { role: { [Op.in]: ['Admin', 'Super Admin'] } } });
+                for (const admin of admins) {
+                    await Notification.create({
+                        userId: admin.email,
+                        role: 'admin',
+                        message: `New message from ${userId} (${role})`,
+                        type: 'chat_new',
+                        timestamp: new Date()
+                    });
+                }
+            } catch (notifyErr) {
+                console.error('[Chat] Failed to create admin notification:', notifyErr);
+            }
+        }
 
         res.status(200).json({
             success: true,
             response: responseText,
             id: record.id,
-            timestamp: record.timestamp
+            timestamp: record.timestamp,
+            fileUrl: record.fileUrl
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -329,6 +400,20 @@ exports.updateChatResponse = async (req, res) => {
         if (!response) return res.status(400).json({ success: false, error: 'response is required' });
 
         await chat.update({ response });
+
+        // Add Notification for User
+        try {
+            await Notification.create({
+                userId: chat.userId,
+                role: chat.role === 'public' ? 'employee' : chat.role, // Simple mapping for public if needed
+                message: `An admin has updated the response to your message: "${chat.message.substring(0, 30)}..."`,
+                type: 'chat_edit',
+                timestamp: new Date()
+            });
+        } catch (notifyErr) {
+            console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
         res.status(200).json({ success: true, data: chat });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

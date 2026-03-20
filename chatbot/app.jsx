@@ -82,6 +82,7 @@ const ChatbotApp = () => {
   };
 
   const fetchHistory = async () => {
+    if (role === 'admin') return; // Don't show history for admin chatbot
     const userId = getUserId();
     const token = sessionStorage.getItem('shnoor_token');
     const headers = {};
@@ -97,7 +98,7 @@ const ChatbotApp = () => {
       }
       const built = [];
       data.data.forEach((item) => {
-        built.push({ role: 'user', text: item.message });
+        built.push({ role: 'user', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType });
         built.push({ role: 'bot', text: item.response });
       });
       setMessages(built);
@@ -115,26 +116,42 @@ const ChatbotApp = () => {
     return () => clearInterval(t);
   }, [open, role]);
 
-  const sendMessage = async (text) => {
-    const userMessage = { role: 'user', text };
+  const sendMessage = async (text, file = null) => {
+    const userMessage = { 
+      role: 'user', 
+      text, 
+      fileUrl: file ? URL.createObjectURL(file) : null,
+      fileType: file ? file.type : null
+    };
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
 
     try {
       const token = sessionStorage.getItem('shnoor_token');
-      const headers = { 'Content-Type': 'application/json' };
+      const formData = new FormData();
+      formData.append('message', text);
+      formData.append('role', role);
+      formData.append('userId', getUserId());
+      if (file) formData.append('file', file);
+
+      const headers = {};
       if (role !== 'public' && token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ message: text, role, userId: getUserId() })
+        body: formData
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Chat failed');
 
-      setMessages(prev => [...prev, { role: 'bot', text: data.response }]);
+      setMessages(prev => [...prev, { 
+        role: 'bot', 
+        text: data.response,
+        fileUrl: data.fileUrl,
+        fileType: data.fileType
+      }]);
       fetchHistory();
     } catch (e) {
       setMessages(prev => [...prev, { role: 'bot', text: `Error: ${e.message}` }]);
@@ -151,7 +168,7 @@ const ChatbotApp = () => {
   const token = sessionStorage.getItem('shnoor_token');
   const handleClear = () => seedGreeting();
   const historyPanel = role === 'admin'
-    ? <AdminChatPanel token={token} onUpdated={fetchHistory} />
+    ? null
     : <UserHistoryPanel items={historyItems} onRefresh={fetchHistory} />;
 
   return (

@@ -7,6 +7,7 @@ const { HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pr
 const Subscription = require('./Subscription');
 const Transaction = require('./Transaction');
 const ChatMessage = require('./ChatMessage');
+const Notification = require('./Notification');
 
 // Import Manager Panel Models
 const Department = require('./DepartmentModel');
@@ -56,5 +57,5 @@ Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
     Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday,
-    ChatMessage
+    ChatMessage, Notification
 };
