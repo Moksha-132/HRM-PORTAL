@@ -1,11 +1,13 @@
+require('dotenv').config();
 const express = require('express');
-const dotenv = require('dotenv');
+//const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+
 const { connectDB, sequelize } = require('./config/db');
 
 // Load env vars
-dotenv.config();
+//dotenv.config();
 
 // Connect to database
 connectDB();

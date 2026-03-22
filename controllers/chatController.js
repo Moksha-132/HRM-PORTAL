@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { ChatMessage, Employee, Leave, SuperAdmin, Company, HeaderSetting, AboutSetting, ContactSetting, Notification } = require('../models');
 const { callGroqChat } = require('../services/groqClient');
+const { sequelize } = require('../config/db');
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
@@ -304,12 +305,14 @@ const extractTextFromFile = async (file) => {
 exports.handleChat = async (req, res) => {
     try {
         const { message, role, userId } = req.body;
+        const normalizedRole = normalize(role);
+        const normalizedUserId = (userId || '').toString().trim().toLowerCase();
 
-        if (!message || !role || !userId) {
+        if (!message || !normalizedRole || !normalizedUserId) {
             return res.status(400).json({ success: false, error: 'message, role, and userId are required' });
         }
 
-        if (!SYSTEM_PROMPTS[role]) {
+        if (!SYSTEM_PROMPTS[normalizedRole]) {
             return res.status(400).json({ success: false, error: 'Invalid role' });
         }
 
@@ -317,7 +320,7 @@ exports.handleChat = async (req, res) => {
         let status = 'Open';
         
         const companyContext = await getCompanyContext();
-        const baseSystemPrompt = `${companyContext}\n${SYSTEM_PROMPTS[role]} ${FORMAT_INSTRUCTIONS}`;
+        const baseSystemPrompt = `${companyContext}\n${SYSTEM_PROMPTS[normalizedRole]} ${FORMAT_INSTRUCTIONS}`;
 
         const adminRedirect = isAdminContactRequest(message);
         if (adminRedirect) {
@@ -330,7 +333,7 @@ exports.handleChat = async (req, res) => {
 
         if (dataQuery) {
             console.log('[Chat] Database question detected:', message, 'Role:', role);
-            const dbResult = await handleDatabaseQuery({ message, role, userId });
+            const dbResult = await handleDatabaseQuery({ message, role: normalizedRole, userId: normalizedUserId });
             if (dbResult.text) {
                 if (wantsExplain) {
                     const systemPrompt = baseSystemPrompt;
@@ -368,8 +371,8 @@ exports.handleChat = async (req, res) => {
         }
 
         const record = await ChatMessage.create({
-            userId,
-            role,
+            userId: normalizedUserId,
+            role: normalizedRole,
             message,
             response: responseText,
             status,
@@ -379,14 +382,14 @@ exports.handleChat = async (req, res) => {
         });
 
         // Add Notification for Admin if user is not admin
-        if (role !== 'admin') {
+        if (normalizedRole !== 'admin') {
             try {
                 const admins = await SuperAdmin.findAll({ where: { role: { [Op.in]: ['Admin', 'Super Admin'] } } });
                 for (const admin of admins) {
                     await Notification.create({
                         userId: admin.email,
                         role: 'admin',
-                        message: `New message from ${userId} (${role})`,
+                        message: `New message from ${normalizedUserId} (${normalizedRole})`,
                         type: 'chat_new',
                         timestamp: new Date()
                     });
@@ -412,7 +415,8 @@ exports.getUserHistory = async (req, res) => {
     try {
         const { userId } = req.params;
         const role = (req.query.role || '').toLowerCase();
-        if (!userId || !role) return res.status(400).json({ success: false, error: 'userId and role are required' });
+        const requestedUserId = (userId || '').toString().trim().toLowerCase();
+        if (!requestedUserId || !role) return res.status(400).json({ success: false, error: 'userId and role are required' });
 
         if (role !== 'public') {
             const authHeader = req.headers.authorization || '';
@@ -426,21 +430,34 @@ exports.getUserHistory = async (req, res) => {
             } catch (e) {
                 return res.status(401).json({ success: false, error: 'Not authorized' });
             }
-            let userEmail = null;
-            if (decoded.role === 'Employee') {
-                const emp = await Employee.findByPk(decoded.id);
-                userEmail = emp ? emp.email : null;
-            } else {
-                const admin = await SuperAdmin.findByPk(decoded.id);
-                userEmail = admin ? admin.email : null;
+            let userEmail = decoded.email ? String(decoded.email).toLowerCase() : null;
+            if (!userEmail) {
+                if (decoded.role === 'Employee') {
+                    const emp = await Employee.findByPk(decoded.id);
+                    if (emp && emp.email) userEmail = emp.email.toLowerCase();
+                    if (!userEmail) {
+                        const maybeAdmin = await SuperAdmin.findByPk(decoded.id);
+                        if (maybeAdmin && maybeAdmin.email) userEmail = maybeAdmin.email.toLowerCase();
+                    }
+                } else {
+                    const admin = await SuperAdmin.findByPk(decoded.id);
+                    if (admin && admin.email) userEmail = admin.email.toLowerCase();
+                    if (!userEmail) {
+                        const maybeEmp = await Employee.findByPk(decoded.id);
+                        if (maybeEmp && maybeEmp.email) userEmail = maybeEmp.email.toLowerCase();
+                    }
+                }
             }
-            if (!userEmail || userEmail.toLowerCase() !== userId.toLowerCase()) {
+            if (!userEmail || userEmail !== requestedUserId) {
                 return res.status(403).json({ success: false, error: 'Forbidden' });
             }
         }
 
         const chats = await ChatMessage.findAll({
-            where: { userId, role },
+            where: {
+                role,
+                [Op.and]: [sequelize.where(sequelize.fn('lower', sequelize.col('userId')), requestedUserId)]
+            },
             order: [['timestamp', 'ASC']]
         });
         res.status(200).json({ success: true, data: chats });

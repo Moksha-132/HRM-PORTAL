@@ -383,6 +383,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifCount = document.getElementById('notification-count');
     const notifList = document.getElementById('notification-list');
     const markAllReadBtn = document.getElementById('mark-all-read');
+    const announcedNotificationIds = new Set();
+
+    function ensurePopupHost() {
+        let host = document.getElementById('popup-notification-host');
+        if (host) return host;
+        host = document.createElement('div');
+        host.id = 'popup-notification-host';
+        host.style.position = 'fixed';
+        host.style.top = '20px';
+        host.style.right = '20px';
+        host.style.zIndex = '9999';
+        host.style.display = 'flex';
+        host.style.flexDirection = 'column';
+        host.style.gap = '10px';
+        document.body.appendChild(host);
+        return host;
+    }
+
+    function playNotificationSound() {
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            const ctx = new Ctx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.36);
+            osc.onended = () => ctx.close();
+        } catch (e) {
+            // Ignore sound playback failures (browser autoplay/audio restrictions)
+        }
+    }
+
+    function showPopupNotification(notification) {
+        const host = ensurePopupHost();
+        const popup = document.createElement('div');
+        popup.style.width = '320px';
+        popup.style.maxWidth = '86vw';
+        popup.style.background = '#ffffff';
+        popup.style.border = '1px solid var(--border)';
+        popup.style.borderLeft = '4px solid var(--primary)';
+        popup.style.borderRadius = '10px';
+        popup.style.boxShadow = '0 10px 24px rgba(0,0,0,0.12)';
+        popup.style.padding = '12px 14px';
+        popup.style.color = 'var(--text-dark)';
+        popup.innerHTML = `
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                <div>
+                    <div style="font-size:12px; color:var(--primary); font-weight:700; margin-bottom:4px;">New Notification</div>
+                    <div style="font-size:13px; line-height:1.4; font-weight:600;">${notification.message}</div>
+                    <div style="font-size:11px; color:var(--text-light); margin-top:6px;">${new Date(notification.timestamp).toLocaleString()}</div>
+                </div>
+                <button type="button" aria-label="Close" style="border:none; background:transparent; color:var(--text-light); font-size:16px; cursor:pointer;">&times;</button>
+            </div>
+        `;
+        const closeBtn = popup.querySelector('button');
+        closeBtn?.addEventListener('click', () => popup.remove());
+        host.appendChild(popup);
+        playNotificationSound();
+        setTimeout(() => {
+            if (popup.parentNode) popup.remove();
+        }, 7000);
+    }
+
+    function announceUnreadNotifications(unread) {
+        unread.forEach((n) => {
+            if (announcedNotificationIds.has(n.id)) return;
+            announcedNotificationIds.add(n.id);
+            showPopupNotification(n);
+        });
+    }
 
     notifTrigger?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -402,6 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok && data.success) {
                 const unread = data.data.filter(n => !n.isRead);
+                announceUnreadNotifications(unread);
                 if (unread.length > 0) {
                     notifCount.textContent = unread.length;
                     notifCount.style.display = 'block';

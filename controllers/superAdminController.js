@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const sendTokenResponse = (user, statusCode, res) => {
     // Include role in payload to help middleware distinguish between tables if necessary
-    const token = jwt.sign({ id: user.id || user.employee_id, role: user.role }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id || user.employee_id, role: user.role, email: user.email }, process.env.JWT_SECRET, {
         expiresIn: '30d'
     });
 
