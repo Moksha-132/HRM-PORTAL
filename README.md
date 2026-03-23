@@ -35,7 +35,7 @@ The application provides:
 
 - Backend: Node.js, Express.js, Sequelize
 - Database: PostgreSQL
-- Frontend: HTML, CSS, JavaScript
+- Frontend: ReactJS, HTML, CSS, JavaScript
 - Frontend module: React + Vite 
 - Authentication: JWT
 - AI integration: Groq API
