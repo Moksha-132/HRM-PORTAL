@@ -503,19 +503,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // Notification System Integration
-    const notificationTrigger = document.getElementById('notification-trigger');
+    const notificationTrigger  = document.getElementById('notification-trigger');
     const notificationDropdown = document.getElementById('notification-dropdown');
-    const notificationList = document.getElementById('notification-list');
-    const notificationCount = document.getElementById('notification-count');
-    const markAllRead = document.getElementById('mark-all-read');
+    const notificationList     = document.getElementById('notification-list');
+    const notificationCount    = document.getElementById('notification-count');
+    // We'll use delegation for the click to be more robust
+    const markAllReadBtn       = document.getElementById('mark-all-read');
 
+    // Toggle dropdown
     notificationTrigger?.addEventListener('click', (e) => {
+        if (notificationDropdown.contains(e.target)) return; 
         e.stopPropagation();
         notificationDropdown.classList.toggle('hidden');
     });
 
-    document.addEventListener('click', () => notificationDropdown?.classList.add('hidden'));
-    notificationDropdown?.addEventListener('click', (e) => e.stopPropagation());
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (notificationTrigger && !notificationTrigger.contains(e.target)) {
+            notificationDropdown?.classList.add('hidden');
+        }
+    });
 
     window.updateNotifications = async function() {
         try {
@@ -534,14 +541,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 if (notificationList) {
                     if (unread.length === 0) {
-                        notificationList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:10px;">No new notifications</p>';
+                        notificationList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:15px; font-size:0.9rem;">No new messages</p>';
                     } else {
-                        notificationList.innerHTML = unread.slice(0, 10).map(n => `
-                            <div style="padding:10px; border-bottom:1px solid var(--border); font-size:0.85rem; background:#f8f9ff; font-weight:500;">
-                                <div style="color:var(--text); margin-bottom:2px;">${n.message}</div>
-                                <div style="color:var(--text-light); font-size:0.75rem;">${new Date(n.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                            </div>
-                        `).join('');
+                        notificationList.innerHTML = unread.slice(0, 15).map(n => {
+                            const date = new Date(n.timestamp);
+                            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                            
+                            return `
+                                <div class="notification-item" style="padding:12px; border-bottom:1px solid var(--border); font-size:0.85rem; background:#fff; cursor:default; transition: background 0.2s;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                        <span style="color:var(--primary); font-weight:700; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">${n.type?.replace('_', ' ') || 'Notification'}</span>
+                                        <span style="color:var(--text-light); font-size:0.7rem;">${dateStr}, ${timeStr}</span>
+                                    </div>
+                                    <div style="color:var(--text); line-height:1.4; font-weight:500;">${n.message}</div>
+                                </div>
+                            `;
+                        }).join('');
                     }
                 }
             }
@@ -554,24 +570,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof window.fetchChatSessions === 'function') window.fetchChatSessions();
     }, 10000);
 
-    markAllRead?.addEventListener('click', async () => {
+    // Handle "Mark all as read" button click (resilient version)
+    notificationDropdown?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('#mark-all-read');
+        if (!btn) return;
+        
+        e.preventDefault();
+        e.stopPropagation(); // prevent document hide
+        
+        // 1. INSTANT UI FEEDBACK
+        console.log('Marking all as read (Instant UI)...');
+        if (notificationCount) {
+            notificationCount.textContent = '0';
+            notificationCount.style.display = 'none';
+        }
+        if (notificationList) {
+            notificationList.innerHTML = '<p style="text-align:center; color:var(--text-primary); padding:15px; font-size:0.9rem; font-weight:600;">Clearing messages...</p>';
+        }
+
         try {
             const res = await fetch('/api/notifications/read-all?role=admin', {
                 method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({}) 
             });
+            
             if (res.ok) {
-                // Immediate UI feedback
-                if (notificationCount) {
-                    notificationCount.textContent = '0';
-                    notificationCount.style.display = 'none';
-                }
+                const data = await res.json();
+                console.log('Mark read success:', data);
+                
+                // Final UI state
                 if (notificationList) {
-                    notificationList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:10px;">No new notifications</p>';
+                    notificationList.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:15px; font-size:0.9rem;">No new messages</p>';
                 }
-                window.updateNotifications();
+                
+                // Re-sync with server just to be sure
+                setTimeout(async () => {
+                    if (typeof window.updateNotifications === 'function') {
+                        await window.updateNotifications();
+                    }
+                }, 500);
+            } else {
+                console.error('API Error during mark all read');
+                // Rollback if needed, but usually better to let the next interval fix it
             }
-        } catch (e) { console.error(e); }
+        } catch (err) {
+            console.error('Network Error during mark all read:', err);
+        }
     });
 
     /* ── Chat Support Logic (HISTORY INBOX) ── */
@@ -666,8 +714,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function applyRoleFilter(role) {
         activeFilterRole = role;
-        // Global exclusion: Admins don't need to oversee other Admin's private helpdesk chats
-        let filtered = allChats.filter(c => (c.role || 'public').toLowerCase() !== 'admin');
+        // Show all chats except those specifically meant for AI testing maybe
+        let filtered = allChats; 
         
         if (role !== 'all') {
             filtered = filtered.filter(c => (c.role || 'public').toLowerCase() === role);
@@ -756,10 +804,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (res.ok) {
+                const data = await res.json();
+                if (data.emailSent === false) {
+                    alert('✅ Message sent, but ❌ Email Notification failed: ' + (data.error || 'Check SMTP settings'));
+                } else {
+                    console.log('Admin reply saved and email sent.');
+                }
+                
                 adminReplyInput.value = '';
                 if (adminReplyFile) adminReplyFile.value = '';
                 if (adminFileName) adminFileName.style.display = 'none';
                 window.fetchChatSessions(); // Re-fetch chats to display the new message and update left side
+                if (activeUserId) window.selectChatHistory(activeUserId);
+            } else {
+                const data = await res.json();
+                alert('Error: ' + (data.error || 'Failed to send message'));
             }
         } catch (e) { console.error('Error sending admin reply:', e); }
     }
@@ -907,11 +966,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                // Update in-memory + re-render
-                const chat = allChats.find(c => c.id == chatId);
-                if (chat) chat.response = newResponse;
+                // Success - Close modal and refresh
                 document.getElementById('edit-response-modal').style.display = 'none';
-                // Trigger full refresh to update list and thread
+                
+                if (data.emailSent === false) {
+                    alert('✅ Response saved, but ❌ Email Notification failed: ' + (data.error || 'Check SMTP settings'));
+                } else {
+                    alert('✅ Response saved and Email Notification sent!');
+                }
+
                 window.fetchChatSessions();
                 if (activeUserId) window.selectChatHistory(activeUserId);
             } else {

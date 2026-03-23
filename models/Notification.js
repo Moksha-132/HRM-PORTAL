@@ -9,7 +9,7 @@ const Notification = sequelize.define('Notification', {
     },
     userId: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     role: {
         type: DataTypes.ENUM('admin', 'employee', 'manager'),
@@ -21,7 +21,7 @@ const Notification = sequelize.define('Notification', {
     },
     type: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     isRead: {
         type: DataTypes.BOOLEAN,
@@ -29,7 +29,7 @@ const Notification = sequelize.define('Notification', {
     },
     timestamp: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
         defaultValue: DataTypes.NOW
     }
 }, {

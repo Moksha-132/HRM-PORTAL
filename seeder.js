@@ -3,8 +3,9 @@ const dotenv = require('dotenv');
 const SuperAdmin = require('./models/SuperAdmin');
 const Company = require('./models/Company');
 const Employee = require('./models/EmployeeModel');
-const { HeaderSetting, AboutSetting, ContactSetting, Feature, Pricing } = require('./models/Settings');
+const { HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing } = require('./models/Settings');
 const { sequelize } = require('./config/db');
+const { Department } = require('./models');
 
 // Load env vars
 dotenv.config();
@@ -16,32 +17,40 @@ const importData = async () => {
         console.log('Connected to Database for seeding...');
 
         // Sync schemas
-        await sequelize.sync({ force: true }); // Warning: force: true DROPS ALL TABLES first!
+        console.log('Syncing database (force: true)...');
+        await sequelize.sync({ force: true }); 
+
+        // Create Default Department
+        const hrDep = await Department.create({
+            department_name: 'Human Resources'
+        });
+        console.log('Created Human Resources department.');
 
         // Seed data
-        await SuperAdmin.destroy({ where: {} });
+        console.log('Seeding administrative users...');
         await SuperAdmin.create({
             name: 'System Admin',
-            email: 'admin@shnoor.com',
-            password: 'Admin@1234', // Hardcoded password from main.js frontend logic
+            email: 'hrm.admin123@gmail.com',
+            password: 'password123', 
             role: 'Super Admin'
         });
 
         await SuperAdmin.create({
             name: 'Shnoor Manager',
-            email: 'manager@shnoor.com',
-            password: 'Manager@1234',
+            email: 'rshnoor.manager@gmail.com',
+            password: 'password123',
             role: 'Manager'
         });
 
-        await Employee.destroy({ where: {} });
+        console.log('Seeding employees...');
         await Employee.create({
             employee_name: 'Shnoor Employee',
-            email: 'emp@shnoor.com',
-            password: 'Emp@1234',
+            email: 'hrm.employee123@gmail.com',
+            password: 'password123',
             role: 'Employee',
-            department: 'HR',
-            designation: 'Employee',
+            department: 'Human Resources',
+            department_id: hrDep.department_id,
+            designation: 'Software Engineer',
             joining_date: new Date()
         });
 

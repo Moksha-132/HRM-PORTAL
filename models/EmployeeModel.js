@@ -42,6 +42,14 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.DATEONLY,
         allowNull: true
     },
+    department_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'departments',
+            key: 'department_id'
+        }
+    },
     manager_id: {
         type: DataTypes.INTEGER, // References Employee
         allowNull: true

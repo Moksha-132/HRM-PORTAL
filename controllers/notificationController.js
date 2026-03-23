@@ -41,16 +41,16 @@ exports.markAllAsRead = async (req, res) => {
         const userId = (req.body.userId || req.user.email || '').toLowerCase();
         const role = req.body.role || req.query.role;
 
-        if (!role) {
-            return res.status(400).json({ success: false, error: 'role is required' });
-        }
+        console.log('MarkAllAsRead hit:', { userId, role });
 
-        await Notification.update(
+        const result = await Notification.update(
             { isRead: true },
             { where: { userId, role, isRead: false } }
         );
 
-        res.status(200).json({ success: true, message: 'All notifications marked as read' });
+        console.log('Update result:', result);
+
+        res.status(200).json({ success: true, message: 'All notifications marked as read', count: result[0] });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
