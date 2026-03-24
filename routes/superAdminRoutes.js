@@ -1,5 +1,5 @@
 const express = require('express');
-const { login, register, getUsers, deleteUser, getMe, updateDetails } = require('../controllers/superAdminController');
+const { login, register, getUsers, deleteUser, getMe, updateDetails, updatePassword } = require('../controllers/superAdminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();

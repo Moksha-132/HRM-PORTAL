@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Date: ${todayDate}<br><br>
             </div>
             
-            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; font-size: 14px; line-height: 1.6;">
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; font-size: 14px; line-height: 1.6; color: #000;">
                 ${item.content}
             </div>
             
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Date: ${todayDate}<br><br>
             </div>
             
-            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify;">${cleanedContent}</div>
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; color: #000;">${cleanedContent}</div>
             
             <div style="margin-top: 60px;">
                 <strong>Thanks & Regards</strong><br>
