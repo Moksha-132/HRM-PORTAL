@@ -484,8 +484,17 @@ exports.sendLetter = async (req, res) => {
 
         let targetEmployeeIds = [];
         if (employee_id === 'all') {
-            const allEmps = await Employee.findAll({ where: { role: 'Employee', status: 'Active' } });
-            targetEmployeeIds = allEmps.map(e => e.employee_id);
+            const allEmps = await Employee.findAll({ where: { status: 'Active' } });
+            targetEmployeeIds = allEmps.filter(e => {
+                const role = (e.role || '').toLowerCase();
+                const desig = (e.designation || '').toLowerCase();
+                const name = (e.employee_name || '').toLowerCase();
+                return !role.includes('manager') && 
+                       !role.includes('admin') && 
+                       !desig.includes('manager') && 
+                       !desig.includes('admin') && 
+                       name !== 'shnoor manager';
+            }).map(e => e.employee_id);
         } else {
             targetEmployeeIds = [employee_id];
         }

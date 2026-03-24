@@ -333,6 +333,17 @@ exports.updateLetter = async (req, res) => {
         const updatedLetter = await Letter.findByPk(letter.letter_id, {
             include: [{ model: Employee, as: 'Sender' }]
         });
+
+        // NOTIFY MANAGER (Sender)
+        if (updatedLetter && updatedLetter.Sender && updatedLetter.Sender.email) {
+            await Notification.create({
+                userId: updatedLetter.Sender.email.toLowerCase(),
+                role: 'manager',
+                message: `Employee ${req.user.employee_name} has edited the letter: "${updatedLetter.title}"`,
+                type: 'Letter'
+            });
+        }
+
         res.status(200).json({ success: true, data: updatedLetter });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
