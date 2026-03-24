@@ -21,17 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const timestamp = new Date().getTime();
         const separator = endpoint.includes('?') ? '&' : '?';
         const url = `/api/v1/employee/${endpoint}${separator}nocache=${timestamp}`;
-        
+
         const options = {
             method,
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Accept': 'application/json'
             }
         };
-        if(body) options.body = JSON.stringify(body);
+        if (body) options.body = JSON.stringify(body);
 
         const res = await fetch(url, options);
         if (!res.ok) {
@@ -42,17 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadData(viewId) {
-        if(viewId === 'view-dashboard') fetchDashboard();
-        if(viewId === 'view-attendance') fetchAttendance();
-        if(viewId === 'view-leaves') fetchLeaves();
-        if(viewId === 'view-assets') fetchAssets();
-        if(viewId === 'view-calendar') fetchHolidays();
-        if(viewId === 'view-appreciations') fetchAppreciations();
-        if(viewId === 'view-offboarding') fetchOffboardings();
-        if(viewId === 'view-expenses') fetchExpenses();
-        if(viewId === 'view-payroll') fetchPayroll();
-        if(viewId === 'view-policies') fetchPolicies();
-        if(viewId === 'view-profile') fetchProfile();
+        if (viewId === 'view-dashboard') fetchDashboard();
+        if (viewId === 'view-attendance') fetchAttendance();
+        if (viewId === 'view-leaves') fetchLeaves();
+        if (viewId === 'view-assets') fetchAssets();
+        if (viewId === 'view-calendar') fetchHolidays();
+        if (viewId === 'view-appreciations') fetchAppreciations();
+        if (viewId === 'view-offboarding') fetchOffboardings();
+        if (viewId === 'view-expenses') fetchExpenses();
+        if (viewId === 'view-payroll') fetchPayroll();
+        if (viewId === 'view-policies') fetchPolicies();
+        if (viewId === 'view-profile') fetchProfile();
+        if (viewId === 'view-letters') fetchLetters();
     }
 
     // Navigation logic
@@ -67,22 +68,23 @@ document.addEventListener('DOMContentLoaded', () => {
         'nav-expenses': 'view-expenses',
         'nav-payroll': 'view-payroll',
         'nav-policies': 'view-policies',
+        'nav-letters': 'view-letters',
         'nav-profile': 'view-profile'
     };
 
     links.forEach(link => {
-        if(link.id === 'nav-logout') return;
+        if (link.id === 'nav-logout') return;
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const viewId = sections[link.id];
-            if(!viewId) return;
+            if (!viewId) return;
 
             links.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
             views.forEach(v => v.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
             pageTitle.textContent = link.textContent.trim();
-            
+
             loadData(viewId);
         });
     });
@@ -118,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('dash-app-list').innerHTML = d.recentActivities.appreciations.map(a => `
                 <tr><td><strong>${a.title}</strong><br/><small>${a.date}</small></td></tr>
             `).join('') || '<tr><td>No recent appreciations</td></tr>';
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
     }
 
     // --- ATTENDANCE ---
@@ -127,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await apiCall('attendance');
             const records = res.data;
             const today = new Date().toISOString().split('T')[0];
-            
+
             // Logic for multiple clock-in/out:
             // Find if there is an ACTIVE record (clock_out is null) regardless of date
             const activeRec = records.find(r => r.clock_out === null);
@@ -151,24 +153,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${new Date(r.clock_in).toLocaleTimeString()}</td>
                     <td>${r.clock_out ? new Date(r.clock_out).toLocaleTimeString() : '---'}</td>
                     <td>${r.work_duration || '0'}</td>
-                    <td><span class="badge ${r.status==='Present'?'bg-green':'bg-yellow'}">${r.status}</span></td>
+                    <td><span class="badge ${r.status === 'Present' ? 'bg-green' : 'bg-yellow'}">${r.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="5" style="text-align:center;">No history found</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     document.getElementById('btn-clock-in')?.addEventListener('click', async () => {
         try {
             await apiCall('attendance/clock-in', 'POST');
             fetchAttendance();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     document.getElementById('btn-clock-out')?.addEventListener('click', async () => {
         try {
             await apiCall('attendance/clock-out', 'POST');
             fetchAttendance();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     // --- LEAVES ---
@@ -179,10 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${l.start_date} to ${l.end_date}</td>
                     <td>${l.leave_type}</td>
-                    <td><span class="badge ${l.status==='Approved'?'bg-green':(l.status==='Rejected'?'bg-red':'bg-yellow')}">${l.status}</span></td>
+                    <td><span class="badge ${l.status === 'Approved' ? 'bg-green' : (l.status === 'Rejected' ? 'bg-red' : 'bg-yellow')}">${l.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="3" style="text-align:center;">No leave requests</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     document.getElementById('form-leave')?.addEventListener('submit', async (e) => {
@@ -197,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Leave request submitted');
             document.getElementById('form-leave').reset();
             fetchLeaves();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     // --- ASSETS ---
@@ -209,10 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${a.asset_name}</td>
                     <td>${a.asset_category}</td>
                     <td>${a.serial_number || 'N/A'}</td>
-                    <td><span class="badge ${a.status==='Available'?'bg-green':'bg-yellow'}">${a.status}</span></td>
+                    <td><span class="badge ${a.status === 'Available' ? 'bg-green' : 'bg-yellow'}">${a.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="4" style="text-align:center;">No assets assigned</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // --- HOLIDAYS ---
@@ -226,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${h.description || ''}</td>
                 </tr>
             `).join('') || '<tr><td colspan="3" style="text-align:center;">No upcoming holidays</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // --- APPRECIATIONS ---
@@ -240,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${a.date}</td>
                 </tr>
             `).join('') || '<tr><td colspan="3" style="text-align:center;">No appreciations yet</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // --- OFFBOARDING ---
@@ -250,10 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('off-list').innerHTML = res.data.map(o => `
                 <tr>
                     <td>${o.last_working_date}</td>
-                    <td><span class="badge ${o.status==='Completed'?'bg-green':'bg-yellow'}">${o.status}</span></td>
+                    <td><span class="badge ${o.status === 'Completed' ? 'bg-green' : 'bg-yellow'}">${o.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="2" style="text-align:center;">No requests</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     document.getElementById('form-off')?.addEventListener('submit', async (e) => {
@@ -266,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Resignation request submitted');
             document.getElementById('form-off').reset();
             fetchOffboardings();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     // --- EXPENSES ---
@@ -277,10 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td>${ex.title}</td>
                     <td>$${ex.amount}</td>
-                    <td><span class="badge ${ex.status==='Approved'?'bg-green':(ex.status==='Rejected'?'bg-red':'bg-yellow')}">${ex.status}</span></td>
+                    <td><span class="badge ${ex.status === 'Approved' ? 'bg-green' : (ex.status === 'Rejected' ? 'bg-red' : 'bg-yellow')}">${ex.status}</span></td>
                 </tr>
             `).join('') || '<tr><td colspan="3" style="text-align:center;">No claims</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     document.getElementById('form-exp')?.addEventListener('submit', async (e) => {
@@ -294,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Expense claim submitted');
             document.getElementById('form-exp').reset();
             fetchExpenses();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     // --- PAYROLL ---
@@ -309,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><button onclick="downloadPayslip(${s.payslip_id})" class="btn btn-outline" style="font-size:11px; padding:4px 8px;">Download</button></td>
                 </tr>
             `).join('') || '<tr><td colspan="4" style="text-align:center;">No payslips available</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     window.downloadPayslip = async (id) => {
@@ -317,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/v1/employee/payslips/${id}/download`, {
                 headers: { 'Authorization': `Bearer ${sessionStorage.getItem('shnoor_token')}` }
             });
-            if(!res.ok) throw new Error('Download failed');
+            if (!res.ok) throw new Error('Download failed');
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -326,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-        } catch(err) { alert(err.message); }
+        } catch (err) { alert(err.message); }
     };
 
     // --- POLICIES ---
@@ -340,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><a href="${p.file_url}" target="_blank" style="color:var(--primary);">View</a></td>
                 </tr>
             `).join('') || '<tr><td colspan="3" style="text-align:center;">No policies found</td></tr>';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     // --- PROFILE ---
@@ -351,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('prof-name').value = p.employee_name;
             document.getElementById('prof-email').value = p.email;
             document.getElementById('prof-phone').value = p.phone || '';
-        } catch(e) {}
+        } catch (e) { }
     }
 
     document.getElementById('form-profile')?.addEventListener('submit', async (e) => {
@@ -362,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone: document.getElementById('prof-phone').value
             });
             alert('Profile updated');
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
 
     document.getElementById('form-pass')?.addEventListener('submit', async (e) => {
@@ -374,8 +376,250 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             alert('Password changed successfully');
             document.getElementById('form-pass').reset();
-        } catch(e) { alert(e.message); }
+        } catch (e) { alert(e.message); }
     });
+
+    // --- LETTERS ---
+    async function fetchLetters() {
+        try {
+            const res = await apiCall('letters');
+            window.letterData = res.data; // cache for download
+            document.getElementById('letter-list').innerHTML = res.data.map(l => `
+                <tr>
+                    <td><strong>${l.title}</strong></td>
+                    <td>${l.Sender ? l.Sender.employee_name : 'N/A'}</td>
+                    <td><span class="badge ${l.status === 'Sent' ? 'bg-green' : 'bg-yellow'}">${l.status === 'Sent' ? 'Received' : l.status}</span></td>
+                    <td>${new Date(l.created_at).toLocaleString()}</td>
+                    <td>
+                        <button onclick="previewLetter(${l.letter_id})" class="action-btn" style="color:var(--text-light);" title="Preview Letter"><i class="fas fa-eye"></i></button>
+                        <button onclick="editLetter(${l.letter_id})" class="action-btn edit-btn" title="Edit Content"><i class="fas fa-edit"></i></button>
+                        <button onclick="downloadLetterText(${l.letter_id})" class="action-btn" style="color:var(--primary);" title="Download Document"><i class="fas fa-download"></i></button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="5" style="text-align:center;">No letters found</td></tr>';
+        } catch (e) { }
+    }
+
+    window.fetchLetters = fetchLetters;
+
+    window.openEditModal = (title, id, fields, onSave) => {
+        const modal = document.getElementById('edit-modal');
+        const form = document.getElementById('edit-form');
+        document.getElementById('modal-title').textContent = 'Edit ' + title;
+        form.innerHTML = fields.map(f => {
+            const inputId = `m-field-${f.key}`;
+            const label = `<label class="form-label">${f.label}</label>`;
+            if (f.type === 'textarea') {
+                return `<div>${label}<textarea id="${inputId}" class="input" rows="8">${f.value || ''}</textarea></div>`;
+            } else {
+                return `<div>${label}<input type="${f.type}" id="${inputId}" class="input" value="${f.value || ''}"></div>`;
+            }
+        }).join('');
+
+        const saveBtn = document.getElementById('modal-save-btn');
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        newSaveBtn.addEventListener('click', async () => {
+            const data = {};
+            fields.forEach(f => { data[f.key] = document.getElementById(`m-field-${f.key}`).value; });
+            await onSave(data);
+            document.getElementById('edit-modal').classList.add('hidden');
+        });
+        modal.classList.remove('hidden');
+    };
+
+    // --- Quill ---
+    if (window.Quill) {
+        window.editLetterQuill = new Quill('#edit-letter-content-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ font: [] }], [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }]] }
+        });
+    }
+
+    window.previewLetter = (id) => {
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+        
+        const todayDate = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('preview-letter-title').textContent = 'Letter Preview';
+        document.getElementById('preview-letter-body').innerHTML = `
+            <div style="text-align: left; margin-bottom: 30px;">
+                <img src="/logo.avif" alt="Logo" style="max-height: 80px;">
+            </div>
+            
+            <div style="text-align: center; font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; text-transform: uppercase;">
+                ${item.title}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                Date: ${todayDate}<br><br>
+            </div>
+            
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; font-size: 14px; line-height: 1.6;">
+                ${item.content}
+            </div>
+            
+            <div style="margin-top: 60px;">
+                <strong>Thanks & Regards</strong><br>
+                <strong>Hiring Team - SHNOOR International LLC</strong><br>
+                <span style="font-size: 10px; color: #666;">Mount Tabor Road, Odessa, Missouri, US | Ph: +91-9429694298</span><br>
+                <div style="text-align: left; margin-top: 15px;">
+                    <img src="/signature.png" alt="Signature" style="max-height: 80px;">
+                </div>
+            </div>
+        `;
+
+        document.getElementById('preview-letter-modal').classList.remove('hidden');
+    };
+
+    window.editLetter = async (id) => {
+        if (!window.letterData) await fetchLetters();
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+
+        document.getElementById('edit-letter-title').value = item.title;
+        if (window.editLetterQuill) window.editLetterQuill.root.innerHTML = item.content;
+
+        document.getElementById('edit-letter-modal').classList.remove('hidden');
+
+        document.getElementById('modal-letter-save-btn').onclick = async () => {
+            const newContent = window.editLetterQuill ? window.editLetterQuill.root.innerHTML : '';
+            if (!newContent || newContent === '<p><br></p>') return alert("Content cannot be empty");
+
+            try {
+                await apiCall('letters/' + id, 'PUT', { content: newContent });
+                document.getElementById('edit-letter-modal').classList.add('hidden');
+                fetchLetters();
+            } catch (e) { alert(e.message); }
+        };
+    };
+
+    window.downloadLetterText = async (id) => {
+        if (!window.letterData) await fetchLetters();
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+
+        const element = document.createElement('div');
+        element.style.padding = '40px';
+        element.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+        element.style.color = '#000';
+        element.style.lineHeight = '1.5';
+        element.style.fontSize = '12px';
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        const empName = item.Recipient ? item.Recipient.employee_name : 'Employee';
+
+        // Strip out "Dear [Name]" from the beginning of the content even if wrapped in HTML tags
+        const cleanedContent = item.content.replace(/^(<p>)?\s*Dear\s+.*?<\/p>[\r\n\s]*/i, '');
+
+        element.innerHTML = `
+            <div style="text-align: left; margin-bottom: 30px;">
+                <img id="pdf-logo" src="logo.avif" alt="SHNOOR Logo" style="max-height: 80px;">
+            </div>
+            
+            <div style="text-align: center; font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 30px;">
+                ${item.title}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                Date: ${todayDate}<br><br>
+            </div>
+            
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify;">${cleanedContent}</div>
+            
+            <div style="margin-top: 60px;">
+                <strong>Thanks & Regards</strong><br>
+                <strong>Hiring Team - SHNOOR International LLC</strong><br>
+                Mount Tabor Road, Odessa, Missouri, United States, Ph: +91-9429694298<br>
+                www.shnoor.com<br><br>
+                <div style="text-align: left; margin-top: 20px;">
+                    <img id="pdf-signature" src="signature.png" alt="Signature and Stamp" style="max-height: 150px;">
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin: [40, 20, 25, 20],
+            filename: item.title.replace(/\s+/g, '_') + '_' + id + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const generatePdf = () => {
+            if (window.html2pdf) {
+                const logoImg = element.querySelector('#pdf-logo');
+                let logoDataURL = null;
+                let aspect = 1;
+                
+                if (logoImg && logoImg.complete && logoImg.naturalWidth > 0 && String(logoImg.src).indexOf('base64') === -1) {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = logoImg.naturalWidth;
+                        canvas.height = logoImg.naturalHeight;
+                        aspect = canvas.height / canvas.width;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(logoImg, 0, 0);
+                        logoDataURL = canvas.toDataURL('image/png');
+                        logoImg.parentNode.style.display = 'none'; // hide in HTML
+                    } catch(e) { console.error('Error extracting logo:', e); }
+                } else if (logoImg && String(logoImg.src).indexOf('base64') !== -1) {
+                    logoDataURL = logoImg.src;
+                    aspect = logoImg.naturalHeight / logoImg.naturalWidth;
+                    logoImg.parentNode.style.display = 'none';
+                }
+
+                html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+                    const totalPages = pdf.internal.getNumberOfPages();
+                    for (let i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        if (logoDataURL) {
+                            let drawWidth = 50;
+                            let drawHeight = 50 * aspect;
+                            if (drawHeight > 22) {
+                                drawHeight = 22;
+                                drawWidth = 22 / aspect;
+                            }
+                            pdf.addImage(logoDataURL, 'PNG', 20, 10, drawWidth, drawHeight);
+                        } else {
+                            // Fallback text
+                            pdf.setFontSize(22);
+                            pdf.setTextColor(79, 110, 247);
+                            pdf.text("shnoor", 20, 15);
+                        }
+                    }
+                }).save();
+            } else {
+                alert('PDF generation library is loading. Please try again.');
+            }
+        };
+
+        // footer image
+        const images = Array.from(element.querySelectorAll('img'));
+        const imagePromises = images.map(img => {
+            return new Promise((resolve) => {
+                if (img.complete && img.naturalWidth > 0) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = () => {
+                        // Fallbacks if images fail to load
+                        if (img.id === 'pdf-logo') {
+                            img.outerHTML = '<div style="font-size: 28px; font-weight: bold; color: #4f6ef7; letter-spacing: 1px;">shnoor</div>';
+                        } else {
+                            img.style.display = 'none';
+                        }
+                        resolve();
+                    };
+                }
+            });
+        });
+
+        Promise.all(imagePromises).then(() => {
+            generatePdf();
+        });
+    };
 
     // --- Notification System Logic ---
     const notifTrigger = document.getElementById('notification-trigger');
@@ -476,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notifDropdown?.classList.add('hidden');
     });
 
-    window.fetchNotifications = async function() {
+    window.fetchNotifications = async function () {
         const email = sessionStorage.getItem('shnoor_admin_email') || 'emp@shnoor.com';
         try {
             const res = await fetch(`/api/notifications?userId=${encodeURIComponent(email)}&role=employee`, {

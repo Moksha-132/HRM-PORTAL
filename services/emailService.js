@@ -4,7 +4,7 @@ require('dotenv').config();
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+    secure: process.env.SMTP_SECURE === 'true', 
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -12,13 +12,13 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Send an email notification when an admin responds to or edits a query.
+ 
  * @param {Object} data - Email data
  * @param {string} data.to - Recipient email
- * @param {string} data.userName - Name of the user (Employee or Manager)
- * @param {string} data.queryDetails - The original query details
- * @param {string} data.responseMessage - The updated response message
- * @returns {Promise<Object>} - Success result or error message
+ * @param {string} data.userName - Name of the user 
+ * @param {string} data.queryDetails - Original msg
+ * @param {string} data.responseMessage - Updated msg
+ * @returns {Promise<Object>} - Success or error
  */
 const sendQueryResponseEmail = async ({ to, userName, queryDetails, responseMessage }) => {
     try {

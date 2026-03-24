@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter } = require('../models');
 const { Op } = require('sequelize');
 
 // Dashboard Statistics
@@ -296,5 +296,43 @@ exports.updatePassword = async (req, res) => {
         req.user.password = newPassword;
         await req.user.save();
         res.status(200).json({ success: true, message: 'Password updated successfully' });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+// --- LETTERS ---
+exports.getEmployeeLetters = async (req, res) => {
+    try {
+        const letters = await Letter.findAll({
+            where: { employee_id: req.user.employee_id },
+            include: [{ model: Employee, as: 'Sender' }],
+            order: [['created_at', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: letters });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.updateLetter = async (req, res) => {
+    try {
+        const letter = await Letter.findByPk(req.params.id);
+        if(!letter) return res.status(404).json({ success: false, error: "Not found" });
+        
+        // Ensure the letter belongs to the employee
+        if (letter.employee_id !== req.user.employee_id) {
+            return res.status(403).json({ success: false, error: "Not authorized to edit this letter" });
+        }
+        
+        // Update content and change status
+        const { content } = req.body;
+        if (!content) return res.status(400).json({ success: false, error: "Content is required" });
+        
+        await letter.update({
+            content,
+            status: 'Edited'
+        });
+        
+        const updatedLetter = await Letter.findByPk(letter.letter_id, {
+            include: [{ model: Employee, as: 'Sender' }]
+        });
+        res.status(200).json({ success: true, data: updatedLetter });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };

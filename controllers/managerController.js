@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification } = require('../models');
 const fs = require('fs');
 const path = require('path');
 
@@ -441,5 +441,117 @@ exports.deleteHoliday = async (req, res) => {
         if(!h) return res.status(404).json({ success: false, error: "Not found" });
         await h.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+// LETTERS
+exports.getManagerLetters = async (req, res) => {
+    try {
+        // Find letters associated with this manager
+        // We assume req.user is populated properly and has an employee_id if they are a manager
+        let managerId = req.user.employee_id;
+        if (!managerId) {
+            // fallback if req.user is just an email (SuperAdmin or special case)
+            const emp = await Employee.findOne({ where: { email: req.user.email } });
+            if (emp) managerId = emp.employee_id;
+        }
+
+        if (!managerId) return res.status(400).json({ success: false, error: "Manager profile not found" });
+
+        const letters = await Letter.findAll({
+            where: { manager_id: managerId },
+            include: [{ model: Employee, as: 'Recipient' }],
+            order: [['created_at', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: letters });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.sendLetter = async (req, res) => {
+    try {
+        const { employee_id, title, content } = req.body;
+        if (!employee_id || !title || !content) {
+            return res.status(400).json({ success: false, error: "Please provide employee, title, and content" });
+        }
+
+        let managerId = req.user.employee_id;
+        if (!managerId) {
+            const emp = await Employee.findOne({ where: { email: req.user.email } });
+            if (emp) managerId = emp.employee_id;
+        }
+
+        if (!managerId) return res.status(400).json({ success: false, error: "Manager profile required to send letter" });
+
+        let targetEmployeeIds = [];
+        if (employee_id === 'all') {
+            const allEmps = await Employee.findAll({ where: { role: 'Employee', status: 'Active' } });
+            targetEmployeeIds = allEmps.map(e => e.employee_id);
+        } else {
+            targetEmployeeIds = [employee_id];
+        }
+
+        if (targetEmployeeIds.length === 0) {
+             return res.status(400).json({ success: false, error: "No target employees found." });
+        }
+
+        const sentLetters = [];
+        for (const targetId of targetEmployeeIds) {
+            const letter = await Letter.create({
+                title,
+                content,
+                manager_id: managerId,
+                employee_id: targetId,
+                status: 'Sent'
+            });
+
+            const rLetter = await Letter.findByPk(letter.letter_id, {
+                include: [{ model: Employee, as: 'Recipient' }]
+            });
+            
+            if (rLetter && rLetter.Recipient && rLetter.Recipient.email) {
+                await Notification.create({
+                    userId: rLetter.Recipient.email.toLowerCase(),
+                    role: 'employee',
+                    message: `You have received a new letter: ${title}`,
+                    type: 'Letter'
+                });
+            }
+            sentLetters.push(rLetter);
+        }
+
+        res.status(201).json({ success: true, data: sentLetters[0], all_sent: sentLetters.length });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.updateLetter = async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        const letter = await Letter.findByPk(req.params.id, {
+            include: [{ model: Employee, as: 'Recipient' }]
+        });
+        if (!letter) return res.status(404).json({ success: false, error: "Letter not found" });
+        
+        letter.title = title || letter.title;
+        letter.content = content || letter.content;
+        await letter.save();
+
+        if (letter.Recipient && letter.Recipient.email) {
+            await Notification.create({
+                userId: letter.Recipient.email.toLowerCase(),
+                role: 'employee',
+                message: `Your letter "${letter.title}" has been updated by your manager.`,
+                type: 'Letter'
+            });
+        }
+        res.status(200).json({ success: true, data: letter });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.deleteLetter = async (req, res) => {
+    try {
+        const letter = await Letter.findByPk(req.params.id);
+        if (!letter) return res.status(404).json({ success: false, error: "Letter not found" });
+        await letter.destroy();
+        res.status(200).json({ success: true, message: "Letter deleted" });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };

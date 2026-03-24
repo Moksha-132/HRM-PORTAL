@@ -39,4 +39,9 @@ router.route('/profile')
 
 router.put('/profile/password', controller.updatePassword);
 
+router.route('/letters')
+    .get(controller.getEmployeeLetters);
+router.route('/letters/:id')
+    .put(controller.updateLetter);
+
 module.exports = router;

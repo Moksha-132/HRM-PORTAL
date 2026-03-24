@@ -7,9 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
   <link rel="stylesheet" href="admin.css" />
   <link rel="stylesheet" href="chatbot/chatbot.css" />
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
   <style>
     .grid { display: grid; gap: 24px; padding: 24px; }
     .grid-2 { grid-template-columns: 1fr 2fr; }
@@ -84,6 +86,9 @@
       </a>
       <a href="#" class="sidebar-link" id="nav-holidays">
         <span class="nav-icon"><i class="fas fa-calendar-star"></i></span> Holidays
+      </a>
+      <a href="#" class="sidebar-link" id="nav-letters">
+        <span class="nav-icon"><i class="fas fa-envelope-open-text"></i></span> Letters
       </a>
       <a href="#" class="sidebar-link" id="nav-profile">
         <span class="nav-icon"><i class="fas fa-user-cog"></i></span> My Profile
@@ -545,10 +550,44 @@
           </div>
         </div>
       </div>
+
+      <!-- VIEW: LETTERS -->
+      <div class="view hidden" id="view-letters">
+        <div class="page-header"><h1 class="page-h1">Letter Management</h1></div>
+        <div class="grid grid-2" style="padding:0;">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">Send New Letter</div></div>
+            <div class="panel-body">
+              <form id="form-letter">
+                <label class="form-label">Select Employee</label>
+                <select id="letter-emp" class="input" required>
+                  <option value="">Select Employee</option>
+                </select>
+                
+                <label class="form-label">Letter Title</label>
+                <input type="text" id="letter-title" class="input" placeholder="e.g. Promotion Letter" required>
+                
+                <label class="form-label">Content</label>
+                <div id="letter-content-editor" style="height: 200px; margin-bottom: 16px;"></div>
+                <button type="submit" class="btn btn-solid" style="width:100%;">Send Letter</button>
+              </form>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Title</th><th>Sent To</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="letter-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- EDIT MODAL -->
+  <!-- EDIT MODAL (Generic) -->
   <div id="edit-modal" class="modal hidden">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -559,6 +598,40 @@
       <div style="margin-top:20px; text-align:right;">
         <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
         <button class="btn btn-solid" id="modal-save-btn">Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT LETTER MODAL (Quill specific) -->
+  <div id="edit-letter-modal" class="modal hidden">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Edit Official Letter</h2>
+        <button onclick="document.getElementById('edit-letter-modal').classList.add('hidden')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="edit-letter-form">
+          <label class="form-label">Title</label>
+          <input type="text" id="edit-letter-title" class="input" required>
+          <label class="form-label">Content</label>
+          <div id="edit-letter-content-editor" style="height: 250px; margin-bottom: 20px;"></div>
+      </form>
+      <div style="margin-top:20px; text-align:right;">
+        <button class="btn btn-outline" onclick="document.getElementById('edit-letter-modal').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-solid" id="modal-letter-save-btn">Update Letter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW LETTER MODAL -->
+  <div id="preview-letter-modal" class="modal hidden">
+    <div class="modal-content" style="max-width: 850px; background: #f4f7fa; padding: 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding: 0 10px;">
+        <h2 id="preview-letter-title" style="font-size: 1.2rem; margin: 0;">Letter Preview</h2>
+        <button onclick="document.getElementById('preview-letter-modal').classList.add('hidden')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: #666;">&times;</button>
+      </div>
+      <div id="preview-letter-body" style="background: #fff; padding: 50px 60px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 600px; max-height: 70vh; overflow-y: auto; color: #1a1a1b; line-height: 1.6; font-family: 'Inter', sans-serif; font-size: 14px;"></div>
+      <div style="margin-top:20px; text-align:right; padding: 0 10px;">
+        <button class="btn btn-outline" onclick="document.getElementById('preview-letter-modal').classList.add('hidden')">Close</button>
       </div>
     </div>
   </div>

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navigation logic
     links.forEach(link => {
-        if(link.id === 'nav-logout') return;
+        if (link.id === 'nav-logout') return;
         link.addEventListener('click', (e) => {
             e.preventDefault();
             links.forEach(l => l.classList.remove('active'));
@@ -26,9 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const section = link.id.split('-')[1];
             const targetId = 'view-' + section;
             views.forEach(v => v.classList.add('hidden'));
-            
+
             const targetView = document.getElementById(targetId);
-            if(targetView) targetView.classList.remove('hidden');
+            if (targetView) targetView.classList.remove('hidden');
             pageTitle.textContent = link.textContent.trim();
 
             loadDataForView(targetId);
@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const timestamp = new Date().getTime();
         const separator = endpoint.includes('?') ? '&' : '?';
         const url = `/api/v1/manager/${endpoint}${separator}nocache=${timestamp}`;
-        
+
         const options = {
             method,
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${token}`,
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Pragma': 'no-cache',
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isFormData) {
             options.headers['Content-Type'] = 'application/json';
-            if(body) options.body = JSON.stringify(body);
+            if (body) options.body = JSON.stringify(body);
         } else {
             options.body = body;
         }
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(url, options);
         let result;
         const contentType = res.headers.get("content-type");
-        
+
         if (contentType && contentType.includes("application/json")) {
             result = await res.json();
         } else {
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(`Server returned non-JSON response (${res.status}). Please check server logs.`);
         }
 
-        if(!res.ok) {
+        if (!res.ok) {
             throw new Error(result.error || `Server error (${res.status})`);
         }
         return result;
@@ -85,15 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Generic Delete with IMMEDIATE UI removal and background refresh
     window.deleteRecord = async (endpoint, id, refreshFunctionName) => {
-        if(!confirm('Are you absolutely sure you want to delete this record permanently? This action cannot be undone.')) return;
-        
+        if (!confirm('Are you absolutely sure you want to delete this record permanently? This action cannot be undone.')) return;
+
         try {
             // 1. Send delete request
             const res = await apiCall(`${endpoint}/${id}`, 'DELETE');
-            
+
             // 2. Alert success
             alert(res.message || 'Deleted successfully');
-            
+
             // 3. Immediately trigger refresh of the specific view
             if (refreshFunctionName && typeof window[refreshFunctionName] === 'function') {
                 console.log(`Triggering refresh: ${refreshFunctionName}`);
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.warn(`Refresh function ${refreshFunctionName} not found on window`);
             }
-            
+
             // 4. Update dashboard stats
             if (window.fetchDashboard) window.fetchDashboard();
 
@@ -115,32 +115,44 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await apiCall('employees');
             const emps = res.data;
-            const selectIds = ['att-emp-id', 'ass-emp', 'pay-emp', 'app-emp', 'off-emp', 'exp-emp'];
+            const selectIds = ['att-emp-id', 'ass-emp', 'pay-emp', 'app-emp', 'off-emp', 'exp-emp', 'letter-emp'];
             selectIds.forEach(id => {
                 const select = document.getElementById(id);
                 if (!select) return;
                 const firstOpt = select.options[0] ? select.options[0].outerHTML : '<option value="">Select Employee</option>';
-                select.innerHTML = firstOpt + emps.map(e => `<option value="${e.employee_id}">${e.employee_name} (ID: ${e.employee_id})</option>`).join('');
+                
+                if (id === 'letter-emp') {
+                    const validEmps = emps.filter(e => 
+                        e.role && 
+                        !e.role.toLowerCase().includes('manager') && 
+                        !e.role.toLowerCase().includes('admin') &&
+                        e.employee_name.toLowerCase() !== 'shnoor manager'
+                    );
+                    select.innerHTML = firstOpt + '<option value="all">All Employees</option>' + validEmps.map(e => `<option value="${e.employee_id}">${e.employee_name}</option>`).join('');
+                } else {
+                    select.innerHTML = firstOpt + emps.map(e => `<option value="${e.employee_id}">${e.employee_name}</option>`).join('');
+                }
             });
             return emps;
-        } catch(e){ return []; }
+        } catch (e) { return []; }
     };
 
     // VIEW LOADER
     function loadDataForView(viewId) {
         window.refreshEmployeeSelects();
-        if(viewId === 'view-dashboard') window.fetchDashboard();
-        if(viewId === 'view-employees') window.fetchEmployees();
-        if(viewId === 'view-attendance') window.fetchAttendance();
-        if(viewId === 'view-leaves') window.fetchLeaves();
-        if(viewId === 'view-assets') window.fetchAssets();
-        if(viewId === 'view-payroll') window.fetchPayroll();
-        if(viewId === 'view-appreciations') window.fetchAppreciations();
-        if(viewId === 'view-policies') window.fetchPolicies();
-        if(viewId === 'view-offboardings') window.fetchOffboardings();
-        if(viewId === 'view-finance') window.fetchExpenses();
-        if(viewId === 'view-holidays') window.fetchHolidays();
-        if(viewId === 'view-profile') window.fetchProfile();
+        if (viewId === 'view-dashboard') window.fetchDashboard();
+        if (viewId === 'view-employees') window.fetchEmployees();
+        if (viewId === 'view-attendance') window.fetchAttendance();
+        if (viewId === 'view-leaves') window.fetchLeaves();
+        if (viewId === 'view-assets') window.fetchAssets();
+        if (viewId === 'view-payroll') window.fetchPayroll();
+        if (viewId === 'view-appreciations') window.fetchAppreciations();
+        if (viewId === 'view-policies') window.fetchPolicies();
+        if (viewId === 'view-offboardings') window.fetchOffboardings();
+        if (viewId === 'view-finance') window.fetchExpenses();
+        if (viewId === 'view-holidays') window.fetchHolidays();
+        if (viewId === 'view-profile') window.fetchProfile();
+        if (viewId === 'view-letters') window.fetchLetters();
     }
 
     // --- MODULES ---
@@ -159,11 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${l.Employee ? l.Employee.employee_name : 'N/A'}</td>
                     <td>${l.leave_type}</td>
                     <td>${l.start_date} to ${l.end_date}</td>
-                    <td><span class="badge ${l.status==='Approved'?'bg-green':(l.status==='Rejected'?'bg-red':'bg-yellow')}">${l.status}</span></td>
+                    <td><span class="badge ${l.status === 'Approved' ? 'bg-green' : (l.status === 'Rejected' ? 'bg-red' : 'bg-yellow')}">${l.status}</span></td>
                 </tr>
             `).join('');
-            if(!res.data.recentActivities.length) dashList.innerHTML = '<tr><td colspan="4" style="text-align:center;">No recent leave activity</td></tr>';
-        } catch(e){}
+            if (!res.data.recentActivities.length) dashList.innerHTML = '<tr><td colspan="4" style="text-align:center;">No recent leave activity</td></tr>';
+        } catch (e) { }
     };
 
     window.fetchEmployees = async () => {
@@ -173,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td><strong>${e.employee_name}</strong><br/><small>${e.email}</small></td>
                 <td>${e.department || 'N/A'}<br/><small>${e.designation || 'N/A'}</small></td>
-                <td><span class="badge ${e.status==='Active'?'bg-green':'bg-red'}">${e.status}</span></td>
+                <td><span class="badge ${e.status === 'Active' ? 'bg-green' : 'bg-red'}">${e.status}</span></td>
                 <td>
                     <button onclick="editEmployee(${e.employee_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteRecord('employees', ${e.employee_id}, 'fetchEmployees')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
@@ -185,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editEmployee = async (id) => {
         const res = await apiCall('employees');
         const item = res.data.find(x => x.employee_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Employee', id, [
             { label: 'Name', key: 'employee_name', value: item.employee_name, type: 'text' },
             { label: 'Email', key: 'email', value: item.email, type: 'email' },
@@ -236,11 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editAttendance = async (id) => {
         const res = await apiCall('attendance');
         const item = res.data.find(x => x.attendance_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Attendance', id, [
             { label: 'Date', key: 'date', value: item.date, type: 'date' },
-            { label: 'Clock In', key: 'clock_in', value: item.clock_in ? item.clock_in.substring(0,16) : '', type: 'datetime-local' },
-            { label: 'Clock Out', key: 'clock_out', value: item.clock_out ? item.clock_out.substring(0,16) : '', type: 'datetime-local' },
+            { label: 'Clock In', key: 'clock_in', value: item.clock_in ? item.clock_in.substring(0, 16) : '', type: 'datetime-local' },
+            { label: 'Clock Out', key: 'clock_out', value: item.clock_out ? item.clock_out.substring(0, 16) : '', type: 'datetime-local' },
             { label: 'Status', key: 'status', value: item.status, type: 'select', options: ['Present', 'Absent', 'Late', 'Half Day'] }
         ], async (data) => {
             await apiCall(`attendance/${id}`, 'PUT', data);
@@ -258,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${l.leave_type}</td>
                 <td>${l.start_date} to ${l.end_date}</td>
                 <td>${l.reason || 'N/A'}</td>
-                <td><span class="badge ${l.status==='Approved'?'bg-green':(l.status==='Rejected'?'bg-red':'bg-yellow')}">${l.status}</span></td>
+                <td><span class="badge ${l.status === 'Approved' ? 'bg-green' : (l.status === 'Rejected' ? 'bg-red' : 'bg-yellow')}">${l.status}</span></td>
                 <td>
                     <button onclick="updateLeave(${l.leave_id}, 'Approved')" class="action-btn" style="color:green" title="Approve"><i class="fas fa-check-circle"></i></button>
                     <button onclick="updateLeave(${l.leave_id}, 'Rejected')" class="action-btn" style="color:red" title="Reject"><i class="fas fa-times-circle"></i></button>
@@ -278,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editLeave = async (id) => {
         const res = await apiCall('leaves');
         const item = res.data.find(x => x.leave_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Leave', id, [
             { label: 'Leave Type', key: 'leave_type', value: item.leave_type, type: 'text' },
             { label: 'Start Date', key: 'start_date', value: item.start_date, type: 'date' },
@@ -300,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${a.asset_name}<br/><small>${a.asset_category}</small></td>
                 <td>${a.serial_number || 'N/A'}</td>
                 <td>${a.assigned_employee || 'Unassigned'}</td>
-                <td><span class="badge ${a.status==='Available'?'bg-green':'bg-yellow'}">${a.status}</span></td>
+                <td><span class="badge ${a.status === 'Available' ? 'bg-green' : 'bg-yellow'}">${a.status}</span></td>
                 <td>
                     <button onclick="editAsset(${a.asset_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteRecord('assets', ${a.asset_id}, 'fetchAssets')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
@@ -313,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await apiCall('assets');
         const item = res.data.find(x => x.asset_id == id);
         const emps = await window.refreshEmployeeSelects();
-        if(!item) return;
+        if (!item) return;
         openEditModal('Asset', id, [
             { label: 'Asset Name', key: 'asset_name', value: item.asset_name, type: 'text' },
             { label: 'Category', key: 'asset_category', value: item.asset_category, type: 'text' },
@@ -347,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editPayroll = async (id) => {
         const res = await apiCall('payroll');
         const item = res.data.find(x => x.payroll_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Payroll', id, [
             { label: 'Basic Salary', key: 'basic_salary', value: item.basic_salary, type: 'number' },
             { label: 'Allowances', key: 'allowances', value: item.allowances, type: 'number' },
@@ -379,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editAppreciation = async (id) => {
         const res = await apiCall('appreciations');
         const item = res.data.find(x => x.appreciation_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Appreciation', id, [
             { label: 'Award Title', key: 'title', value: item.title, type: 'text' },
             { label: 'Description', key: 'description', value: item.description, type: 'textarea' },
@@ -409,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editPolicy = async (id) => {
         const res = await apiCall('policies');
         const item = res.data.find(x => x.policy_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Policy', id, [
             { label: 'Title', key: 'title', value: item.title, type: 'text' },
             { label: 'Description', key: 'description', value: item.description, type: 'textarea' },
@@ -429,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${o.Employee ? o.Employee.employee_name : 'N/A'}</strong></td>
                 <td>${o.reason || 'N/A'}</td>
                 <td>${o.last_working_date}</td>
-                <td><span class="badge ${o.status==='Completed'?'bg-green':'bg-yellow'}">${o.status}</span></td>
+                <td><span class="badge ${o.status === 'Completed' ? 'bg-green' : 'bg-yellow'}">${o.status}</span></td>
                 <td>
                     <button onclick="updateOffboarding(${o.offboarding_id}, 'Completed')" class="action-btn" title="Complete" style="color:green"><i class="fas fa-check-double"></i></button>
                     <button onclick="editOffboarding(${o.offboarding_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
@@ -447,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editOffboarding = async (id) => {
         const res = await apiCall('offboardings');
         const item = res.data.find(x => x.offboarding_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Offboarding', id, [
             { label: 'Reason', key: 'reason', value: item.reason, type: 'textarea' },
             { label: 'Last Date', key: 'last_working_date', value: item.last_working_date, type: 'date' },
@@ -466,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${ex.title}</strong><br/><small>${ex.category}</small></td>
                 <td>${ex.employee_id} (${ex.Employee ? ex.Employee.employee_name : 'N/A'})</td>
                 <td>$${ex.amount}</td>
-                <td><span class="badge ${ex.status==='Approved'?'bg-green':(ex.status==='Rejected'?'bg-red':'bg-yellow')}">${ex.status}</span></td>
+                <td><span class="badge ${ex.status === 'Approved' ? 'bg-green' : (ex.status === 'Rejected' ? 'bg-red' : 'bg-yellow')}">${ex.status}</span></td>
                 <td>
                     <button onclick="updateExpense(${ex.expense_id}, 'Approved')" class="action-btn" style="color:green" title="Approve"><i class="fas fa-thumbs-up"></i></button>
                     <button onclick="editExpense(${ex.expense_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
@@ -484,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editExpense = async (id) => {
         const res = await apiCall('expenses');
         const item = res.data.find(x => x.expense_id == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Expense', id, [
             { label: 'Title', key: 'title', value: item.title, type: 'text' },
             { label: 'Amount', key: 'amount', value: item.amount, type: 'number' },
@@ -503,13 +515,13 @@ document.addEventListener('DOMContentLoaded', () => {
         form.innerHTML = fields.map(f => {
             const inputId = `m-field-${f.key}`;
             const label = `<label class="form-label">${f.label}</label>`;
-            if(f.type === 'select') {
+            if (f.type === 'select') {
                 return `<div>${label}<select id="${inputId}" class="input">${f.options.map(opt => {
                     const val = typeof opt === 'object' ? opt.val : opt;
                     const lab = typeof opt === 'object' ? opt.lab : opt;
                     return `<option value="${val}" ${val == f.value ? 'selected' : ''}>${lab}</option>`;
                 }).join('')}</select></div>`;
-            } else if(f.type === 'textarea') {
+            } else if (f.type === 'textarea') {
                 return `<div>${label}<textarea id="${inputId}" class="input" rows="3">${f.value || ''}</textarea></div>`;
             } else {
                 return `<div>${label}<input type="${f.type}" id="${inputId}" class="input" value="${f.value || ''}"></div>`;
@@ -614,12 +626,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('title', document.getElementById('pol-title').value);
         formData.append('description', document.getElementById('pol-desc').value);
-        
+
         const fileInput = document.getElementById('pol-file');
         if (fileInput.files.length > 0) {
             formData.append('file', fileInput.files[0]);
         }
-        
+
         const externalUrl = document.getElementById('pol-url').value;
         if (externalUrl) {
             formData.append('external_url', externalUrl);
@@ -654,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editHoliday = async (id) => {
         const res = await apiCall('holidays');
         const item = res.data.find(x => (x.holiday_id || x.id) == id);
-        if(!item) return;
+        if (!item) return;
         openEditModal('Holiday', id, [
             { label: 'Title', key: 'holiday_name', value: item.holiday_name, type: 'text' },
             { label: 'Date', key: 'date', value: item.date, type: 'date' },
@@ -676,11 +688,204 @@ document.addEventListener('DOMContentLoaded', () => {
         window.fetchHolidays();
     });
 
+    window.fetchLetters = async () => {
+        window.refreshTable('letter-list');
+        const res = await apiCall('letters');
+        window.letterData = res.data;
+        document.getElementById('letter-list').innerHTML = res.data.map(l => `
+            <tr>
+                <td><strong>${l.title}</strong></td>
+                <td>${l.Recipient ? l.Recipient.employee_name : 'N/A'}</td>
+                <td><span class="badge ${l.status === 'Sent' ? 'bg-green' : 'bg-yellow'}">${l.status}</span></td>
+                <td>${new Date(l.created_at).toLocaleString()}</td>
+                <td>
+                    <button class="action-btn" title="Preview Letter" onclick="previewManagerLetter(${l.letter_id})" style="color:var(--text-light)"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn" title="Edit Letter" onclick="editManagerLetter(${l.letter_id})" style="color:var(--primary)"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn" title="Delete Letter" onclick="deleteManagerLetter(${l.letter_id})" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    // --- Quill ---
+
+    if (window.Quill) {
+        window.newLetterQuill = new Quill('#letter-content-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ font: [] }], [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }]] }
+        });
+        window.editLetterQuill = new Quill('#edit-letter-content-editor', {
+            theme: 'snow',
+            modules: { toolbar: [[{ font: [] }], [{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }]] }
+        });
+    }
+
+    window.downloadLetterText = async (id) => {
+        if (!window.letterData) await fetchLetters();
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+
+        const element = document.createElement('div');
+        element.style.padding = '40px';
+        element.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+        element.style.color = '#000';
+        element.style.lineHeight = '1.5';
+        element.style.fontSize = '12px';
+
+        const todayDate = new Date().toISOString().split('T')[0];
+        const cleanedContent = item.content.replace(/^(<p>)?\s*Dear\s+.*?<\/p>[\r\n\s]*/i, '');
+
+        element.innerHTML = `
+            <div style="text-align: left; margin-bottom: 30px;">
+                <img id="pdf-logo" src="logo.avif" alt="SHNOOR Logo" style="max-height: 80px;">
+            </div>
+            <div style="text-align: center; font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; text-transform: uppercase;">
+                ${item.title}
+            </div>
+            <div style="margin-bottom: 20px;">
+                Date: ${todayDate}<br><br>
+            </div>
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify;">${cleanedContent}</div>
+            <div style="margin-top: 60px;">
+                <strong>Thanks & Regards</strong><br>
+                <strong>Hiring Team - SHNOOR International LLC</strong><br>
+                Mount Tabor Road, Odessa, Missouri, United States | Ph: +91-9429694298<br>
+                www.shnoor.com<br><br>
+                <div style="text-align: left; margin-top: 20px;">
+                    <img id="pdf-signature" src="signature.png" alt="Signature" style="max-height: 150px;">
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin: [40, 20, 25, 20],
+            filename: item.title.replace(/\s+/g, '_') + '_' + id + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        if (window.html2pdf) {
+            const logoImg = element.querySelector('#pdf-logo');
+            let logoDataURL = null;
+            let aspect = 1;
+            
+            if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = logoImg.naturalWidth;
+                    canvas.height = logoImg.naturalHeight;
+                    aspect = canvas.height / canvas.width;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(logoImg, 0, 0);
+                    logoDataURL = canvas.toDataURL('image/png');
+                    logoImg.parentNode.style.display = 'none';
+                } catch(e) { console.error(e); }
+            }
+
+            html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    if (logoDataURL) {
+                        let drawWidth = 50;
+                        let drawHeight = 50 * aspect;
+                        if (drawHeight > 22) {
+                            drawHeight = 22;
+                            drawWidth = 22 / aspect;
+                        }
+                        pdf.addImage(logoDataURL, 'PNG', 20, 10, drawWidth, drawHeight);
+                    }
+                }
+            }).save();
+        }
+    };
+
+    window.previewManagerLetter = (id) => {
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+        
+        const todayDate = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('preview-letter-title').textContent = 'Letter Preview';
+        document.getElementById('preview-letter-body').innerHTML = `
+            <div style="text-align: left; margin-bottom: 30px;">
+                <img src="/logo.avif" alt="Logo" style="max-height: 80px;">
+            </div>
+            
+            <div style="text-align: center; font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; text-transform: uppercase;">
+                ${item.title}
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                Date: ${todayDate}<br><br>
+            </div>
+            
+            <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; font-size: 14px; line-height: 1.6;">
+                ${item.content}
+            </div>
+            
+            <div style="margin-top: 60px;">
+                <strong>Thanks & Regards</strong><br>
+                <strong>Hiring Team - SHNOOR International LLC</strong><br>
+                <span style="font-size: 10px; color: #666;">Mount Tabor Road, Odessa, Missouri, US | Ph: +91-9429694298</span><br>
+                <div style="text-align: left; margin-top: 15px;">
+                    <img src="/signature.png" alt="Signature" style="max-height: 80px;">
+                </div>
+            </div>
+        `;
+
+        document.getElementById('preview-letter-modal').classList.remove('hidden');
+    };
+
+    window.editManagerLetter = (id) => {
+        const item = window.letterData.find(x => x.letter_id == id);
+        if (!item) return;
+
+        document.getElementById('edit-letter-title').value = item.title;
+        if (window.editLetterQuill) window.editLetterQuill.root.innerHTML = item.content;
+
+        document.getElementById('edit-letter-modal').classList.remove('hidden');
+
+        document.getElementById('modal-letter-save-btn').onclick = async () => {
+            const newTitle = document.getElementById('edit-letter-title').value;
+            const newContent = window.editLetterQuill ? window.editLetterQuill.root.innerHTML : '';
+            if (!newTitle || !newContent || newContent === '<p><br></p>') return alert("Please fill all fields");
+
+            await apiCall('letters/' + id, 'PUT', { title: newTitle, content: newContent });
+            document.getElementById('edit-letter-modal').classList.add('hidden');
+            fetchLetters();
+        };
+    };
+
+    window.deleteManagerLetter = async (id) => {
+        if (!confirm("Are you sure you want to delete this official letter?")) return;
+        try {
+            await apiCall('letters/' + id, 'DELETE');
+            fetchLetters();
+        } catch (e) { alert("Error deleting letter"); }
+    };
+
+    document.getElementById('form-letter')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contentVal = window.newLetterQuill ? window.newLetterQuill.root.innerHTML : '';
+        if (!contentVal || contentVal === '<p><br></p>') return alert("Please type your letter content");
+
+        await apiCall('letters', 'POST', {
+            employee_id: document.getElementById('letter-emp').value,
+            title: document.getElementById('letter-title').value,
+            content: contentVal
+        });
+        document.getElementById('form-letter').reset();
+        if (window.newLetterQuill) window.newLetterQuill.root.innerHTML = '';
+        window.fetchLetters();
+    });
+
     window.generatePayslipBtn = async (id) => {
         try {
             const res = await apiCall(`payroll/${id}/generate-payslip`, 'POST');
             alert(res.message);
-        } catch(e){}
+        } catch (e) { }
     };
 
     // --- Notification System Logic ---
@@ -782,7 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notifDropdown?.classList.add('hidden');
     });
 
-    window.fetchNotifications = async function() {
+    window.fetchNotifications = async function () {
         const email = sessionStorage.getItem('shnoor_admin_email') || sessionStorage.getItem('shnoor_email') || 'manager@shnoor.com';
         try {
             const res = await fetch(`/api/notifications?userId=${encodeURIComponent(email)}&role=manager`, {

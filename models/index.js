@@ -22,6 +22,7 @@ const CompanyPolicy = require('./CompanyPolicyModel');
 const Offboarding = require('./OffboardingModel');
 const Payslip = require('./PayslipModel');
 const Holiday = require('./HolidayModel');
+const Letter = require('./LetterModel');
 
 // Define Associations here if necessary
 // e.g.
@@ -54,9 +55,12 @@ Employee.hasMany(Offboarding, { foreignKey: 'employee_id', onDelete: 'CASCADE' }
 Payslip.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
+Letter.belongsTo(Employee, { as: 'Sender', foreignKey: 'manager_id', onDelete: 'CASCADE' });
+Letter.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
+
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
-    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday,
+    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter,
     ChatMessage, Notification
 };

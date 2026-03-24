@@ -94,4 +94,11 @@ router.route('/holidays/:id')
     .put(protect, controller.updateHoliday)
     .delete(protect, controller.deleteHoliday);
 
+router.route('/letters')
+    .get(protect, controller.getManagerLetters)
+    .post(protect, controller.sendLetter);
+router.route('/letters/:id')
+    .put(protect, controller.updateLetter)
+    .delete(protect, controller.deleteLetter);
+
 module.exports = router;

@@ -24,7 +24,7 @@ const Employee = sequelize.define('Employee', {
     },
     role: {
         type: DataTypes.STRING,
-        defaultValue: 'Employee'
+        allowNull: false
     },
     phone: {
         type: DataTypes.STRING,
