@@ -564,6 +564,17 @@ exports.updateChatResponse = async (req, res) => {
             console.error('[Chat] Failed to create user notification:', notifyErr);
         }
 
+        // Emit real-time desktop notification via Socket.IO
+        const io = req.app.get('io');
+        if (io && chat.userId) {
+            io.to(chat.userId).emit('new_notification', {
+                title: 'Admin Response Updated',
+                message: `An admin has updated the response to your message: "${chat.message.substring(0, 30)}..."`,
+                type: 'chat_edit',
+                timestamp: new Date()
+            });
+        }
+
         // Send Email Notification
         try {
             if (chat.userId && chat.userId.includes('@')) {
@@ -679,6 +690,17 @@ exports.sendAdminReply = async (req, res) => {
             });
         } catch (notifyErr) {
             console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
+        // Emit real-time desktop notification via Socket.IO
+        const io = req.app.get('io');
+        if (io && session_id) {
+            io.to(session_id).emit('new_notification', {
+                title: 'New Admin Message',
+                message: `An admin has sent you a new message: "${content.substring(0, 30)}..."`,
+                type: 'chat_new',
+                timestamp: new Date()
+            });
         }
 
         // Send Email Notification

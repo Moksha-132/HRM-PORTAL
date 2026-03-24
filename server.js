@@ -1,6 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-//const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
@@ -8,9 +7,6 @@ const { Server } = require('socket.io');
 
 const { connectDB, sequelize } = require('./config/db');
 const GlobalNotificationService = require('./services/globalNotificationService');
-
-// Load env vars
-//dotenv.config();
 
 // Connect to database
 connectDB();
@@ -28,6 +24,47 @@ sequelize.sync()
     });
 
 const app = express();
+const server = http.createServer(app);
+
+// Create Socket.IO server
+const io = new Server(server, {
+    cors: { origin: "*", methods: ["GET", "POST"] }
+});
+
+// Attach io to app so controllers can use it
+app.set('io', io);
+
+// Global notification service mapping
+const globalNotificationService = new GlobalNotificationService(io);
+
+// Socket connection handling
+io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
+    // Users join a room with their email/ID for explicit personalized alerts
+    socket.on('join_room', (userId) => {
+        if (userId) {
+            socket.join(userId);
+            console.log(`User ${userId} joined their notification room`);
+        }
+    });
+
+    // Register user for broadcasting global notifications
+    socket.on('register-global-notifications', (userData) => {
+        console.log('User registered for global notifications:', userData);
+        globalNotificationService.registerUser(socket.id, userData);
+        socket.join('global-notifications');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+        globalNotificationService.unregisterUser(socket.id);
+    });
+});
+
+// Make io and globalNotificationService globally available
+global.io = io;
+global.globalNotificationService = globalNotificationService;
 
 // Body parser
 app.use(express.json());
@@ -36,15 +73,11 @@ app.use(express.urlencoded({ extended: true }));
 // Enable CORS
 app.use(cors());
 
-// Set static folder - be careful not to serve sensitive files
-// Express static can be restricted or we can serve specific extensions
+// Set static folder
 const publicFilesOptions = {
     index: ['index.html'],
     setHeaders: (res, filepath) => {
         // basic protection
-        if(filepath.endsWith('.env') || filepath.endsWith('.js') && !filepath.endsWith('main.js') && !filepath.endsWith('admin.js')) {
-            // we'll allow but actually better to route exact files
-        }
     }
 };
 
@@ -52,7 +85,6 @@ const publicFilesOptions = {
 app.use('/api/v1/auth', require('./routes/superAdminRoutes'));
 app.use('/api/v1/settings', require('./routes/settingsRoutes'));
 app.use('/api/v1/companies', require('./routes/companyRoutes'));
-// app.use('/api/v1/subscriptions', require('./routes/subscriptionRoutes'));
 app.use('/api/v1/transactions', require('./routes/transactionRoutes'));
 app.use('/api/v1/manager', require('./routes/managerRoutes'));
 app.use('/api/v1/employee', require('./routes/employeeRoutes'));
@@ -61,25 +93,20 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminChatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/global-notifications', require('./routes/globalNotificationRoutes'));
-// app.use('/api/v1/email-queries', require('./routes/emailQueryRoutes'));
-// app.use('/api/v1/offline-requests', require('./routes/offlineRequestRoutes'));
-
 
 // Serve static assets
 app.use(express.static(__dirname, publicFilesOptions));
 
-// Expose uploads so uploaded images can be fetched
+// Expose uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve specific files
 app.get('/admin-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin-dashboard.html'));
 });
-
 app.get('/manager-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'manager-dashboard.html'));
 });
-
 app.get('/employee-dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'employee-dashboard.html'));
 });
@@ -96,36 +123,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
-// Create HTTP server and Socket.IO
-const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
-
-// Global notification service
-const globalNotificationService = new GlobalNotificationService(io);
-
-io.on('connection', (socket) => {
-    console.log('User connected for global notifications:', socket.id);
-    
-    socket.on('register-global-notifications', (userData) => {
-        console.log('User registered for global notifications:', userData);
-        globalNotificationService.registerUser(socket.id, userData);
-        socket.join('global-notifications');
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('User disconnected from global notifications:', socket.id);
-        globalNotificationService.unregisterUser(socket.id);
-    });
-});
-
-// Make io and globalNotificationService globally available
-global.io = io;
-global.globalNotificationService = globalNotificationService;
-
-server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`));

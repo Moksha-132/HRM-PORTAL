@@ -770,6 +770,11 @@ document.addEventListener('DOMContentLoaded', () => {
     notifTrigger?.addEventListener('click', (e) => {
         e.stopPropagation();
         notifDropdown?.classList.toggle('hidden');
+        
+        // Request desktop notification permission on user gesture if not already decided
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
     });
 
     document.addEventListener('click', () => {
@@ -829,6 +834,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start notification polling
     window.fetchNotifications();
     setInterval(window.fetchNotifications, 30000); // every 30s
+
+    // Real-time Socket.IO and Desktop Notifications
+    if (typeof io !== 'undefined') {
+        const socket = io();
+        const email = sessionStorage.getItem('shnoor_admin_email') || sessionStorage.getItem('shnoor_email');
+        if (email) {
+            socket.emit('join_room', email);
+        }
+
+        // Request permission early
+        if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+
+        socket.on('new_notification', (data) => {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(data.title || 'New Notification', {
+                    body: data.message
+                });
+            } else if ('Notification' in window && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification(data.title || 'New Notification', {
+                            body: data.message
+                        });
+                    }
+                });
+            }
+            
+            // Show HUD popup 
+            showPopupNotification(data);
+            // Refresh notification API count
+            window.fetchNotifications();
+        });
+    }
 
     // Initial Load
     window.fetchDashboard();
