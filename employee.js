@@ -387,12 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('letter-list').innerHTML = res.data.map(l => `
                 <tr>
                     <td><strong>${l.title}</strong></td>
-                    <td>${l.Sender ? l.Sender.employee_name : 'N/A'}</td>
+                    <td>${l.Sender ? l.Sender.name : 'N/A'}</td>
                     <td><span class="badge ${l.status === 'Sent' ? 'bg-green' : 'bg-yellow'}">${l.status === 'Sent' ? 'Received' : l.status}</span></td>
                     <td>${new Date(l.created_at).toLocaleString()}</td>
                     <td>
                         <button onclick="previewLetter(${l.letter_id})" class="action-btn" style="color:var(--text-light);" title="Preview Letter"><i class="fas fa-eye"></i></button>
-                        <button onclick="editLetter(${l.letter_id})" class="action-btn edit-btn" title="Edit Content"><i class="fas fa-edit"></i></button>
                         <button onclick="downloadLetterText(${l.letter_id})" class="action-btn" style="color:var(--primary);" title="Download Document"><i class="fas fa-download"></i></button>
                     </td>
                 </tr>
@@ -465,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <strong>Hiring Team - SHNOOR International LLC</strong><br>
                 <span style="font-size: 10px; color: #666;">Mount Tabor Road, Odessa, Missouri, US | Ph: +91-9429694298</span><br>
                 <div style="text-align: left; margin-top: 15px;">
-                    <img src="/signature.png" alt="Signature" style="max-height: 80px;">
+                    <img src="/Signature.png" alt="Signature" style="max-height: 80px;">
                 </div>
             </div>
         `;
@@ -534,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Mount Tabor Road, Odessa, Missouri, United States, Ph: +91-9429694298<br>
                 www.shnoor.com<br><br>
                 <div style="text-align: left; margin-top: 20px;">
-                    <img id="pdf-signature" src="signature.png" alt="Signature and Stamp" style="max-height: 150px;">
+                    <img id="pdf-signature" src="Signature.png" alt="Signature and Stamp" style="max-height: 150px;">
                 </div>
             </div>
         `;

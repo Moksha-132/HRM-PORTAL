@@ -449,9 +449,9 @@ exports.getManagerLetters = async (req, res) => {
     try {
         // Find letters associated with this manager
         // We assume req.user is populated properly and has an employee_id if they are a manager
-        let managerId = req.user.employee_id;
-        if (!managerId) {
-            // fallback if req.user is just an email (SuperAdmin or special case)
+        let managerId = req.user.employee_id || req.user.id;
+        if (!req.user.employee_id) {
+            // Check if they have an employee profile, otherwise use SuperAdmin ID
             const emp = await Employee.findOne({ where: { email: req.user.email } });
             if (emp) managerId = emp.employee_id;
         }
@@ -474,10 +474,10 @@ exports.sendLetter = async (req, res) => {
             return res.status(400).json({ success: false, error: "Please provide employee, title, and content" });
         }
 
-        let managerId = req.user.employee_id;
-        if (!managerId) {
-            const emp = await Employee.findOne({ where: { email: req.user.email } });
-            if (emp) managerId = emp.employee_id;
+        let managerId = req.user.employee_id || req.user.id;
+        if (!req.user.employee_id) {
+             const emp = await Employee.findOne({ where: { email: req.user.email } });
+             if (emp) managerId = emp.employee_id;
         }
 
         if (!managerId) return res.status(400).json({ success: false, error: "Manager profile required to send letter" });

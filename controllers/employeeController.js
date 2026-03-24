@@ -304,7 +304,7 @@ exports.getEmployeeLetters = async (req, res) => {
     try {
         const letters = await Letter.findAll({
             where: { employee_id: req.user.employee_id },
-            include: [{ model: Employee, as: 'Sender' }],
+            include: [{ model: SuperAdmin, as: 'Sender' }],
             order: [['created_at', 'DESC']]
         });
         res.status(200).json({ success: true, data: letters });

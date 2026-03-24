@@ -55,7 +55,7 @@ Employee.hasMany(Offboarding, { foreignKey: 'employee_id', onDelete: 'CASCADE' }
 Payslip.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Letter.belongsTo(Employee, { as: 'Sender', foreignKey: 'manager_id', onDelete: 'CASCADE' });
+Letter.belongsTo(SuperAdmin, { as: 'Sender', foreignKey: 'manager_id', onDelete: 'CASCADE' });
 Letter.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
 

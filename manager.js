@@ -752,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Mount Tabor Road, Odessa, Missouri, United States | Ph: +91-9429694298<br>
                 www.shnoor.com<br><br>
                 <div style="text-align: left; margin-top: 20px;">
-                    <img id="pdf-signature" src="signature.png" alt="Signature" style="max-height: 150px;">
+                    <img id="pdf-signature" src="Signature.png" alt="Signature" style="max-height: 150px;">
                 </div>
             </div>
         `;
@@ -830,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <strong>Hiring Team - SHNOOR International LLC</strong><br>
                 <span style="font-size: 10px; color: #666;">Mount Tabor Road, Odessa, Missouri, US | Ph: +91-9429694298</span><br>
                 <div style="text-align: left; margin-top: 15px;">
-                    <img src="/signature.png" alt="Signature" style="max-height: 80px;">
+                    <img src="/Signature.png" alt="Signature" style="max-height: 80px;">
                 </div>
             </div>
         `;
