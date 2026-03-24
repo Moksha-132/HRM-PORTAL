@@ -23,6 +23,14 @@ const Notification = sequelize.define('Notification', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    senderRole: {
+        type: DataTypes.ENUM('admin', 'employee', 'manager', 'system'),
+        allowNull: true
+    },
+    senderEmail: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     isRead: {
         type: DataTypes.BOOLEAN,
         defaultValue: false

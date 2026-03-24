@@ -3,8 +3,11 @@ const express = require('express');
 //const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const { connectDB, sequelize } = require('./config/db');
+const GlobalNotificationService = require('./services/globalNotificationService');
 
 // Load env vars
 //dotenv.config();
@@ -57,6 +60,7 @@ app.use('/api/v1/chat', require('./routes/v1ChatRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin', require('./routes/adminChatRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/global-notifications', require('./routes/globalNotificationRoutes'));
 // app.use('/api/v1/email-queries', require('./routes/emailQueryRoutes'));
 // app.use('/api/v1/offline-requests', require('./routes/offlineRequestRoutes'));
 
@@ -93,4 +97,35 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+// Create HTTP server and Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Global notification service
+const globalNotificationService = new GlobalNotificationService(io);
+
+io.on('connection', (socket) => {
+    console.log('User connected for global notifications:', socket.id);
+    
+    socket.on('register-global-notifications', (userData) => {
+        console.log('User registered for global notifications:', userData);
+        globalNotificationService.registerUser(socket.id, userData);
+        socket.join('global-notifications');
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('User disconnected from global notifications:', socket.id);
+        globalNotificationService.unregisterUser(socket.id);
+    });
+});
+
+// Make io and globalNotificationService globally available
+global.io = io;
+global.globalNotificationService = globalNotificationService;
+
+server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

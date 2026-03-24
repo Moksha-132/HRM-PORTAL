@@ -157,6 +157,97 @@ const ADMIN_PASSWORD = 'Admin@1234';
 const loginForm   = document.getElementById('login-form');
 const loginError  = document.getElementById('login-error');
 
+// Handle URL parameters for email pre-fill and redirect
+function handleLoginRedirect() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const email = urlParams.get('email');
+  const redirect = urlParams.get('redirect');
+  
+  // Pre-fill email if provided
+  if (email) {
+    const emailInput = document.getElementById('login-email');
+    if (emailInput) {
+      emailInput.value = email;
+      emailInput.focus();
+    }
+  }
+  
+  // Store redirect info for after login
+  if (redirect) {
+    try {
+      const redirectData = JSON.parse(decodeURIComponent(redirect));
+      sessionStorage.setItem('hrm_notification_redirect', JSON.stringify(redirectData));
+      console.log('Stored notification redirect info:', redirectData);
+    } catch (error) {
+      console.error('Error parsing redirect data:', error);
+    }
+  }
+}
+
+// Handle redirect after successful login
+function handlePostLoginRedirect(userRole) {
+  const redirectInfo = sessionStorage.getItem('hrm_notification_redirect');
+  sessionStorage.removeItem('hrm_notification_redirect'); // Clean up
+  
+  if (redirectInfo) {
+    try {
+      const redirectData = JSON.parse(redirectInfo);
+      console.log('Processing post-login redirect:', redirectData);
+      
+      // Show notification details after login
+      setTimeout(() => {
+        showNotificationDetails(redirectData);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Error processing redirect:', error);
+    }
+  }
+}
+
+// Show notification details to user
+function showNotificationDetails(redirectData) {
+  // Create a notification banner or modal
+  const notificationBanner = document.createElement('div');
+  notificationBanner.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    max-width: 400px;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  notificationBanner.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <strong>New Message from ${redirectData.from}</strong>
+        <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">
+          Click to view full details
+        </div>
+      </div>
+      <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">&times;</button>
+    </div>
+  `;
+  
+  document.body.appendChild(notificationBanner);
+  
+  // Auto-remove after 8 seconds
+  setTimeout(() => {
+    if (notificationBanner.parentElement) {
+      notificationBanner.remove();
+    }
+  }, 8000);
+}
+
+// Call redirect handler on page load
+handleLoginRedirect();
+
 loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email    = document.getElementById('login-email').value.trim();
@@ -177,6 +268,9 @@ loginForm?.addEventListener('submit', async (e) => {
       sessionStorage.setItem('shnoor_admin', 'true');
       sessionStorage.setItem('shnoor_token', data.token);
       sessionStorage.setItem('shnoor_admin_email', data.user.email);
+      
+      // Handle post-login redirect
+      handlePostLoginRedirect(data.user.role);
       
       if (data.user.role === 'Manager') {
         window.location.href = 'manager-dashboard.html';

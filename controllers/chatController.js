@@ -8,6 +8,23 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 
+// Helper function to send global notifications
+const sendGlobalNotification = async (notificationData) => {
+    try {
+        console.log('🔧 sendGlobalNotification called with:', notificationData);
+        const globalNotificationService = global.globalNotificationService;
+        console.log('🔧 Global notification service exists:', !!globalNotificationService);
+        if (globalNotificationService) {
+            await globalNotificationService.sendGlobalNotification(notificationData);
+            console.log('✅ Global notification sent successfully');
+        } else {
+            console.error('❌ Global notification service not available');
+        }
+    } catch (error) {
+        console.error('❌ Error sending global notification:', error);
+    }
+};
+
 const SYSTEM_PROMPTS = {
     public: 'You are a friendly help desk assistant for a HRM platform. Explain the company, platform features, and how to login or navigate. Keep responses concise and helpful.',
     employee: 'You are an HR assistant for employees. Help with HR policies, leave info, salary basics (no sensitive data), and general platform guidance. Be friendly and clear.',
@@ -394,6 +411,16 @@ exports.handleChat = async (req, res) => {
                         timestamp: new Date()
                     });
                 }
+
+                // 🚀 SEND GLOBAL NOTIFICATION FOR EMPLOYEE/MANAGER MESSAGES
+                await sendGlobalNotification({
+                    senderRole: normalizedRole,
+                    senderEmail: normalizedUserId,
+                    message: message,
+                    type: 'user_message',
+                    recipientEmails: admins.map(admin => admin.email) // Send to all admins
+                });
+                console.log('🔔 Global notification sent for user message:', message.substring(0, 50) + '...');
             } catch (notifyErr) {
                 console.error('[Chat] Failed to create admin notification:', notifyErr);
             }
@@ -606,6 +633,21 @@ exports.sendAdminReply = async (req, res) => {
             });
         } catch (notifyErr) {
             console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
+        // 🚀 SEND GLOBAL NOTIFICATION TO ALL CONNECTED USERS
+        console.log('🚀 About to call sendGlobalNotification...');
+        try {
+            await sendGlobalNotification({
+                senderRole: 'admin',
+                senderEmail: req.user?.email || 'admin@shnoor.com',
+                message: content,
+                type: 'admin_message',
+                recipientEmails: [session_id] // Send to specific recipient
+            });
+            console.log('✅ Global notification sent for admin message:', content.substring(0, 50) + '...');
+        } catch (globalNotifyErr) {
+            console.error('❌ Failed to send global notification:', globalNotifyErr);
         }
 
         res.status(200).json({ success: true, data: msg });

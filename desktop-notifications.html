@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRM Desktop Notifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .notification-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 380px;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notification-sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-header {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-count {
+            background: #ff4757;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .notifications-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            color: white;
+        }
+
+        .notification-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ffd93d;
+            animation: slideIn 0.4s ease-out;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(-5px);
+        }
+
+        .notification-item.admin {
+            border-left-color: #ff4757;
+        }
+
+        .notification-item.manager {
+            border-left-color: #ffd93d;
+        }
+
+        .notification-item.employee {
+            border-left-color: #5f27cd;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sender-info {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .notification-time {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .action-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.8;
+        }
+
+        .pulse-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+            z-index: 999998;
+            transition: all 0.3s;
+        }
+
+        .pulse-indicator:hover {
+            transform: scale(1.1);
+        }
+
+        .pulse-indicator.has-notifications {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+            }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 999997;
+        }
+
+        .connection-status.connected {
+            background: #10b981;
+        }
+
+        .connection-status.disconnected {
+            background: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <!-- Connection Status -->
+    <div class="connection-status" id="connectionStatus">
+        Connecting to HRM Portal...
+    </div>
+
+    <!-- Pulse Indicator -->
+    <div class="pulse-indicator" id="pulseIndicator" onclick="toggleSidebar()">
+        🔔
+    </div>
+
+    <!-- Notification Sidebar -->
+    <div class="notification-sidebar" id="notificationSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <span>🔔 HRM Notifications</span>
+                <span class="notification-count" id="notificationCount">0</span>
+            </div>
+            <button class="close-btn" onclick="toggleSidebar()">×</button>
+        </div>
+        <div class="notifications-container" id="notificationsContainer">
+            <div class="empty-state">
+                <div>📱</div>
+                <p>No notifications yet</p>
+                <p style="font-size: 12px; opacity: 0.7;">Waiting for messages from admin, manager, or employees...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let notifications = [];
+        let sidebarOpen = false;
+
+        // Initialize connection
+        function initializeConnection() {
+            try {
+                socket = io('/', {
+                    transports: ['websocket', 'polling']
+                });
+
+                socket.on('connect', () => {
+                    console.log('✅ Connected to HRM Portal notification system');
+                    updateConnectionStatus(true);
+                    registerForNotifications();
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('❌ Disconnected from HRM Portal');
+                    updateConnectionStatus(false);
+                });
+
+                socket.on('global-notification', (data) => {
+                    console.log('🔔 Received notification:', data);
+                    handleNewNotification(data);
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('❌ Connection error:', error);
+                    updateConnectionStatus(false);
+                });
+
+            } catch (error) {
+                console.error('❌ Error initializing connection:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Register for notifications
+        function registerForNotifications() {
+            if (socket && socket.connected) {
+                socket.emit('register-global-notifications', {
+                    email: 'desktop-notifications@hrmportal.com',
+                    role: 'desktop_client',
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+
+        // Handle new notification
+        function handleNewNotification(data) {
+            const notification = {
+                ...data,
+                id: Date.now(),
+                receivedAt: new Date(),
+                read: false
+            };
+
+            notifications.unshift(notification);
+            updateNotificationsDisplay();
+            showDesktopNotification(data);
+            animatePulseIndicator();
+        }
+
+        // Update notifications display
+        function updateNotificationsDisplay() {
+            const container = document.getElementById('notificationsContainer');
+            const count = document.getElementById('notificationCount');
+            
+            count.textContent = notifications.length;
+            
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div>📱</div>
+                        <p>No notifications yet</p>
+                        <p style="font-size: 12px; opacity: 0.7;">Waiting for messages from admin, manager, or employees...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notif => {
+                // Display recipient emails if available
+                const recipientInfo = notif.recipientEmails && notif.recipientEmails.length > 0 
+                    ? `<div style="font-size: 11px; opacity: 0.8; margin-bottom: 5px;">
+                        📧 To: ${notif.recipientEmails.join(', ')}
+                       </div>`
+                    : '';
+
+                return `
+                    <div class="notification-item ${notif.senderRole}">
+                        <div class="notification-header">
+                            <div class="sender-info">
+                                ${notif.senderRole.charAt(0).toUpperCase() + notif.senderRole.slice(1)}
+                                ${notif.senderEmail ? `(${notif.senderEmail})` : ''}
+                            </div>
+                            <div class="notification-time">
+                                ${formatTime(notif.receivedAt)}
+                            </div>
+                        </div>
+                        ${recipientInfo}
+                        <div class="notification-message">
+                            ${notif.preview || notif.message}
+                        </div>
+                        <div class="notification-actions">
+                            <a href="http://localhost:5000/index.html#login?email=${encodeURIComponent(notif.recipientEmails?.[0] || notif.senderEmail || '')}&redirect=${encodeURIComponent(JSON.stringify({
+                                from: notif.senderRole,
+                                type: notif.type,
+                                notificationId: notif.id,
+                                timestamp: notif.timestamp,
+                                recipientEmails: notif.recipientEmails || []
+                            }))}" class="action-btn" target="_blank">
+                                🔐 Login to View Full Message
+                            </a>
+                            <button class="action-btn" onclick="markAsRead('${notif.id}')">
+                                ✓ Mark as Read
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Show desktop notification
+        function showDesktopNotification(data) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                // Create notification title showing who it's FOR
+                let notificationTitle = `HRM Portal - ${data.senderRole}`;
+                let notificationBody = data.preview;
+                
+                // If recipient emails are available, show who it's for
+                if (data.recipientEmails && data.recipientEmails.length > 0) {
+                    const recipientList = data.recipientEmails.join(', ');
+                    notificationTitle = `HRM Portal - Message for ${recipientList}`;
+                    notificationBody = `From: ${data.senderRole} (${data.senderEmail || 'admin'})\n${data.preview}`;
+                }
+                
+                const notification = new Notification(notificationTitle, {
+                    body: notificationBody,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23667eea"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="white" font-size="40">🔔</text></svg>',
+                    tag: `hrm-${data.id}`,
+                    requireInteraction: true
+                });
+
+                notification.onclick = () => {
+                    window.open(`http://localhost:5000/index.html#login?email=${encodeURIComponent(data.recipientEmails?.[0] || data.senderEmail || '')}&redirect=${encodeURIComponent(JSON.stringify({
+                        from: data.senderRole,
+                        type: data.type,
+                        notificationId: data.id,
+                        timestamp: data.timestamp,
+                        recipientEmails: data.recipientEmails || []
+                    }))}`, '_blank');
+                    notification.close();
+                };
+
+                setTimeout(() => notification.close(), 100000);
+            }
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('notificationSidebar');
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.classList.add('active');
+                document.getElementById('pulseIndicator').classList.add('has-notifications');
+            } else {
+                sidebar.classList.remove('active');
+                document.getElementById('pulseIndicator').classList.remove('has-notifications');
+            }
+        }
+
+        // Mark as read
+        function markAsRead(notificationId) {
+            notifications = notifications.map(n => 
+                n.id === notificationId ? { ...n, read: true } : n
+            );
+            updateNotificationsDisplay();
+        }
+
+        // Animate pulse indicator
+        function animatePulseIndicator() {
+            const indicator = document.getElementById('pulseIndicator');
+            indicator.classList.add('has-notifications');
+            setTimeout(() => {
+                if (notifications.filter(n => !n.read).length === 0) {
+                    indicator.classList.remove('has-notifications');
+                }
+            }, 3000);
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.textContent = '✅ Connected to HRM Portal';
+                status.className = 'connection-status connected';
+            } else {
+                status.textContent = '❌ Disconnected from HRM Portal';
+                status.className = 'connection-status disconnected';
+            }
+        }
+
+        // Format time
+        function formatTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return date.toLocaleTimeString();
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            requestNotificationPermission();
+            initializeConnection();
+            
+            // Auto-open sidebar if there are notifications
+            setTimeout(() => {
+                if (notifications.length > 0) {
+                    toggleSidebar();
+                }
+            }, 2000);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+        });
+    </script>
+</body>
+</html>

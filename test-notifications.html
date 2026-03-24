@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Notification Test - HRM Portal</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .connected {
+            background: #10b981;
+            color: white;
+        }
+        .disconnected {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        Connecting...
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Global Notification Test</h1>
+            <p>Test the HRM Portal Global Notification System</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Connection Status</h3>
+            <div id="connectionDetails" class="status info">
+                Checking connection to global notification service...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Send Test Notification</h3>
+            <div class="form-group">
+                <label>Sender Role:</label>
+                <select id="senderRole">
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="employee">Employee</option>
+                    <option value="system">System</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sender Email:</label>
+                <input type="email" id="senderEmail" value="test@example.com">
+            </div>
+            <div class="form-group">
+                <label>Message:</label>
+                <textarea id="message" rows="3" placeholder="Enter your test message here...">This is a test global notification from the HRM Portal system. You should see this as a desktop notification!</textarea>
+            </div>
+            <div class="form-group">
+                <label>Notification Type:</label>
+                <select id="notificationType">
+                    <option value="test_notification">Test Notification</option>
+                    <option value="urgent_message">Urgent Message</option>
+                    <option value="system_update">System Update</option>
+                    <option value="reminder">Reminder</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="sendTestNotification()">Send Test Notification</button>
+            <button class="btn btn-success" onclick="sendUrgentNotification()">Send Urgent Message</button>
+            <button class="btn btn-warning" onclick="testPermission()">Check Permission</button>
+            <div id="sendStatus" class="status info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Notification History</h3>
+            <div id="notificationHistory">
+                <p>No notifications received yet...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Browser Support</h3>
+            <div id="browserSupport" class="status info">
+                Checking browser notification support...
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+        let notificationCount = 0;
+
+        // Initialize connection
+        function initializeConnection() {
+            try {
+                socket = io('/', {
+                    transports: ['websocket', 'polling']
+                });
+
+                socket.on('connect', () => {
+                    console.log('Connected to global notification service');
+                    updateConnectionStatus(true);
+                    registerForNotifications();
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Disconnected from global notification service');
+                    updateConnectionStatus(false);
+                });
+
+                socket.on('global-notification', (data) => {
+                    console.log('Received global notification:', data);
+                    handleReceivedNotification(data);
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('Connection error:', error);
+                    updateConnectionStatus(false);
+                });
+
+            } catch (error) {
+                console.error('Error initializing connection:', error);
+                updateConnectionStatus(false);
+            }
+        }
+
+        // Register for notifications
+        function registerForNotifications() {
+            if (socket && socket.connected) {
+                socket.emit('register-global-notifications', {
+                    email: 'test@example.com',
+                    role: 'admin',
+                    userAgent: navigator.userAgent,
+                    timestamp: new Date().toISOString()
+                });
+                updateStatus('connectionDetails', 'Registered for global notifications', 'success');
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            const detailsEl = document.getElementById('connectionDetails');
+            
+            if (connected) {
+                statusEl.textContent = 'Connected';
+                statusEl.className = 'connection-status connected';
+                updateStatus('connectionDetails', 'Connected to global notification service', 'success');
+            } else {
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'connection-status disconnected';
+                updateStatus('connectionDetails', 'Disconnected from global notification service', 'error');
+            }
+        }
+
+        // Send test notification
+        async function sendTestNotification() {
+            const senderRole = document.getElementById('senderRole').value;
+            const senderEmail = document.getElementById('senderEmail').value;
+            const message = document.getElementById('message').value;
+            const type = document.getElementById('notificationType').value;
+
+            if (!message.trim()) {
+                updateStatus('sendStatus', 'Please enter a message', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/global-notifications/test-desktop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message, senderRole, senderEmail, type })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatus('sendStatus', `Test notification sent successfully! (${result.notificationsSent} users)`, 'success');
+                } else {
+                    updateStatus('sendStatus', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('sendStatus', `Network error: ${error.message}`, 'error');
+            }
+        }
+
+        // Send urgent notification
+        async function sendUrgentNotification() {
+            try {
+                const response = await fetch('/api/global-notifications/test-desktop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        message: '🚨 URGENT: This is an urgent test message from HRM Portal! Immediate attention required.',
+                        type: 'urgent_message'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateStatus('sendStatus', `Urgent notification sent! (${result.notificationsSent} users)`, 'success');
+                } else {
+                    updateStatus('sendStatus', `Error: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('sendStatus', `Network error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test notification permission
+        function testPermission() {
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                let message = `Notification permission: ${permission}`;
+                
+                if (permission === 'default') {
+                    message += ' (Click to request permission)';
+                } else if (permission === 'granted') {
+                    message += ' ✅ (Desktop notifications enabled)';
+                } else {
+                    message += ' ❌ (Desktop notifications blocked)';
+                }
+                
+                updateStatus('sendStatus', message, permission === 'granted' ? 'success' : 'error');
+                
+                // Request permission if not granted
+                if (permission === 'default') {
+                    Notification.requestPermission().then((perm) => {
+                        testPermission(); // Re-check after request
+                    });
+                }
+            } else {
+                updateStatus('sendStatus', 'This browser does not support notifications', 'error');
+            }
+        }
+
+        // Handle received notification
+        function handleReceivedNotification(data) {
+            notificationCount++;
+            
+            // Add to history
+            const historyEl = document.getElementById('notificationHistory');
+            const notificationItem = document.createElement('div');
+            notificationItem.style.cssText = 'padding: 10px; margin: 5px 0; border-left: 4px solid #3b82f6; background: #f8fafc;';
+            notificationItem.innerHTML = `
+                <strong>#${notificationCount}</strong> - ${new Date().toLocaleTimeString()}<br>
+                <strong>From:</strong> ${data.senderRole} (${data.senderEmail})<br>
+                <strong>Message:</strong> ${data.preview}<br>
+                <strong>Type:</strong> ${data.type}
+            `;
+            
+            if (historyEl.firstChild?.textContent.includes('No notifications')) {
+                historyEl.innerHTML = '';
+            }
+            
+            historyEl.insertBefore(notificationItem, historyEl.firstChild);
+            
+            // Show browser notification if permission granted
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(`HRM Portal - ${data.senderRole}`, {
+                    body: data.preview,
+                    icon: '/favicon.ico',
+                    tag: `test-${notificationCount}`,
+                    requireInteraction: true
+                });
+                
+                setTimeout(() => notification.close(), 8000);
+            }
+        }
+
+        // Update status display
+        function updateStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `status ${type}`;
+            el.style.display = 'block';
+        }
+
+        // Check browser support
+        function checkBrowserSupport() {
+            const supportEl = document.getElementById('browserSupport');
+            
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                let message = `✅ Browser supports notifications\nPermission: ${permission}`;
+                
+                if (permission === 'granted') {
+                    updateStatus('browserSupport', message + ' ✅ Ready for desktop notifications', 'success');
+                } else if (permission === 'default') {
+                    updateStatus('browserSupport', message + ' ⚠️ Permission needed', 'info');
+                } else {
+                    updateStatus('browserSupport', message + ' ❌ Permission denied', 'error');
+                }
+            } else {
+                updateStatus('browserSupport', '❌ Browser does not support notifications', 'error');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeConnection();
+            checkBrowserSupport();
+        });
+    </script>
+</body>
+</html>
