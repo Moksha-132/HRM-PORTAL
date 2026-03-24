@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const { ChatMessage, Employee, Leave, SuperAdmin, Company, HeaderSetting, AboutSetting, ContactSetting, Notification } = require('../models');
 const { callGroqChat } = require('../services/groqClient');
 const { sequelize } = require('../config/db');
+const { sendQueryResponseEmail } = require('../services/emailService');
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
@@ -501,16 +502,32 @@ exports.getAllChats = async (req, res) => {
 
         // Manual join to avoid sync-breaking constraints
         const userIds = [...new Set(chats.map(c => c.userId).filter(id => id && id.includes('@')))];
-        const users = await Employee.findAll({
-            where: { email: userIds },
-            attributes: ['employee_name', 'email']
-        });
-        const userMap = new Map(users.map(u => [u.email.toLowerCase(), u]));
+        
+        // Fetch from both Employee and SuperAdmin (Managers/Admins)
+        const [employees, admins] = await Promise.all([
+            Employee.findAll({
+                where: { email: userIds },
+                attributes: ['employee_name', 'email']
+            }),
+            SuperAdmin.findAll({
+                where: { email: userIds },
+                attributes: ['name', 'email', 'role']
+            })
+        ]);
+
+        const userMap = new Map();
+        employees.forEach(u => userMap.set(u.email.toLowerCase(), { name: u.employee_name, email: u.email }));
+        admins.forEach(u => userMap.set(u.email.toLowerCase(), { name: u.name, email: u.email, role: u.role }));
 
         const data = chats.map(c => {
             const plain = c.get({ plain: true });
             if (plain.userId && userMap.has(plain.userId.toLowerCase())) {
-                plain.user = userMap.get(plain.userId.toLowerCase());
+                const userData = userMap.get(plain.userId.toLowerCase());
+                plain.user = {
+                    name: userData.name,
+                    employee_name: userData.name, // compatibility
+                    email: userData.email
+                };
             }
             return plain;
         });
@@ -545,6 +562,32 @@ exports.updateChatResponse = async (req, res) => {
             });
         } catch (notifyErr) {
             console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
+        // Send Email Notification
+        try {
+            if (chat.userId && chat.userId.includes('@')) {
+                let userName = chat.userId.split('@')[0];
+                const emp = await Employee.findOne({ where: { email: chat.userId } });
+                if (emp) {
+                    userName = emp.employee_name;
+                } else {
+                    const admin = await SuperAdmin.findOne({ where: { email: chat.userId } });
+                    if (admin) userName = admin.name;
+                }
+
+                await sendQueryResponseEmail({
+                    to: chat.userId.trim(),
+                    userName,
+                    queryDetails: chat.message,
+                    responseMessage: response
+                });
+                console.log(`[Chat] Email sent successfully to ${chat.userId}`);
+                return res.status(200).json({ success: true, data: chat, emailSent: true });
+            }
+        } catch (emailErr) {
+            console.error('[Chat] Failed to send email (Edit):', emailErr);
+            return res.status(200).json({ success: true, data: chat, emailSent: false, error: emailErr.message || 'Email delivery failed' });
         }
 
         res.status(200).json({ success: true, data: chat });
@@ -600,7 +643,10 @@ exports.getSessionMessages = async (req, res) => {
 
 exports.sendAdminReply = async (req, res) => {
     try {
-        const { session_id, content, target_role } = req.body;
+        let { session_id, content, target_role } = req.body;
+        session_id = (session_id || '').toString().trim();
+        target_role = (target_role || '').toString().trim().toLowerCase();
+        
         if (!session_id || !content) return res.status(400).json({ success: false, error: 'session_id and content are required' });
 
         // Create new message from Admin
@@ -633,6 +679,39 @@ exports.sendAdminReply = async (req, res) => {
             });
         } catch (notifyErr) {
             console.error('[Chat] Failed to create user notification:', notifyErr);
+        }
+
+        // Send Email Notification
+        try {
+            if (session_id && session_id.includes('@')) {
+                let userName = session_id.split('@')[0];
+                const emp = await Employee.findOne({ where: { email: session_id } });
+                if (emp) {
+                    userName = emp.employee_name;
+                } else {
+                    const admin = await SuperAdmin.findOne({ where: { email: session_id } });
+                    if (admin) userName = admin.name;
+                }
+
+                // Get the original query (the last message from the user)
+                const lastUserMsg = await ChatMessage.findOne({
+                    where: { userId: session_id, sender_type: { [Op.ne]: 'Admin' } },
+                    order: [['timestamp', 'DESC']]
+                });
+                const queryDetails = lastUserMsg ? lastUserMsg.message : 'No prior queries found.';
+
+                await sendQueryResponseEmail({
+                    to: session_id,
+                    userName,
+                    queryDetails,
+                    responseMessage: content
+                });
+                console.log(`[Chat] Email sent successfully to ${session_id}`);
+                return res.status(200).json({ success: true, data: msg, emailSent: true });
+            }
+        } catch (emailErr) {
+            console.error('[Chat] Failed to send email notification (Reply):', emailErr);
+            return res.status(200).json({ success: true, data: msg, emailSent: false, error: emailErr.message || 'Email delivery failed' });
         }
 
         // 🚀 SEND GLOBAL NOTIFICATION TO ALL CONNECTED USERS

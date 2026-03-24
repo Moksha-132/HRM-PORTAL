@@ -19,7 +19,7 @@ connectDB();
 require('./models');
 
 // Sync models
-sequelize.sync({ alter: true })
+sequelize.sync()
     .then(() => {
         console.log('Database synced successfully');
     })
