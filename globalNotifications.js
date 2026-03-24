@@ -88,6 +88,9 @@ class GlobalNotificationClient {
         // Show desktop notification immediately
         this.showDesktopNotification(data);
 
+        // Show in-app toast
+        this.showToast(data);
+
         // Also store in local storage for persistence
         this.storeNotification(data);
     }
@@ -132,6 +135,67 @@ class GlobalNotificationClient {
         
         // Redirect to login page
         window.location.href = loginUrl;
+    }
+
+    // Show in-app toast notification
+    showToast(data) {
+        const toastId = `toast-${Date.now()}`;
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'global-toast';
+        toast.style.cssText = `
+            position: fixed; top: 20px; right: 20px; 
+            background: white; border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            padding: 16px; border-left: 4px solid var(--primary);
+            z-index: 9999; display: flex; align-items: start; 
+            gap: 12px; min-width: 300px; animation: slideIn 0.3s ease forwards;
+        `;
+        
+        toast.innerHTML = `
+            <div style="font-size: 1.5rem; color: var(--primary);">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;">New Notification</div>
+                <div style="font-size: 0.85rem; color: #4b5563;">${data.preview || data.fullMessage || data.message}</div>
+                <div style="margin-top: 8px; font-size: 0.75rem; color: #9ca3af;">Click to view</div>
+            </div>
+            <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color: #9ca3af; font-size: 1.2rem;">&times;</button>
+        `;
+
+        // Add slideIn animation if style tag isn't there
+        if (!document.getElementById('global-toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'global-toast-styles';
+            style.innerHTML = `
+                @keyframes slideIn { 
+                    from { transform: translateX(100%); opacity: 0; } 
+                    to { transform: translateX(0); opacity: 1; } 
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        toast.onclick = (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                this.handleNotificationClick(data);
+                toast.remove();
+            }
+        };
+
+        const closeBtn = toast.querySelector('button');
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                toast.remove();
+            };
+        }
+
+        document.body.appendChild(toast);
+
+        // Auto-remove after 8 seconds
+        setTimeout(() => { if (toast.parentElement) toast.remove(); }, 8000);
     }
 
     // Build login redirect URL with email pre-fill

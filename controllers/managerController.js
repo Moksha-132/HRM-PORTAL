@@ -43,6 +43,7 @@ exports.getEmployees = async (req, res) => {
 exports.createEmployee = async (req, res) => {
     try {
         const data = { ...req.body };
+        if (!data.role) data.role = 'Employee';
         if (req.user && req.user.role === 'Manager' && !data.manager_id) {
             let mgrEmp = await Employee.findOne({ where: { email: req.user.email } });
             if (!mgrEmp) {
@@ -447,15 +448,8 @@ exports.deleteHoliday = async (req, res) => {
 // LETTERS
 exports.getManagerLetters = async (req, res) => {
     try {
-        // Find letters associated with this manager
-        // We assume req.user is populated properly and has an employee_id if they are a manager
-        let managerId = req.user.employee_id || req.user.id;
-        if (!req.user.employee_id) {
-            // Check if they have an employee profile, otherwise use SuperAdmin ID
-            const emp = await Employee.findOne({ where: { email: req.user.email } });
-            if (emp) managerId = emp.employee_id;
-        }
-
+        // For letters, manager_id always refers to the SuperAdmin record (Managers/Admins)
+        let managerId = req.user.id;
         if (!managerId) return res.status(400).json({ success: false, error: "Manager profile not found" });
 
         const letters = await Letter.findAll({
@@ -469,17 +463,15 @@ exports.getManagerLetters = async (req, res) => {
 
 exports.sendLetter = async (req, res) => {
     try {
+        console.log('--- SEND LETTER REQUEST ---', req.body);
         const { employee_id, title, content } = req.body;
         if (!employee_id || !title || !content) {
+            console.warn('Missing fields:', { employee_id, title, content });
             return res.status(400).json({ success: false, error: "Please provide employee, title, and content" });
         }
 
-        let managerId = req.user.employee_id || req.user.id;
-        if (!req.user.employee_id) {
-             const emp = await Employee.findOne({ where: { email: req.user.email } });
-             if (emp) managerId = emp.employee_id;
-        }
-
+        // Letters are sent by Admins/Managers from SuperAdmin table
+        let managerId = req.user.id;
         if (!managerId) return res.status(400).json({ success: false, error: "Manager profile required to send letter" });
 
         let targetEmployeeIds = [];
@@ -524,6 +516,17 @@ exports.sendLetter = async (req, res) => {
                     message: `You have received a new letter: ${title}`,
                     type: 'Letter'
                 });
+
+                // Emit real-time global notification
+                if (global.globalNotificationService) {
+                    await global.globalNotificationService.sendGlobalNotification({
+                        senderRole: 'manager',
+                        senderEmail: req.user.email,
+                        message: `Letter Sent: ${title}`,
+                        type: 'Letter',
+                        recipientEmails: [rLetter.Recipient.email]
+                    });
+                }
             }
             sentLetters.push(rLetter);
         }

@@ -918,16 +918,29 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('form-letter')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const contentVal = window.newLetterQuill ? window.newLetterQuill.root.innerHTML : '';
+        console.log('--- SUBMITTING LETTER ---', { 
+            emp: document.getElementById('letter-emp').value, 
+            title: document.getElementById('letter-title').value 
+        });
+
         if (!contentVal || contentVal === '<p><br></p>') return alert("Please type your letter content");
 
-        await apiCall('letters', 'POST', {
-            employee_id: document.getElementById('letter-emp').value,
-            title: document.getElementById('letter-title').value,
-            content: contentVal
-        });
-        document.getElementById('form-letter').reset();
-        if (window.newLetterQuill) window.newLetterQuill.root.innerHTML = '';
-        window.fetchLetters();
+        try {
+            console.log('Sending API call to /api/v1/manager/letters ...');
+            await apiCall('letters', 'POST', {
+                employee_id: document.getElementById('letter-emp').value,
+                title: document.getElementById('letter-title').value,
+                content: contentVal
+            });
+            console.log('Success!');
+            alert("Letter sent successfully!");
+            document.getElementById('form-letter').reset();
+            if (window.newLetterQuill) window.newLetterQuill.root.innerHTML = '';
+            window.fetchLetters();
+        } catch (err) {
+            console.error('Send letter error:', err);
+            alert("Failed to send letter: " + err.message);
+        }
     });
 
     window.generatePayslipBtn = async (id) => {

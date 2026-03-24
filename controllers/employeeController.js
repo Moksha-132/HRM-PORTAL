@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin } = require('../models');
 const { Op } = require('sequelize');
 
 // Dashboard Statistics
