@@ -25,6 +25,10 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
             isEmail: { msg: 'Please add a valid email' }
         }
     },
+    phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     role: {
         type: DataTypes.ENUM('Super Admin', 'Admin', 'Company Admin', 'Manager', 'Employee'),
         defaultValue: 'Super Admin'

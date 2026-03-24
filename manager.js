@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(viewId === 'view-offboardings') window.fetchOffboardings();
         if(viewId === 'view-finance') window.fetchExpenses();
         if(viewId === 'view-holidays') window.fetchHolidays();
+        if(viewId === 'view-profile') window.fetchProfile();
     }
 
     // --- MODULES ---
@@ -869,6 +870,71 @@ document.addEventListener('DOMContentLoaded', () => {
             window.fetchNotifications();
         });
     }
+
+    // --- PROFILE ---
+    window.fetchProfile = async () => {
+        try {
+            const res = await fetch('/api/v1/auth/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                document.getElementById('prof-name').value = data.data.name || '';
+                document.getElementById('prof-email').value = data.data.email || '';
+                document.getElementById('prof-phone').value = data.data.phone || '';
+            }
+        } catch (e) { console.error('Error fetching profile:', e); }
+    };
+
+    document.getElementById('form-profile')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('prof-name').value;
+        const email = document.getElementById('prof-email').value;
+        const phone = document.getElementById('prof-phone').value;
+
+        try {
+            const res = await fetch('/api/v1/auth/updatedetails', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, email, phone })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert('Profile updated successfully');
+                if (emailDisplay) emailDisplay.textContent = email;
+                sessionStorage.setItem('shnoor_admin_email', email);
+            } else {
+                alert(data.error || 'Failed to update profile');
+            }
+        } catch (err) { console.error(err); }
+    });
+
+    document.getElementById('form-pass')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentPassword = document.getElementById('pass-curr').value;
+        const newPassword = document.getElementById('pass-new').value;
+
+        try {
+            const res = await fetch('/api/v1/auth/updatepassword', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert('Password updated successfully');
+                e.target.reset();
+            } else {
+                alert(data.error || 'Failed to update password');
+            }
+        } catch (err) { console.error(err); }
+    });
 
     // Initial Load
     window.fetchDashboard();

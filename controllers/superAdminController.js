@@ -113,7 +113,8 @@ exports.updateDetails = async (req, res) => {
     try {
         const fieldsToUpdate = {
             name: req.body.name,
-            email: req.body.email
+            email: req.body.email,
+            phone: req.body.phone
         };
         // Option to include other basic details, but for now name and email.
 
@@ -124,6 +125,31 @@ exports.updateDetails = async (req, res) => {
         await user.update(fieldsToUpdate);
 
         res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Update password
+// @route   PUT /api/v1/auth/updatepassword
+exports.updatePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = await SuperAdmin.findByPk(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const isMatch = await user.matchPassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, error: 'Current password incorrect' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Password updated successfully' });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }

@@ -12,5 +12,6 @@ router.delete('/users/:id', protect, authorize('Super Admin'), deleteUser);
 
 router.get('/me', protect, getMe);
 router.put('/updatedetails', protect, updateDetails);
+router.put('/updatepassword', protect, updatePassword);
 
 module.exports = router;

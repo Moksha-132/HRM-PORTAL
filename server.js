@@ -15,7 +15,7 @@ connectDB();
 require('./models');
 
 // Sync models
-sequelize.sync()
+sequelize.sync({ alter: true })
     .then(() => {
         console.log('Database synced successfully');
     })
