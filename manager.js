@@ -866,6 +866,55 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { alert("Error deleting letter"); }
     };
 
+    const LETTER_TEMPLATES = {
+        offer: {
+            title: "Offer of Employment",
+            content: "Dear [Employee Name],\n\nWe are pleased to offer you the position of [Job Title] at SHNOOR International LLC. We were impressed with your background and believe you will be a valuable addition to our team.\n\nYour start date will be [Date], and you will report to [Manager Name]. Your initial compensation will be [Salary] per annum, payable in accordance with our standard payroll schedule.\n\nWe look forward to welcoming you to the SHNOOR family!"
+        },
+        promotion: {
+            title: "Promotion and Salary Revision",
+            content: "Dear [Employee Name],\n\nCongratulations! We are delighted to inform you of your promotion to the position of [New Job Title], effective from [Effective Date].\n\nThis promotion is a recognition of your hard work, dedication, and the significant impact you have made on our team. Your new annual compensation will be [New Salary].\n\nWe are confident that you will continue to excel in your new role and contribute to the ongoing success of SHNOOR International LLC."
+        },
+        appreciation: {
+            title: "Letter of Appreciation",
+            content: "Dear [Employee Name],\n\nThis letter is to express our sincere appreciation for your outstanding performance and dedication to SHNOOR International LLC. Your contributions to [Project Name/Specific Area] have been exceptional.\n\nYour commitment to excellence and your positive attitude are an inspiration to the entire team. Thank you for your hard work and for being such a valuable member of our organization."
+        },
+        relieving: {
+            title: "Relieving Letter and experience certificate",
+            content: "Dear [Employee Name],\n\nThis is to certify that [Employee Name] was employed with SHNOOR International LLC from [Start Date] to [End Date]. During this period, they served as [Last Designation].\n\nWe would like to confirm that [Employee Name] is being relieved of their duties effective [End Date]. We appreciate the contributions made during their tenure and wish them the very best in their future professional endeavors."
+        },
+        warning: {
+            title: "Performance / Conduct Warning",
+            content: "Dear [Employee Name],\n\nThis is a formal warning letter regarding [specific issue, e.g., consistent tardiness / performance concerns]. Despite previous verbal discussions, we have not seen the required improvement in [Area of concern].\n\nWe expect to see immediate and sustained improvement in your [Performance/Conduct]. Please be advised that further instances of this nature may lead to more severe disciplinary action, up to and including termination of employment."
+        },
+        internship: {
+            title: "Internship Completion Certificate",
+            content: "Dear [Employee Name],\n\nThis is to certify that [Employee Name] has successfully completed their internship with SHNOOR International LLC from [Start Date] to [End Date]. During this period, they worked with the [Department Name] team as an Intern.\n\nThey demonstrated a keen interest in learning and contributed effectively to the team's objectives. Their performance during the internship was [Rating, e.g., Outstanding]. We wish them all the best in their academic and professional journey ahead."
+        },
+        termination: {
+            title: "Notification of Termination",
+            content: "Dear [Employee Name],\n\nWe regret to inform you that your employment with SHNOOR International LLC is being terminated, effective [Effective Date]. This decision has been made due to [Reason, e.g., business restructuring / performance issues].\n\nYour final paycheck, including any accrued vacation pay and benefits information, will be [sent to you / provided]. Please return all company property, including keys and equipment, by [Date]. We wish you the best in your future endeavors."
+        },
+        confirmation: {
+            title: "Employment Confirmation Letter",
+            content: "Dear [Employee Name],\n\nWe are pleased to inform you that you have successfully completed your probation period at SHNOOR International LLC. Based on your performance and contribution to the team, we are happy to confirm your permanent appointment as [Job Title].\n\nAll other terms and conditions of your employment as per your initial offer letter remain unchanged. We look forward to your continued growth and success with the organization."
+        }
+    };
+
+    document.getElementById('letter-template')?.addEventListener('change', (e) => {
+        const templateKey = e.target.value;
+        if (templateKey && LETTER_TEMPLATES[templateKey]) {
+            const template = LETTER_TEMPLATES[templateKey];
+            document.getElementById('letter-title').value = template.title;
+            if (window.newLetterQuill) {
+                window.newLetterQuill.root.innerHTML = template.content.replace(/\n/g, '<br>');
+            }
+        } else {
+            document.getElementById('letter-title').value = '';
+            if (window.newLetterQuill) window.newLetterQuill.root.innerHTML = '';
+        }
+    });
+
     document.getElementById('form-letter')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const contentVal = window.newLetterQuill ? window.newLetterQuill.root.innerHTML : '';
