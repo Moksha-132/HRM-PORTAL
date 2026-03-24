@@ -31,6 +31,7 @@ class GlobalNotificationClient {
             // Get user info from session storage
             this.userEmail = sessionStorage.getItem('shnoor_admin_email') || 
                            sessionStorage.getItem('shnoor_email') || 
+                           localStorage.getItem('cb_public_id') ||
                            'anonymous@user.com';
             
             this.userRole = this.inferRoleFromEmail(this.userEmail);
@@ -79,6 +80,18 @@ class GlobalNotificationClient {
     // Handle incoming global notification
     handleGlobalNotification(data) {
         console.log('Received global notification:', data);
+        
+        // Filter based on recipient emails if provided
+        if (data.recipientEmails && data.recipientEmails.length > 0) {
+            const isRecipient = data.recipientEmails.some(email => 
+                email.toLowerCase() === this.userEmail.toLowerCase()
+            );
+            
+            if (!isRecipient) {
+                console.log('Notification is NOT for this user, ignoring...');
+                return;
+            }
+        }
 
         // Store in queue for later if user is not logged in
         if (!this.isUserLoggedIn()) {

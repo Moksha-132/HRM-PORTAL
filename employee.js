@@ -788,20 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         socket.on('new_notification', (data) => {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(data.title || 'New Notification', {
-                    body: data.message
-                });
-            } else if ('Notification' in window && Notification.permission !== 'denied') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        new Notification(data.title || 'New Notification', {
-                            body: data.message
-                        });
-                    }
-                });
-            }
-            
             // Show HUD popup 
             showPopupNotification(data);
             // Refresh notification API count
