@@ -31,7 +31,7 @@ const ManagerDashboard = () => {
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'offboardings', label: 'Offboardings', icon: 'fas fa-user-minus' },
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
-      { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-star' },
+      { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
     ],
     []

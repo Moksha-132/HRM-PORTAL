@@ -80,7 +80,7 @@ const AdminTransactionsView = () => {
                   </option>
                 ))}
               </select>
-              <label className="form-label">Amount ($)</label>
+              <label className="form-label">Amount (₹)</label>
               <input className="input" type="number" step="0.01" value={form.amount} onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))} required />
               <label className="form-label">Transaction Date</label>
               <input className="input" type="date" value={form.transactionDate} onChange={(e) => setForm((prev) => ({ ...prev, transactionDate: e.target.value }))} required />
@@ -140,7 +140,7 @@ const AdminTransactionsView = () => {
                     <tr key={transaction.id}>
                       <td>{transaction.transactionDate ? new Date(transaction.transactionDate).toLocaleDateString() : 'N/A'}</td>
                       <td>{transaction.Company?.name || 'Unknown'}</td>
-                      <td>${transaction.amount}</td>
+                      <td>₹{transaction.amount}</td>
                       <td>{transaction.nextPaymentDate ? new Date(transaction.nextPaymentDate).toLocaleDateString() : 'N/A'}</td>
                       <td>{transaction.paymentMethod || 'N/A'}</td>
                       <td>

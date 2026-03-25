@@ -3,7 +3,8 @@ import React from 'react';
 const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, isCollapsed }) => {
   return (
     <aside className={`sidebar${isOpen ? ' open' : ''}${isCollapsed ? ' collapsed' : ''}`} id="sidebar">
-      <div className="sidebar-top">
+      <div className="sidebar-top" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <img src="/logo.avif" alt="Logo" style={{ height: '48px' }} />
         <span className="sidebar-brand">{brand}</span>
         <span className="sidebar-tag">{tag}</span>
       </div>

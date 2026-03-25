@@ -14,8 +14,7 @@ const EmployeeProfileView = () => {
         const res = await getProfile();
         if (active && res.success) {
           setProfile({
-            employee_name: res.data.employee_name,
-            email: res.data.email,
+            ...res.data,
             phone: res.data.phone || '',
           });
         }
@@ -54,12 +53,50 @@ const EmployeeProfileView = () => {
           </div>
           <div className="panel-body">
             <form onSubmit={handleProfileSubmit}>
-              <label className="form-label">Full Name</label>
-              <input className="input" value={profile.employee_name} onChange={(e) => setProfile((prev) => ({ ...prev, employee_name: e.target.value }))} required />
-              <label className="form-label">Corporate Email</label>
-              <input className="input" type="email" value={profile.email} readOnly />
-              <label className="form-label">Contact Number</label>
-              <input className="input" value={profile.phone} onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))} />
+              <div className="grid grid-2" style={{ gap: '15px' }}>
+                <div>
+                  <label className="form-label">Full Name</label>
+                  <input className="input" value={profile.employee_name} onChange={(e) => setProfile((prev) => ({ ...prev, employee_name: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="form-label">Corporate Email</label>
+                  <input className="input" type="email" value={profile.email} readOnly />
+                </div>
+              </div>
+
+              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px' }}>
+                <div>
+                  <label className="form-label">Contact Number</label>
+                  <input className="input" value={profile.phone} onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="form-label">Joining Date</label>
+                  <input className="input" value={profile.joining_date || 'N/A'} readOnly />
+                </div>
+              </div>
+
+              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px' }}>
+                <div>
+                  <label className="form-label">Department</label>
+                  <input className="input" value={profile.department || 'N/A'} readOnly />
+                </div>
+                <div>
+                  <label className="form-label">Designation</label>
+                  <input className="input" value={profile.designation || 'N/A'} readOnly />
+                </div>
+              </div>
+
+              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px', marginBottom: '20px' }}>
+                <div>
+                  <label className="form-label">Work Allotment</label>
+                  <input className="input" value={profile.work_mode || 'N/A'} readOnly />
+                </div>
+                <div>
+                  <label className="form-label">Location</label>
+                  <input className="input" value={profile.location || 'N/A'} readOnly />
+                </div>
+              </div>
+
               <button type="submit" className="btn btn-solid" style={{ width: '100%' }} disabled={loading}>
                 Save Changes
               </button>

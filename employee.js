@@ -441,10 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const todayDate = new Date().toISOString().split('T')[0];
         
-        document.getElementById('preview-letter-title').textContent = 'Letter Preview';
-        document.getElementById('preview-letter-body').innerHTML = `
+        document.getElementById('preview-letter-title').textContent = item.title || 'Letter Preview';
+        const bodyEl = document.getElementById('preview-letter-body');
+        if (!bodyEl) return;
+
+        bodyEl.innerHTML = `
             <div style="text-align: left; margin-bottom: 30px;">
-                <img src="/logo.avif" alt="Logo" style="max-height: 80px;">
+                <img src="logo.avif" alt="Logo" style="max-height: 80px;" onerror="this.style.display='none'">
             </div>
             
             <div style="text-align: center; font-size: 18px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; text-transform: uppercase;">
@@ -456,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             
             <div style="white-space: pre-wrap; margin-bottom: 40px; text-align: justify; font-size: 14px; line-height: 1.6; color: #000;">
-                ${item.content}
+                ${item.content || 'No content available.'}
             </div>
             
             <div style="margin-top: 60px;">
@@ -464,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <strong>Hiring Team - SHNOOR International LLC</strong><br>
                 <span style="font-size: 10px; color: #666;">Mount Tabor Road, Odessa, Missouri, US | Ph: +91-9429694298</span><br>
                 <div style="text-align: left; margin-top: 15px;">
-                    <img src="/Signature.png" alt="Signature" style="max-height: 80px;">
+                    <img src="Signature.png" alt="Signature" style="max-height: 80px;" onerror="this.style.display='none'">
                 </div>
             </div>
         `;

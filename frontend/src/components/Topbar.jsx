@@ -11,7 +11,6 @@ const Topbar = ({ title, roleLabel, roleKey, email, onToggle }) => {
       <div className="topbar-right">
         <NotificationBell role={roleKey} />
         <span className="admin-badge">{roleLabel}</span>
-        <span className="admin-email">{email}</span>
       </div>
     </header>
   );

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>shnoor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="chatbot/chatbot.css" />
@@ -36,8 +37,8 @@
             <option value="ur">UR</option>
           </select>
         </div>
-        <a href="#register" class="btn btn-outline">Register</a>
-        <a href="#login"    class="btn btn-solid">Login</a>
+        <a href="register.html" class="btn btn-outline">Register</a>
+        <a href="login.html"    class="btn btn-solid">Login</a>
       </div>
 
       <button class="hamburger" id="hamburger">&#9776;</button>
@@ -47,21 +48,21 @@
   <!-- HERO -->
   <section class="section hero" id="home">
     <div class="container center">
-      <div class="hero-badge" id="hero-subtitle" style="display: none;"></div>
-      <h1 class="hero-title" id="hero-title">Loading...</h1>
-      <p class="hero-desc" id="hero-desc" style="display: none;"></p>
-      <div class="btn-row" id="hero-btn-row" style="display: none;">
+      <div class="hero-badge animate-fade-up" id="hero-subtitle" style="display: none;"></div>
+      <h1 class="hero-title animate-fade-up delay-100" id="hero-title">Loading...</h1>
+      <p class="hero-desc animate-fade-up delay-200" id="hero-desc" style="display: none;"></p>
+      <div class="btn-row animate-fade-up delay-300" id="hero-btn-row" style="display: none;">
         <a href="#" class="btn btn-solid" id="hero-btn"></a>
         <a href="#features" class="btn btn-outline" id="hero-btn-secondary">Explore Features</a>
       </div>
-      <div class="hero-visual" id="hero-bg-container">
+      <div class="hero-visual animate-fade-in delay-400" id="hero-bg-container">
       </div>
     </div>
   </section>
 
   <!-- ABOUT US -->
   <section class="section" id="about">
-    <div class="container center">
+    <div class="container center animate-fade-up">
       <div class="section-label">About Us</div>
       <h2 class="section-title" id="about-title">Our Story</h2>
       <p class="section-desc" id="about-desc" style="max-width: 800px; text-align: center; margin: 0 auto; line-height: 1.6;">Loading...</p>
@@ -129,62 +130,48 @@
     </div>
   </section>
 
-  <!-- LOGIN -->
-  <section class="section" id="login">
-    <div class="container center">
-      <div class="auth-card">
-        <div class="auth-logo-wrap">
-          <span class="auth-brand">shnoor</span>
-        </div>
-        <h2 class="auth-heading">Welcome back</h2>
-        <p class="auth-sub-text">Sign in to your account</p>
-
-        <div id="login-error" class="login-error" style="display:none;">
-          Invalid email or password.
-        </div>
-
-        <form id="login-form" novalidate>
-          <div class="form-group">
-            <label for="login-email">Email</label>
-            <input type="email" id="login-email" name="email"
-                   placeholder="you@example.com" autocomplete="email" required />
-          </div>
-          <div class="form-group">
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password"
-                   placeholder="••••••••" autocomplete="current-password" required />
-          </div>
-          <div class="auth-row" style="margin-bottom:20px;">
-            <label class="checkbox-label">
-              <input type="checkbox" id="remember-me" /> Remember me
-            </label>
-            <a href="#" class="link-small">Forgot password?</a>
-          </div>
-          <button type="submit" class="btn btn-solid btn-block" id="login-submit">
-            Sign In
-          </button>
-        </form>
-
-        <p class="auth-foot-text">
-          Don't have an account? <a href="#register" class="link-small">Register</a>
-        </p>
-      </div>
-    </div>
-  </section>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="footer-inner" style="display:flex; justify-content:center; text-align:center;">
-      <div class="footer-brand" style="align-items:center;">
-        <span class="logo">shnoor</span>
-        <div class="footer-text" style="font-size: 0.85rem; color: var(--text-light); margin-top: 10px;">Empowering Next-Gen Workforce</div>
-        <div class="social-row" id="footer-social-row" style="margin-top:20px; gap: 20px;">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo">shnoor</div>
+        <div class="footer-text">Empowering Next-Gen Workforce with seamless human resource management solutions.</div>
+        <div class="social-row" id="footer-social-row">
           <!-- Injected via main.js -->
         </div>
       </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <div class="footer-list">
+          <a href="#about" class="footer-link">About Us</a>
+          <a href="#features" class="footer-link">Features</a>
+          <a href="#pricing" class="footer-link">Pricing</a>
+          <a href="#contact" class="footer-link">Contact</a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <div class="footer-list">
+          <a href="login.html" class="footer-link">Login</a>
+          <a href="register.html" class="footer-link">Register</a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <div class="footer-col-title">Contact</div>
+        <div class="footer-list">
+          <a href="mailto:info@shnoor.com" class="footer-link" id="contact-email-footer">info@shnoor.com</a>
+          <a href="tel:+1234567890" class="footer-link" id="contact-phone-footer">+1 234 567 890</a>
+          <span class="footer-muted" id="contact-address-footer">123 Business Avenue, Tech City</span>
+        </div>
+      </div>
     </div>
+
     <div class="footer-bar">
-      <div style="font-size: 0.85rem; color: var(--text-light);">&copy; 2026 Shnoor International LLC. All rights reserved.</div>
+      <div class="footer-copyright">&copy; 2026 Shnoor International LLC. All rights reserved.</div>
     </div>
   </footer>
 

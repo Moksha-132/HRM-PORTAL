@@ -13,7 +13,8 @@ const Header = () => {
     <>
       <header className="navbar">
         <div className="nav-container">
-          <Link to="/" className="logo" aria-label="Shnoor Home">
+          <Link to="/" className="logo" aria-label="Shnoor Home" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.avif" alt="shnoor logo" style={{ height: '48px' }} />
             shnoor
           </Link>
 
@@ -46,16 +47,7 @@ const Header = () => {
           </nav>
 
           <div className="nav-right">
-            <div className="lang-wrap" aria-label="Language selector">
-              <span style={{ fontWeight: 700, color: 'var(--text-light)' }}>Lang</span>
-              <select id="lang" defaultValue="en" aria-label="Language">
-                <option value="en">EN</option>
-                <option value="ar">AR</option>
-                <option value="fr">FR</option>
-                <option value="ur">UR</option>
-              </select>
-            </div>
-            <Link to="/register" className="btn btn-outline">
+            <Link to="/register" className="btn btn-outline" style={{ marginLeft: 'auto' }}>
               Register
             </Link>
             <Link to="/login" className="btn btn-solid">

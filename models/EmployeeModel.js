@@ -57,6 +57,14 @@ const Employee = sequelize.define('Employee', {
     status: {
         type: DataTypes.ENUM('Active', 'Inactive', 'OnLeave', 'Resigned'),
         defaultValue: 'Active'
+    },
+    work_mode: {
+        type: DataTypes.STRING, // 'Work from Home', 'Hybrid', 'Work from Office'
+        allowNull: true
+    },
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     tableName: 'employees',

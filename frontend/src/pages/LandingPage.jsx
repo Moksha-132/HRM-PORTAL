@@ -8,6 +8,17 @@ import {
   getPricing,
 } from '../services/settingsService';
 
+const getFeatureIcon = (title) => {
+  const t = (title || '').toLowerCase();
+  if (t.includes('directory') || t.includes('employee')) return 'fas fa-users';
+  if (t.includes('time') || t.includes('attendance')) return 'fas fa-clock';
+  if (t.includes('payroll') || t.includes('salary') || t.includes('finance')) return 'fas fa-money-check-alt';
+  if (t.includes('performance') || t.includes('review')) return 'fas fa-chart-line';
+  if (t.includes('portal') || t.includes('self')) return 'fas fa-laptop-house';
+  if (t.includes('reporting') || t.includes('analytic')) return 'fas fa-chart-pie';
+  return 'fas fa-star';
+};
+
 const LandingPage = () => {
   const [header, setHeader] = useState({
     title: 'Loading...',
@@ -92,8 +103,13 @@ const LandingPage = () => {
             className="hero-visual animate-fade-in delay-400"
             id="hero-bg-container"
             style={{
-              backgroundImage: header.backgroundImage ? `url('${header.backgroundImage}')` : 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
-              minHeight: '400px'
+              backgroundImage: `url('/website-img.jpeg')`,
+              backgroundSize: 'contain',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              height: '350px',
+              width: '100%',
+              borderRadius: '20px',
             }}
           />
         </div>
@@ -114,8 +130,8 @@ const LandingPage = () => {
           </p>
           
           <div className="grid-2" style={{ marginTop: 60 }}>
-            <div className="card animate-fade-up delay-100" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid var(--primary)' }}>
-              <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}>🎯</div>
+            <div className="card animate-slide-left delay-100" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid var(--primary)' }}>
+              <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}><i className="fas fa-bullseye"></i></div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                 Our Mission
               </h3>
@@ -124,8 +140,8 @@ const LandingPage = () => {
               </p>
             </div>
             
-            <div className="card animate-fade-up delay-200" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid #a855f7' }}>
-              <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}>🔭</div>
+            <div className="card animate-slide-right delay-200" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid #a855f7' }}>
+              <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}><i className="fas fa-eye"></i></div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                 Our Vision
               </h3>
@@ -159,7 +175,7 @@ const LandingPage = () => {
               features.map((feature, index) => (
                 <div key={feature._id || feature.title} className={`card animate-fade-up delay-${(index % 3 + 1) * 100}`}>
                   <div className="card-icon">
-                    {feature.icon || '✨'}
+                    <i className={getFeatureIcon(feature.title)}></i>
                   </div>
                   <h3 className="card-title" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)' }}>
                     {feature.title}
@@ -187,7 +203,7 @@ const LandingPage = () => {
                   Starter
                 </h3>
                 <div className="pricing-price">
-                  $0
+                  ₹0
                   <span style={{ fontSize: '1.1rem', fontWeight: 500, color: 'var(--text-light)' }}>/mo</span>
                 </div>
                 <hr className="divider" />
@@ -212,7 +228,7 @@ const LandingPage = () => {
                     {plan.planName}
                   </h3>
                   <div className="pricing-price">
-                    ${plan.price}
+                    ₹{plan.price}
                     <span style={{ fontSize: '1.1rem', fontWeight: 500, color: 'var(--text-light)' }}>/mo</span>
                   </div>
                   <hr className="divider" />

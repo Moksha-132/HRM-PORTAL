@@ -1,4 +1,5 @@
 const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification } = require('../models');
+const { sequelize } = require('../config/db');
 const fs = require('fs');
 const path = require('path');
 
@@ -399,6 +400,20 @@ exports.updateExpense = async (req, res) => {
         if(!ex) return res.status(404).json({ success: false, error: "Not found" });
         await ex.update(req.body);
         const rex = await Expense.findByPk(ex.expense_id, { include: [Employee] });
+        
+        // Notify Employee via Global Service (Real-time)
+        if (req.body.status && (req.body.status === 'Approved' || req.body.status === 'Rejected')) {
+            if (rex.Employee && rex.Employee.email && global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [rex.Employee.email.toLowerCase()],
+                    message: `Your expense claim for "${rex.title}" has been ${req.body.status}.`,
+                    type: 'expense_status_update'
+                });
+            }
+        }
+        
         res.status(200).json({ success: true, data: rex });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -470,9 +485,11 @@ exports.sendLetter = async (req, res) => {
             return res.status(400).json({ success: false, error: "Please provide employee, title, and content" });
         }
 
-        // Letters are sent by Admins/Managers from SuperAdmin table
-        let managerId = req.user.id;
-        if (!managerId) return res.status(400).json({ success: false, error: "Manager profile required to send letter" });
+        // Managers are identified by their email in the Employee table
+        // Database enforces manager_id pointing to SuperAdmin table
+        const managerId = req.user.id;
+        console.log('Using SuperAdmin ID for letter sender:', managerId);
+
 
         let targetEmployeeIds = [];
         if (employee_id === 'all') {
@@ -485,18 +502,21 @@ exports.sendLetter = async (req, res) => {
                        !role.includes('admin') && 
                        !desig.includes('manager') && 
                        !desig.includes('admin') && 
-                       name !== 'shnoor manager';
+                       name !== 'shnoor manager' &&
+                       e.email !== req.user.email; // Don't send to self
             }).map(e => e.employee_id);
         } else {
             targetEmployeeIds = [employee_id];
         }
 
         if (targetEmployeeIds.length === 0) {
-             return res.status(400).json({ success: false, error: "No target employees found." });
+            return res.status(400).json({ success: false, error: "No target employees found." });
         }
 
         const sentLetters = [];
         for (const targetId of targetEmployeeIds) {
+            if (!targetId) continue;
+            
             const letter = await Letter.create({
                 title,
                 content,
@@ -510,29 +530,36 @@ exports.sendLetter = async (req, res) => {
             });
             
             if (rLetter && rLetter.Recipient && rLetter.Recipient.email) {
-                await Notification.create({
-                    userId: rLetter.Recipient.email.toLowerCase(),
-                    role: 'employee',
-                    message: `You have received a new letter: ${title}`,
-                    type: 'Letter'
-                });
-
-                // Emit real-time global notification
-                if (global.globalNotificationService) {
-                    await global.globalNotificationService.sendGlobalNotification({
-                        senderRole: 'manager',
-                        senderEmail: req.user.email,
-                        message: `Letter Sent: ${title}`,
-                        type: 'Letter',
-                        recipientEmails: [rLetter.Recipient.email]
+                try {
+                    await Notification.create({
+                        userId: rLetter.Recipient.email.toLowerCase(),
+                        role: 'employee',
+                        message: `You have received a new letter: ${title}`,
+                        type: 'Letter'
                     });
+
+                    // Emit real-time global notification
+                    if (global.globalNotificationService) {
+                        await global.globalNotificationService.sendGlobalNotification({
+                            senderRole: 'manager',
+                            senderEmail: req.user.email,
+                            message: `Letter Sent: ${title}`,
+                            type: 'Letter',
+                            recipientEmails: [rLetter.Recipient.email]
+                        });
+                    }
+                } catch (notifErr) {
+                    console.error('Non-critical notification error:', notifErr);
                 }
             }
             sentLetters.push(rLetter);
         }
 
         res.status(201).json({ success: true, data: sentLetters[0], all_sent: sentLetters.length });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { 
+        console.error('Critical Letter Save Error:', err);
+        res.status(400).json({ success: false, error: err.message }); 
+    }
 };
 
 exports.updateLetter = async (req, res) => {

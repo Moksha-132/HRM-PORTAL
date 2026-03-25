@@ -58,7 +58,7 @@ const EmployeePayrollView = () => {
                 payslips.map((slip) => (
                   <tr key={slip.payslip_id || slip.payroll_id}>
                     <td>{slip.payment_date || 'N/A'}</td>
-                    <td>${slip.net_salary}</td>
+                    <td>₹{slip.net_salary}</td>
                     <td>{slip.payment_date || 'N/A'}</td>
                     <td>
                       <button className="btn btn-outline" style={{ fontSize: 11, padding: '4px 8px' }} type="button">

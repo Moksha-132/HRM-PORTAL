@@ -56,7 +56,7 @@ const importData = async () => {
 
         await HeaderSetting.destroy({ where: {} });
         await HeaderSetting.create({
-            title: 'Shnoor International LLc',
+            title: 'Shnoor International LLC',
             subtitle: 'Empowering Next-Gen Workforce',
             description: 'Advanced Human Resource Management designed for the modern enterprise.',
             buttonText: 'Get Started',

@@ -65,6 +65,16 @@ export const submitExpense = async (payload) => {
   return data;
 };
 
+export const updateExpense = async (id, payload) => {
+  const { data } = await api.put(`/api/v1/employee/expenses/${id}`, payload);
+  return data;
+};
+
+export const deleteExpense = async (id) => {
+  const { data } = await api.delete(`/api/v1/employee/expenses/${id}`);
+  return data;
+};
+
 export const getPayslips = async () => {
   const { data } = await api.get('/api/v1/employee/payslips');
   return data;

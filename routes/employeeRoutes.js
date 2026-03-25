@@ -29,6 +29,10 @@ router.route('/expenses')
     .get(controller.getMyExpenses)
     .post(controller.submitExpense);
 
+router.route('/expenses/:id')
+    .put(controller.updateExpense)
+    .delete(controller.deleteExpense);
+
 router.get('/payroll', controller.getMyPayroll);
 router.get('/payslips', controller.getMyPayslips);
 router.get('/payslips/:id/download', controller.downloadPayslip);

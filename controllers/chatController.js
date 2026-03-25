@@ -575,6 +575,20 @@ exports.updateChatResponse = async (req, res) => {
             });
         }
 
+        // 🚀 SEND GLOBAL NOTIFICATION FOR CHAT EDIT
+        try {
+            await sendGlobalNotification({
+                senderRole: 'admin',
+                senderEmail: req.user?.email || 'admin@shnoor.com',
+                message: response,
+                type: 'admin_message',
+                recipientEmails: [chat.userId]
+            });
+            console.log('✅ Global notification sent for chat edit:', (response || '').substring(0, 50) + '...');
+        } catch (globalNotifyErr) {
+            console.error('❌ Failed to send global notification (Edit):', globalNotifyErr);
+        }
+
         // Send Email Notification
         try {
             if (chat.userId && chat.userId.includes('@')) {

@@ -63,73 +63,74 @@ const LoginPage = () => {
 
   return (
     <MainLayout>
-      <section className="section" id="login" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
-        <div className="container center">
-          <div className="auth-card animate-fade-up" style={{ margin: '0 auto' }}>
-            <div className="auth-logo-wrap">
-              <span className="auth-brand">shnoor</span>
-            </div>
-            <h2 className="auth-heading">Welcome back</h2>
-            <p className="auth-sub-text">Sign in to your account</p>
-            {loginError && (
-              <div className="login-error" style={{ display: 'block' }}>
-                {loginError}
-              </div>
-            )}
-            <form id="login-form" onSubmit={handleLogin} noValidate>
-              <div className="form-group">
-                <label htmlFor="login-email">Email</label>
-                <input
-                  type="email"
-                  id="login-email"
-                  name="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
-                  value={loginEmail}
-                  onChange={(e) => {
-                    setLoginEmail(e.target.value);
-                    setLoginError('');
-                  }}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="login-password">Password</label>
-                <input
-                  type="password"
-                  id="login-password"
-                  name="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  required
-                  value={loginPassword}
-                  onChange={(e) => {
-                    setLoginPassword(e.target.value);
-                    setLoginError('');
-                  }}
-                />
-              </div>
-              <div className="auth-row" style={{ marginBottom: 20 }}>
-                <label className="checkbox-label">
-                  <input type="checkbox" id="remember-me" /> Remember me
-                </label>
-                <Link to="/forgot" className="link-small">
-                  Forgot password?
-                </Link>
-              </div>
-              <button type="submit" className="btn btn-solid btn-block" id="login-submit" disabled={loginLoading}>
-                {loginLoading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </form>
-            <p className="auth-foot-text">
-              Do not have an account?{' '}
-              <Link to="/register" className="link-small">
-                Register
-              </Link>
-            </p>
+      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+        <div className="login-card-modern">
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <span className="auth-brand">shnoor</span>
           </div>
+          
+          <h2 className="auth-heading">Welcome back</h2>
+          <p className="auth-sub-text">Please enter your details to sign in.</p>
+          
+          {loginError && (
+            <div className="login-error" style={{ marginBottom: '24px' }}>
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} noValidate>
+            <div className="form-group">
+              <label htmlFor="login-email">Email Address</label>
+              <input
+                type="email"
+                id="login-email"
+                placeholder="name@company.com"
+                required
+                value={loginEmail}
+                onChange={(e) => {
+                  setLoginEmail(e.target.value);
+                  setLoginError('');
+                }}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                placeholder="••••••••"
+                required
+                value={loginPassword}
+                onChange={(e) => {
+                  setLoginPassword(e.target.value);
+                  setLoginError('');
+                }}
+              />
+            </div>
+
+            <div className="auth-row">
+              <label className="checkbox-label">
+                <input type="checkbox" id="remember-me" /> Remember for 30 days
+              </label>
+              <Link to="/forgot" className="link-small">
+                Forgot password?
+              </Link>
+            </div>
+
+            <button type="submit" className="btn btn-solid btn-block" disabled={loginLoading}>
+              {loginLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <p className="auth-foot-text" style={{ marginTop: '32px' }}>
+            Don't have an account? {' '}
+            <Link to="/register" className="link-small">
+              Register now
+            </Link>
+          </p>
         </div>
-      </section>
+      </div>
     </MainLayout>
   );
 };

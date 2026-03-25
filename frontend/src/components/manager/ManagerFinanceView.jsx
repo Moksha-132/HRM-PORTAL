@@ -82,7 +82,7 @@ const ManagerFinanceView = () => {
                   </option>
                 ))}
               </select>
-              <label className="form-label">Amount ($)</label>
+              <label className="form-label">Amount (₹)</label>
               <input className="input" type="number" step="0.01" value={form.amount} onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))} required />
               <label className="form-label">Category</label>
               <input className="input" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
@@ -128,13 +128,16 @@ const ManagerFinanceView = () => {
                       <td>
                         {item.employee_id} ({item.Employee ? item.Employee.employee_name : 'N/A'})
                       </td>
-                      <td>${item.amount}</td>
+                      <td>₹{item.amount}</td>
                       <td>
                         <span className={`badge ${item.status === 'Approved' ? 'bg-green' : item.status === 'Rejected' ? 'bg-red' : 'bg-yellow'}`}>{item.status}</span>
                       </td>
                       <td>
                         <button type="button" className="action-btn" style={{ color: 'green' }} onClick={() => updateExpense(item.expense_id, { status: 'Approved' }).then(load)} title="Approve">
                           <i className="fas fa-thumbs-up" />
+                        </button>
+                        <button type="button" className="action-btn" style={{ color: '#ef4444' }} onClick={() => updateExpense(item.expense_id, { status: 'Rejected' }).then(load)} title="Reject">
+                          <i className="fas fa-thumbs-down" />
                         </button>
                         <button type="button" className="action-btn edit-btn" onClick={() => openEdit(item)}>
                           <i className="fas fa-edit" />

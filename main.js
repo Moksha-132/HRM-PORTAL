@@ -78,16 +78,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Contact Info
       if (c.address) {
-        document.getElementById('contact-address-row').style.display = 'flex';
-        document.getElementById('contact-address').textContent = c.address;
+        const addrEl = document.getElementById('contact-address');
+        if (addrEl) addrEl.textContent = c.address;
+        const footerAddr = document.getElementById('contact-address-footer');
+        if (footerAddr) footerAddr.textContent = c.address;
       }
       if (c.email) {
-        document.getElementById('contact-email-row').style.display = 'flex';
-        document.getElementById('contact-email').textContent = c.email;
+        const emailEl = document.getElementById('contact-email');
+        if (emailEl) emailEl.textContent = c.email;
+        const footerEmail = document.getElementById('contact-email-footer');
+        if (footerEmail) {
+          footerEmail.textContent = c.email;
+          footerEmail.href = `mailto:${c.email}`;
+        }
       }
       if (c.phone) {
-        document.getElementById('contact-phone-row').style.display = 'flex';
-        document.getElementById('contact-phone').textContent = c.phone;
+        const phoneEl = document.getElementById('contact-phone');
+        if (phoneEl) phoneEl.textContent = c.phone;
+        const footerPhone = document.getElementById('contact-phone-footer');
+        if (footerPhone) {
+          footerPhone.textContent = c.phone;
+          footerPhone.href = `tel:${c.phone}`;
+        }
       }
 
       // Social Media

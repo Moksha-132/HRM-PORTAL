@@ -27,8 +27,38 @@ const MainLayout = ({ children }) => {
       }
     };
     loadSettings();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          } else {
+            entry.target.classList.remove('is-visible');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const observeNodes = () => {
+      const els = document.querySelectorAll(
+        '.animate-fade-up, .animate-fade-in, .animate-slide-left, .animate-slide-right'
+      );
+      els.forEach((el) => observer.observe(el));
+    };
+
+    observeNodes();
+
+    const mutationObserver = new MutationObserver(() => {
+      observeNodes();
+    });
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
     return () => {
       active = false;
+      observer.disconnect();
+      mutationObserver.disconnect();
     };
   }, []);
 
@@ -44,7 +74,7 @@ const MainLayout = ({ children }) => {
   return (
     <div className="site-mode" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
-      <main style={{ flex: 1 }}>{children}</main>
+      <main style={{ flex: 1, marginTop: 'var(--nav-h, 70px)' }}>{children}</main>
       <Footer contact={contact} socialLinks={socialLinks} />
     </div>
   );

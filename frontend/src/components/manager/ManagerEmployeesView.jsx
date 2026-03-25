@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import EditModal from '../EditModal';
 import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '../../services/managerService';
 
+const departments = ['IT / Software Development', 'Human Resources', 'Finance', 'Marketing', 'Sales', 'Operations', 'Management'];
+const designations = ['Software Engineer', 'Senior Software Engineer', 'HR Manager', 'Finance Analyst', 'Marketing Executive', 'Sales Representative', 'Intern-Software Engineer', 'Project Manager', 'Director'];
+const workModes = ['Work from Home', 'Hybrid', 'Work from Office'];
+const locations = ['Odessa, MO (United States)', 'Pune, India', 'Remote', 'London, UK', 'Dubai, UAE'];
+
 const ManagerEmployeesView = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,6 +23,8 @@ const ManagerEmployeesView = () => {
     department: '',
     designation: '',
     joining_date: '',
+    work_mode: 'Work from Office',
+    location: 'Remote'
   });
 
   const loadEmployees = async () => {
@@ -37,14 +44,19 @@ const ManagerEmployeesView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await createEmployee({
-      employee_name: form.employee_name,
-      email: form.email,
-      phone: form.phone,
-      department: form.department,
-      designation: form.designation,
+      ...form,
       joining_date: form.joining_date || null,
     });
-    setForm({ employee_name: '', email: '', phone: '', department: '', designation: '', joining_date: '' });
+    setForm({ 
+      employee_name: '', 
+      email: '', 
+      phone: '', 
+      department: '', 
+      designation: '', 
+      joining_date: '',
+      work_mode: 'Work from Office',
+      location: 'Remote'
+    });
     loadEmployees();
   };
 
@@ -54,8 +66,10 @@ const ManagerEmployeesView = () => {
       { label: 'Name', key: 'employee_name', value: employee.employee_name, type: 'text' },
       { label: 'Email', key: 'email', value: employee.email, type: 'email' },
       { label: 'Phone', key: 'phone', value: employee.phone, type: 'text' },
-      { label: 'Department', key: 'department', value: employee.department, type: 'text' },
-      { label: 'Designation', key: 'designation', value: employee.designation, type: 'text' },
+      { label: 'Department', key: 'department', value: employee.department, type: 'select', options: departments },
+      { label: 'Designation', key: 'designation', value: employee.designation, type: 'select', options: designations },
+      { label: 'Work Mode', key: 'work_mode', value: employee.work_mode || 'Work from Office', type: 'select', options: workModes },
+      { label: 'Location', key: 'location', value: employee.location || 'Remote', type: 'text' },
       { label: 'Status', key: 'status', value: employee.status, type: 'select', options: ['Active', 'Inactive', 'OnLeave', 'Resigned'] },
     ]);
     saveRef.current = async (values) => {
@@ -84,17 +98,37 @@ const ManagerEmployeesView = () => {
             <form onSubmit={handleSubmit}>
               <label className="form-label">Full Name</label>
               <input className="input" value={form.employee_name} onChange={(e) => setForm((prev) => ({ ...prev, employee_name: e.target.value }))} required />
+              
               <label className="form-label">Email Address</label>
               <input className="input" type="email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} required />
+
               <label className="form-label">Phone Number</label>
               <input className="input" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))} />
-              <label className="form-label">Department</label>
-              <input className="input" value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))} />
-              <label className="form-label">Designation</label>
-              <input className="input" value={form.designation} onChange={(e) => setForm((prev) => ({ ...prev, designation: e.target.value }))} />
+              
               <label className="form-label">Joining Date</label>
               <input className="input" type="date" value={form.joining_date} onChange={(e) => setForm((prev) => ({ ...prev, joining_date: e.target.value }))} />
-              <button type="submit" className="btn btn-solid" style={{ width: '100%' }}>
+
+              <label className="form-label">Department</label>
+              <select className="input" value={form.department} onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))}>
+                <option value="">Select Department</option>
+                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+
+              <label className="form-label">Designation</label>
+              <select className="input" value={form.designation} onChange={(e) => setForm((prev) => ({ ...prev, designation: e.target.value }))}>
+                <option value="">Select Designation</option>
+                {designations.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+
+              <label className="form-label">Work Allotment</label>
+              <select className="input" value={form.work_mode} onChange={(e) => setForm((prev) => ({ ...prev, work_mode: e.target.value }))}>
+                {workModes.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+              
+              <label className="form-label">Location</label>
+              <input className="input" value={form.location} onChange={(e) => setForm((prev) => ({ ...prev, location: e.target.value }))} placeholder="e.g. Remote, City" />
+
+              <button type="submit" className="btn btn-solid" style={{ width: '100%', marginTop: '10px' }}>
                 Save Employee
               </button>
             </form>
@@ -108,8 +142,9 @@ const ManagerEmployeesView = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Dept</th>
+                  <th>Employee Info</th>
+                  <th>Role & Dept</th>
+                  <th>Work Details</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -117,37 +152,41 @@ const ManagerEmployeesView = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center' }}>
+                    <td colSpan={5} style={{ textAlign: 'center' }}>
                       Loading employees...
                     </td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center' }}>
+                    <td colSpan={5} style={{ textAlign: 'center' }}>
                       No employees found.
                     </td>
                   </tr>
                 ) : (
                   employees.map((emp) => (
                     <tr key={emp.employee_id}>
-                      <td>
-                        <strong>{emp.employee_name}</strong>
-                        <br />
-                        <small>{emp.email}</small>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ fontWeight: 600 }}>{emp.employee_name}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>{emp.email}</div>
                       </td>
-                      <td>
-                        {emp.department || 'N/A'}
-                        <br />
-                        <small>{emp.designation || 'N/A'}</small>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ fontSize: '13px' }}>{emp.designation || 'N/A'}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>{emp.department || 'N/A'}</div>
                       </td>
-                      <td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ fontSize: '13px' }}>{emp.work_mode || 'N/A'}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>{emp.location || 'N/A'}</div>
+                      </td>
+                      <td style={{ padding: '12px 8px' }}>
                         <span className={`badge ${emp.status === 'Active' ? 'bg-green' : 'bg-red'}`}>{emp.status}</span>
                       </td>
-                      <td>
-                        <button type="button" className="action-btn edit-btn" onClick={() => openEdit(emp)}>
+                      <td style={{ padding: '12px 8px' }}>
+                        <button type="button" className="action-btn edit-btn" onClick={() => openEdit(emp)} style={{ marginRight: '8px' }}>
                           <i className="fas fa-edit" />
                         </button>
-                        <button type="button" className="action-btn delete-btn" onClick={() => deleteEmployee(emp.employee_id).then(loadEmployees)}>
+                        <button type="button" className="action-btn delete-btn" onClick={() => {
+                          if(window.confirm('Delete this employee?')) deleteEmployee(emp.employee_id).then(loadEmployees);
+                        }}>
                           <i className="fas fa-trash" />
                         </button>
                       </td>

@@ -9,10 +9,12 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import './index.css';
 
 import ChatbotApp from './components/chatbot/ChatbotApp.jsx';
+import GlobalNotificationListener from './components/common/GlobalNotificationListener.jsx';
 
 function App() {
   return (
     <BrowserRouter>
+      <GlobalNotificationListener />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />

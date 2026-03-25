@@ -137,8 +137,8 @@ const ManagerPayrollView = () => {
                       <td>
                         {payroll.employee_id} ({payroll.Employee ? payroll.Employee.employee_name : 'N/A'})
                       </td>
-                      <td>${payroll.basic_salary}</td>
-                      <td>${payroll.net_salary}</td>
+                      <td>₹{payroll.basic_salary}</td>
+                      <td>₹{payroll.net_salary}</td>
                       <td>{payroll.payment_date || 'N/A'}</td>
                       <td>
                         <button

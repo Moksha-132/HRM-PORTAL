@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin, Notification } = require('../models');
 const { Op } = require('sequelize');
 
 // Dashboard Statistics
@@ -176,15 +176,80 @@ exports.submitExpense = async (req, res) => {
     try {
         const data = { ...req.body, employee_id: req.user.employee_id, status: 'Pending' };
         const exp = await Expense.create(data);
+        
+        const manager = await Employee.findOne({ where: { designation: 'Manager' } });
+        if (manager && manager.email) { // Notify Manager via Global Service (Real-time)
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'employee',
+                    senderEmail: req.user.email,
+                    recipientEmails: [manager.email],
+                    message: `${req.user.employee_name} submitted a new expense claim: ${data.title} ($${data.amount})`,
+                    type: 'expense_submission'
+                });
+            }
+        }
+        
         res.status(201).json({ success: true, data: exp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.getMyExpenses = async (req, res) => {
     try {
-        const list = await Expense.findAll({ where: { employee_id: req.user.employee_id }, order: [['id', 'DESC']] });
+        const list = await Expense.findAll({ where: { employee_id: req.user.employee_id }, order: [['expense_id', 'DESC']] });
         res.status(200).json({ success: true, data: list });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.updateExpense = async (req, res) => {
+    try {
+        const exp = await Expense.findOne({ where: { expense_id: req.params.id, employee_id: req.user.employee_id } });
+        if (!exp) return res.status(404).json({ success: false, error: "Expense not found" });
+        if (exp.status !== 'Pending') return res.status(400).json({ success: false, error: "Only pending claims can be edited" });
+
+        await exp.update(req.body);
+
+        const manager = await Employee.findOne({ where: { designation: 'Manager' } });
+        if (manager && manager.email) { // Notify Manager via Global Service (Real-time)
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'employee',
+                    senderEmail: req.user.email,
+                    recipientEmails: [manager.email],
+                    message: `${req.user.employee_name} updated their expense claim: ${exp.title}`,
+                    type: 'expense_update'
+                });
+            }
+        }
+
+        res.status(200).json({ success: true, data: exp });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.deleteExpense = async (req, res) => {
+    try {
+        const exp = await Expense.findOne({ where: { expense_id: req.params.id, employee_id: req.user.employee_id } });
+        if (!exp) return res.status(404).json({ success: false, error: "Expense not found" });
+        if (exp.status !== 'Pending') return res.status(400).json({ success: false, error: "Only pending claims can be deleted" });
+
+        const title = exp.title;
+        await exp.destroy();
+
+        const manager = await Employee.findOne({ where: { designation: 'Manager' } });
+        if (manager && manager.email) { // Notify Manager via Global Service (Real-time)
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'employee',
+                    senderEmail: req.user.email,
+                    recipientEmails: [manager.email],
+                    message: `${req.user.employee_name} deleted their expense claim: ${title}`,
+                    type: 'expense_delete'
+                });
+            }
+        }
+
+        res.status(200).json({ success: true, message: "Expense deleted" });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
 
 // --- PAYROLL / PAYSLIPS ---
@@ -331,7 +396,7 @@ exports.updateLetter = async (req, res) => {
         });
         
         const updatedLetter = await Letter.findByPk(letter.letter_id, {
-            include: [{ model: Employee, as: 'Sender' }]
+            include: [{ model: SuperAdmin, as: 'Sender' }]
         });
 
         // NOTIFY MANAGER (Sender)
