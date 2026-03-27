@@ -684,8 +684,31 @@ html {
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* —— Responsive —— */
+
+/* Mobile actions */
+.nav-mobile-actions {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  width: 100%;
+}
+
+.nav-mobile-actions .btn {
+  width: 100%;
+  justify-content: center;
+  border-radius: 12px;
+  padding: 12px;
+}
+
 @media (max-width: 900px) {
+
+  /* Hide desktop-only nav-right */
+  .nav-right-desktop {
+    display: none !important;
+  }
 
   .grid-3,
   .grid-2 {
@@ -706,35 +729,41 @@ html {
   }
 
   .hamburger {
-    display: block;
-  }
-
-  .btn-outline {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
   }
 
   .nav-links.open {
     display: flex;
     position: absolute;
-    top: calc(var(--nav-h) - 10px);
+    top: calc(var(--nav-h) - 4px);
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.97);
     border: 1px solid rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 12px;
-    border-radius: 16px;
+    padding: 8px;
+    border-radius: 0 0 16px 16px;
     box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     z-index: 60;
-    animation: fadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    width: 100%;
   }
 
   .nav-links.open .nav-link {
     width: 100%;
     padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  /* Show mobile action buttons when drawer is open */
+  .nav-links.open .nav-mobile-actions {
+    display: flex;
   }
 }
 
@@ -753,10 +782,46 @@ html {
     padding: 32px 24px;
   }
 
+  /* Reduce login card padding on small phones */
+  .login-card-modern {
+    padding: 28px 20px;
+  }
+
   .section {
     padding: 60px 0;
   }
+
+  .hero-title {
+    font-size: clamp(2rem, 9vw, 3rem);
+    letter-spacing: -0.5px;
+  }
+
+  .hero-desc {
+    font-size: 1rem;
+  }
+
+  .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .btn-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .section-title {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+  }
+
+  .footer-inner {
+    padding: 40px 20px 30px;
+    gap: 30px;
+  }
 }
+
 
 /* —— Modern Login Card —— */
 .login-card-modern {
@@ -792,4 +857,4 @@ html {
   padding: 16px;
   font-size: 1.1rem;
 }
-
+

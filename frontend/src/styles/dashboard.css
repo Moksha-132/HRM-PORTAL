@@ -543,23 +543,75 @@
 
 .dashboard-mode .form-label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem; color: var(--text); }
 
+/* —— mobile sidebar   —— */
+.dashboard-mode .sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 29;
+  animation: fadeIn 0.2s ease both;
+}
+.dashboard-mode .sidebar-overlay.visible {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* —— Responsive —— */
 .dashboard-mode .sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-w))); }
 .dashboard-mode .main-wrap.expanded { margin-left: 0; }
 
 @media (max-width: 900px) {
   .dashboard-mode .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
-  .dashboard-mode .sidebar.open { transform: translateX(0); }
+  .dashboard-mode .sidebar.open  { transform: translateX(0); }
   .dashboard-mode .main-wrap { margin-left: 0; }
   .dashboard-mode .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-mode .row-2 { grid-template-columns: 1fr; }
-  .dashboard-mode .btn-outline { display: inline-flex; }
+  /* Stack the 2-column form+table panels */
+  .dashboard-mode .grid-2 { grid-template-columns: 1fr !important; }
+  .dashboard-mode .grid { gap: 16px; padding: 16px; }
+  /* Collapse 4-col stat grid to 2 on tablet */
+  .dashboard-mode .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  /* Chat panel: stack list on top of messages */
+  .dashboard-mode .chat-layout {
+    flex-direction: column !important;
+  }
+  .dashboard-mode .chat-sessions-panel {
+    width: 100% !important;
+    min-width: unset !important;
+    max-height: 220px;
+  }
 }
 
-@media (max-width: 560px) {
-  .dashboard-mode .stats-grid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+  /* Hide admin email earlier to avoid topbar crowding */
   .dashboard-mode .admin-email { display: none; }
-  .dashboard-mode .main-content { padding: 20px 16px; }
+}
+
+@media (max-width: 640px) {
+  .dashboard-mode .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-mode .main-content { padding: 16px 14px; }
+  .dashboard-mode .topbar { padding: 0 14px; }
+  .dashboard-mode .topbar-title { font-size: 0.9rem; }
+  .dashboard-mode .panel-head { padding: 12px 16px; }
+  .dashboard-mode .panel-body { padding: 16px; }
+}
+
+@media (max-width: 480px) {
+  .dashboard-mode .stats-grid { grid-template-columns: 1fr; }
+  .dashboard-mode .main-content { padding: 12px; }
+  .dashboard-mode .sidebar-tag { display: none; }
+  /* Collapse 4-col stat grid to single column on small phones */
+  .dashboard-mode .grid-4 { grid-template-columns: 1fr; }
+  /* Make tables scroll horizontally instead of breaking layout */
+  .dashboard-mode .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .dashboard-mode th, .dashboard-mode td { padding: 10px 8px; font-size: 0.82rem; white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
