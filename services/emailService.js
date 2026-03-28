@@ -11,6 +11,23 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+const sendEmail = async ({ email, subject, html, text }) => {
+    const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+    const fromName = process.env.SMTP_FROM_NAME || 'HRM Portal';
+
+    const mailOptions = {
+        from: `${fromName} <${fromAddress}>`,
+        to: email,
+        subject,
+        html,
+        text,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[EmailService] Email sent:', info.messageId);
+    return info;
+};
+
 /**
  
  * @param {Object} data - Email data
@@ -66,5 +83,6 @@ const sendQueryResponseEmail = async ({ to, userName, queryDetails, responseMess
 };
 
 module.exports = {
+    sendEmail,
     sendQueryResponseEmail,
 };

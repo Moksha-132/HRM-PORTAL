@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const SuperAdmin = require('../models/SuperAdmin');
 const Employee = require('../models/EmployeeModel');
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
 
 exports.protect = async (req, res, next) => {
     let token;
@@ -14,7 +15,7 @@ exports.protect = async (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET);
         
         if (decoded.role === 'Employee') {
             req.user = await Employee.findByPk(decoded.id);

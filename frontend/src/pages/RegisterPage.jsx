@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
-import { registerAdmin } from '../services/authService';
+import { registerPublic } from '../services/authService';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const RegisterPage = () => {
 
     setRegisterLoading(true);
     try {
-      const data = await registerAdmin({
+      const data = await registerPublic({
         name: formData.name,
         email: formData.email,
         password: formData.password,
@@ -130,7 +130,6 @@ const RegisterPage = () => {
                 >
                   <option value="Employee">Employee</option>
                   <option value="Manager">Manager</option>
-                  <option value="Admin">Admin</option>
                 </select>
               </div>
               <button type="submit" className="btn btn-solid btn-block" id="register-submit" disabled={registerLoading}>

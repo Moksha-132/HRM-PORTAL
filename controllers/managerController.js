@@ -2,6 +2,9 @@ const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, Comp
 const { sequelize } = require('../config/db');
 const fs = require('fs');
 const path = require('path');
+const { sendEmail } = require('../services/emailService');
+
+const DEFAULT_EMPLOYEE_PASSWORD = process.env.EMPLOYEE_DEFAULT_PASSWORD || 'Emp@1234';
 
 // DASHBOARD
 exports.getDashboardStats = async (req, res) => {
@@ -45,6 +48,11 @@ exports.createEmployee = async (req, res) => {
     try {
         const data = { ...req.body };
         if (!data.role) data.role = 'Employee';
+        // Manager-created employee accounts use a default password unless explicitly provided.
+        if (!data.password || !String(data.password).trim()) {
+            data.password = DEFAULT_EMPLOYEE_PASSWORD;
+        }
+
         if (req.user && req.user.role === 'Manager' && !data.manager_id) {
             let mgrEmp = await Employee.findOne({ where: { email: req.user.email } });
             if (!mgrEmp) {
@@ -59,8 +67,59 @@ exports.createEmployee = async (req, res) => {
             }
             data.manager_id = mgrEmp.employee_id;
         }
+
+        const plainPassword = data.password;
         const emp = await Employee.create(data);
-        res.status(201).json({ success: true, data: emp });
+
+        let emailSent = false;
+        let emailError = null;
+        try {
+            const employeeName = emp.employee_name || data.employee_name || 'Employee';
+            const message = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #2563eb; color: white; padding: 20px; text-align: center;">
+                        <h1 style="margin: 0;">Welcome to HRM Portal</h1>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p>Hello <strong>${employeeName}</strong>,</p>
+                        <p>Your employee account has been created by your manager.</p>
+                        <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 5px 0;"><strong>Login Email:</strong> ${emp.email}</p>
+                            <p style="margin: 5px 0;"><strong>Default Password:</strong> ${plainPassword}</p>
+                        </div>
+                        <p>Please log in and change your password as soon as possible.</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="http://localhost:5000/index.html#login" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to HRM Portal</a>
+                        </div>
+                        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                        <p style="font-size: 12px; color: #777;">This is an automated message, please do not reply to this email.</p>
+                    </div>
+                </div>
+            `;
+
+            await sendEmail({
+                email: emp.email,
+                subject: 'Your HRM Employee Account Credentials',
+                html: message,
+                text: [
+                    'Welcome to HRM Portal',
+                    '',
+                    `Hello ${employeeName},`,
+                    'Your employee account has been created by your manager.',
+                    `Login Email: ${emp.email}`,
+                    `Default Password: ${plainPassword}`,
+                    '',
+                    'Please change your password after first login.',
+                    'Login URL: http://localhost:5000/index.html#login'
+                ].join('\n')
+            });
+            emailSent = true;
+        } catch (emailErr) {
+            console.error('[Manager] Failed to send employee credentials email:', emailErr.message);
+            emailError = emailErr.message;
+        }
+
+        res.status(201).json({ success: true, data: emp, defaultPasswordSent: true, emailSent, emailError });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
 

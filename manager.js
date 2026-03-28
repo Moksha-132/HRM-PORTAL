@@ -214,17 +214,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-emp')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await apiCall('employees', 'POST', {
-            employee_name: document.getElementById('emp-name').value,
-            email: document.getElementById('emp-email').value,
-            phone: document.getElementById('emp-phone').value,
-            department: document.getElementById('emp-dept').value,
-            designation: document.getElementById('emp-desig').value,
-            joining_date: document.getElementById('emp-join').value || null
-        });
-        document.getElementById('form-emp').reset();
-        window.fetchEmployees();
-        window.refreshEmployeeSelects();
+        try {
+            const result = await apiCall('employees', 'POST', {
+                employee_name: document.getElementById('emp-name').value,
+                email: document.getElementById('emp-email').value,
+                phone: document.getElementById('emp-phone').value,
+                department: document.getElementById('emp-dept').value,
+                designation: document.getElementById('emp-desig').value,
+                joining_date: document.getElementById('emp-join').value || null
+            });
+
+            if (result.emailSent) {
+                alert('Employee created and credentials email sent successfully.');
+            } else {
+                alert(`Employee created, but credentials email failed: ${result.emailError || 'Unknown email error'}`);
+            }
+
+            document.getElementById('form-emp').reset();
+            window.fetchEmployees();
+            window.refreshEmployeeSelects();
+        } catch (err) {
+            alert('Failed to create employee: ' + err.message);
+        }
     });
 
     window.fetchAttendance = async () => {
@@ -261,9 +272,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.fetchLeaves = async () => {
+        const tbody = document.getElementById('lv-list');
+        if (!tbody) return;
         window.refreshTable('lv-list');
-        const res = await apiCall('leaves');
-        document.getElementById('lv-list').innerHTML = res.data.map(l => `
+
+        try {
+            const res = await apiCall('leaves');
+            const leaves = Array.isArray(res.data) ? res.data : [];
+
+            if (!leaves.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:16px;">No leave records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leaves.map(l => `
             <tr>
                 <td>#${l.leave_id}</td>
                 <td>${l.employee_id} <small>(${l.Employee ? l.Employee.employee_name : 'N/A'})</small></td>
@@ -279,12 +301,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `).join('');
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:16px; color:#b91c1c;">Failed to load leaves: ${err.message}</td></tr>`;
+        }
     };
 
     window.updateLeave = async (id, status) => {
-        await apiCall(`leaves/${id}`, 'PUT', { status });
-        window.fetchLeaves();
-        window.fetchDashboard();
+        try {
+            await apiCall(`leaves/${id}`, 'PUT', { status });
+            window.fetchLeaves();
+            window.fetchDashboard();
+        } catch (err) {
+            alert('Leave update failed: ' + err.message);
+        }
     };
 
     window.editLeave = async (id) => {
@@ -648,9 +677,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.fetchHolidays = async () => {
+        const tbody = document.getElementById('holi-list');
+        if (!tbody) return;
         window.refreshTable('holi-list');
-        const res = await apiCall('holidays');
-        document.getElementById('holi-list').innerHTML = res.data.map((h, index) => `
+
+        try {
+            const res = await apiCall('holidays');
+            const holidays = Array.isArray(res.data) ? res.data : [];
+
+            if (!holidays.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:16px;">No holidays found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = holidays.map((h, index) => `
             <tr>
                 <td>${index + 1}</td>
                 <td>${h.date}</td>
@@ -661,6 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>
         `).join('');
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:16px; color:#b91c1c;">Failed to load holidays: ${err.message}</td></tr>`;
+        }
     };
 
     window.editHoliday = async (id) => {
@@ -679,13 +722,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-holi')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await apiCall('holidays', 'POST', {
-            holiday_name: document.getElementById('holi-title').value,
-            date: document.getElementById('holi-date').value,
-            description: document.getElementById('holi-desc').value
-        });
-        document.getElementById('form-holi').reset();
-        window.fetchHolidays();
+        try {
+            await apiCall('holidays', 'POST', {
+                holiday_name: document.getElementById('holi-title').value,
+                date: document.getElementById('holi-date').value,
+                description: document.getElementById('holi-desc').value
+            });
+            document.getElementById('form-holi').reset();
+            window.fetchHolidays();
+        } catch (err) {
+            alert('Holiday save failed: ' + err.message);
+        }
     });
 
     window.fetchLetters = async () => {

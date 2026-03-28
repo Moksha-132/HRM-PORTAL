@@ -123,4 +123,18 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`));
+
+server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+        console.log(`Port ${PORT} is already in use. Backend is likely already running in another terminal.`);
+        console.log('Use only one backend terminal, or stop the old process on port 5000 before starting again.');
+        process.exit(0);
+    }
+
+    console.error('Server failed to start:', err);
+    process.exit(1);
+});
+
+server.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});

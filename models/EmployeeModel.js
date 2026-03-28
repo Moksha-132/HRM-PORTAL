@@ -58,6 +58,14 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.ENUM('Active', 'Inactive', 'OnLeave', 'Resigned'),
         defaultValue: 'Active'
     },
+    resetPasswordToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    resetPasswordExpire: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
     work_mode: {
         type: DataTypes.STRING, // 'Work from Home', 'Hybrid', 'Work from Office'
         allowNull: true

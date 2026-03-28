@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
 
     try {
-      const res = await fetch('/api/v1/auth/register', {
+      const res = await fetch('/api/v1/auth/register/public', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -41,6 +41,14 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
             len: [6, 100] // password length at least 6
         }
         // To exclude from queries by default, in Sequelize we often exclude it in the controller or use a scope
+    },
+    resetPasswordToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    resetPasswordExpire: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 }, {
     timestamps: true, // adds createdAt and updatedAt

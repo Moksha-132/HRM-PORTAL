@@ -4,9 +4,9 @@ const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
 function callGroqChat({ systemPrompt, userMessage }) {
     return new Promise((resolve, reject) => {
-        const apiKey = process.env.GROQ_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY || process.env.GROQ_API;
         if (!apiKey) {
-            return reject(new Error('GROQ_API_KEY is not configured'));
+            return reject(new Error('Groq API key is not configured. Set GROQ_API_KEY or GROQ_API in .env'));
         }
 
         const payload = JSON.stringify({

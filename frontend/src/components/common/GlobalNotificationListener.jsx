@@ -3,9 +3,20 @@ import { io } from 'socket.io-client';
 
 const GlobalNotificationListener = () => {
   const [toasts, setToasts] = useState([]);
+  const [authVersion, setAuthVersion] = useState(0);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('shnoor_token');
+    const onAuthChanged = () => setAuthVersion((v) => v + 1);
+    window.addEventListener('auth-changed', onAuthChanged);
+    window.addEventListener('storage', onAuthChanged);
+    return () => {
+      window.removeEventListener('auth-changed', onAuthChanged);
+      window.removeEventListener('storage', onAuthChanged);
+    };
+  }, []);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
     if (!token) return;
 
     // Use absolute URL or proxy
@@ -15,7 +26,9 @@ const GlobalNotificationListener = () => {
     });
 
     const userEmail = sessionStorage.getItem('shnoor_admin_email') || 
-                     sessionStorage.getItem('shnoor_email') || 
+             sessionStorage.getItem('shnoor_email') || 
+             localStorage.getItem('shnoor_admin_email') ||
+             localStorage.getItem('shnoor_email') ||
                      'anonymous@user.com';
     
     // Simple role inference
@@ -64,7 +77,7 @@ const GlobalNotificationListener = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [authVersion]);
 
   return (
     <div 

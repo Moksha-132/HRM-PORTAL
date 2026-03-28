@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | shnoor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .login-error {
+      display: none;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin: 8px 0;
+    }
+    .link-small { color: var(--primary); font-weight: 600; }
+    .form-group { margin-top: 10px; }
+    .form-group select {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      color: var(--text);
+      width: 100%;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 640px) { .row-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card animate-fade-up" style="margin: 0 auto;">
+      <div class="auth-brand" style="text-align:center;">shnoor</div>
+      <h1 class="auth-heading">Create your account</h1>
+      <p class="auth-sub-text">Join us today to manage your workforce</p>
+
+      <div id="register-error" class="login-error"></div>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label for="register-name">Full Name</label>
+          <input id="register-name" type="text" placeholder="John Doe" required />
+        </div>
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input id="register-email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="row-2">
+          <div class="form-group">
+            <label for="register-password">Password</label>
+            <input id="register-password" type="password" placeholder="••••••••" required />
+          </div>
+          <div class="form-group">
+            <label for="register-confirm">Confirm Password</label>
+            <input id="register-confirm" type="password" placeholder="••••••••" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="register-role">Register As</label>
+          <select id="register-role" required>
+            <option value="Employee">Employee</option>
+            <option value="Manager">Manager</option>
+          </select>
+        </div>
+        <button id="register-submit" type="submit" class="btn btn-solid btn-block">Register</button>
+      </form>
+
+      <p class="auth-foot-text">
+        Already have an account?
+        <a class="link-small" href="login.html">Login</a>
+      </p>
+      <p class="auth-foot-text">
+        <a class="link-small" href="index.html">Back to Home</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="register.js"></script>
+</body>
+</html>

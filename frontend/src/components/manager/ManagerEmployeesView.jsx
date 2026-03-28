@@ -43,21 +43,32 @@ const ManagerEmployeesView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createEmployee({
-      ...form,
-      joining_date: form.joining_date || null,
-    });
-    setForm({ 
-      employee_name: '', 
-      email: '', 
-      phone: '', 
-      department: '', 
-      designation: '', 
-      joining_date: '',
-      work_mode: 'Work from Office',
-      location: 'Remote'
-    });
-    loadEmployees();
+    try {
+      const result = await createEmployee({
+        ...form,
+        joining_date: form.joining_date || null,
+      });
+
+      if (result?.emailSent) {
+        window.alert('Employee created and credentials email sent successfully.');
+      } else {
+        window.alert(`Employee created, but credentials email failed: ${result?.emailError || 'Unknown email error'}`);
+      }
+
+      setForm({ 
+        employee_name: '', 
+        email: '', 
+        phone: '', 
+        department: '', 
+        designation: '', 
+        joining_date: '',
+        work_mode: 'Work from Office',
+        location: 'Remote'
+      });
+      loadEmployees();
+    } catch (err) {
+      window.alert(err?.response?.data?.error || 'Failed to create employee.');
+    }
   };
 
   const openEdit = (employee) => {

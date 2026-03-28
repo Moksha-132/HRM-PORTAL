@@ -63,7 +63,7 @@ Create a `.env` file in project root and configure:
 
 - `JWT_SECRET`
 - `NODE_ENV`
-- `GROQ_API`
+- `GROQ_API_KEY` (preferred) or `GROQ_API`
 - `PORT`
 - `POSTGRES_URI`
 

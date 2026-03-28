@@ -422,6 +422,23 @@ exports.handleChat = async (req, res) => {
                     recipientEmails: admins.map(admin => admin.email) // Send to all admins
                 });
                 console.log('🔔 Global notification sent for user message:', message.substring(0, 50) + '...');
+
+                // Send email copy to admins when manager/employee reply in chat.
+                if (normalizedRole === 'manager' || normalizedRole === 'employee') {
+                    for (const admin of admins) {
+                        if (!admin?.email || !admin.email.includes('@')) continue;
+                        try {
+                            await sendQueryResponseEmail({
+                                to: admin.email.trim(),
+                                userName: admin.name || 'Admin',
+                                queryDetails: `${normalizedRole} (${normalizedUserId}) sent: ${message}`,
+                                responseMessage: responseText || 'No assistant response generated.'
+                            });
+                        } catch (emailErr) {
+                            console.error(`[Chat] Failed to send admin email notification to ${admin.email}:`, emailErr);
+                        }
+                    }
+                }
             } catch (notifyErr) {
                 console.error('[Chat] Failed to create admin notification:', notifyErr);
             }
@@ -718,6 +735,7 @@ exports.sendAdminReply = async (req, res) => {
         }
 
         // Send Email Notification
+        let emailSent = false;
         try {
             if (session_id && session_id.includes('@')) {
                 let userName = session_id.split('@')[0];
@@ -743,11 +761,10 @@ exports.sendAdminReply = async (req, res) => {
                     responseMessage: content
                 });
                 console.log(`[Chat] Email sent successfully to ${session_id}`);
-                return res.status(200).json({ success: true, data: msg, emailSent: true });
+                emailSent = true;
             }
         } catch (emailErr) {
             console.error('[Chat] Failed to send email notification (Reply):', emailErr);
-            return res.status(200).json({ success: true, data: msg, emailSent: false, error: emailErr.message || 'Email delivery failed' });
         }
 
         // 🚀 SEND GLOBAL NOTIFICATION TO ALL CONNECTED USERS
@@ -765,7 +782,7 @@ exports.sendAdminReply = async (req, res) => {
             console.error('❌ Failed to send global notification:', globalNotifyErr);
         }
 
-        res.status(200).json({ success: true, data: msg });
+        res.status(200).json({ success: true, data: msg, emailSent });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

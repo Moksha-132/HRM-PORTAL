@@ -34,6 +34,9 @@ body {
 }
 a { text-decoration: none; color: inherit; }
 
+/* Shared hidden utility used by modals, dropdowns and conditional panels */
+.hidden { display: none !important; }
+
 /* —— Sidebar —— */
 .sidebar {
   width: var(--sidebar-w);
@@ -315,11 +318,38 @@ tr:last-child td { border-bottom: none; }
 /* Modals */
 .modal {
   position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
 }
 .modal-content {
-  background: #fff; padding: 40px; border-radius: 20px; width: 100%; max-width: 600px;
+  background: #fff;
+  padding: 40px;
+  border-radius: 20px;
+  width: min(100%, 600px);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.2);
+}
+
+/* Letter preview modal used in employee/manager dashboards */
+#preview-letter-modal .modal-content {
+  width: min(100%, 850px) !important;
+  background: #f4f7fa !important;
+  padding: 20px !important;
+}
+
+#preview-letter-body {
+  min-height: 360px !important;
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+}
+
+#preview-letter-modal button {
+  line-height: 1;
 }
 
 /* Grids */
@@ -365,4 +395,32 @@ tr:last-child td { border-bottom: none; }
   .stats-grid { grid-template-columns: 1fr; }
   .main-content { padding: 24px; }
   .topbar { padding: 0 20px; }
+
+  .topbar-right {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .admin-email {
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    border-radius: 14px;
+    max-height: calc(100vh - 24px);
+  }
+
+  #preview-letter-body {
+    padding: 24px !important;
+    min-height: 260px !important;
+  }
 }

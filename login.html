@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | shnoor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+    .login-error {
+      display: none;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin: 8px 0;
+    }
+    .link-small { color: var(--primary); font-weight: 600; }
+    .form-group { margin-top: 10px; }
+    .forgot-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 1100;
+      padding: 20px;
+    }
+    .forgot-modal-content {
+      background: #fff;
+      margin: 8vh auto;
+      max-width: 420px;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+      position: relative;
+    }
+    .forgot-close {
+      position: absolute;
+      right: 12px;
+      top: 8px;
+      border: none;
+      background: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .forgot-msg {
+      display: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    .forgot-msg.error {
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .forgot-msg.success {
+      border: 1px solid #d1fae5;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card animate-fade-up" style="margin: 0 auto;">
+      <div class="auth-brand" style="text-align:center;">shnoor</div>
+      <h1 class="auth-heading">Welcome back</h1>
+      <p class="auth-sub-text">Sign in to continue</p>
+
+      <div id="login-error" class="login-error"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <p class="auth-foot-text" style="text-align:right; margin: 6px 0 12px;">
+          <a id="forgot-password-link" class="link-small" href="#">Forgot Password?</a>
+        </p>
+        <button type="submit" class="btn btn-solid btn-block">Login</button>
+      </form>
+
+      <p class="auth-foot-text">
+        Don&apos;t have an account?
+        <a class="link-small" href="register.html">Register</a>
+      </p>
+      <p class="auth-foot-text">
+        <a class="link-small" href="index.html">Back to Home</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="forgot-password-modal" class="forgot-modal" aria-hidden="true">
+    <div class="forgot-modal-content">
+      <button type="button" id="close-forgot-modal" class="forgot-close" aria-label="Close">&times;</button>
+      <h2 class="auth-heading" style="text-align:left; margin-bottom:4px;">Forgot Password</h2>
+      <p class="auth-sub-text" style="text-align:left;">Enter your account email to receive a reset link.</p>
+      <form id="forgot-password-form" novalidate>
+        <div class="form-group">
+          <label for="forgot-email">Email</label>
+          <input id="forgot-email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <button id="forgot-submit" type="submit" class="btn btn-solid btn-block">Send Reset Link</button>
+      </form>
+      <div id="forgot-error" class="forgot-msg error"></div>
+      <div id="forgot-success" class="forgot-msg success">Reset email sent. Please check your inbox.</div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

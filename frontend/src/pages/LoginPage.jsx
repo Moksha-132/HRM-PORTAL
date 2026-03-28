@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { login as loginRequest } from '../services/authService';
+import api from '../services/api';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -9,6 +10,11 @@ const LoginPage = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState(() => new URLSearchParams(window.location.search).get('email') || '');
   const [loginPassword, setLoginPassword] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,6 +40,8 @@ const LoginPage = () => {
           localStorage.removeItem('shnoor_admin_email');
         }
 
+        window.dispatchEvent(new Event('auth-changed'));
+
         try {
           if (window.globalNotificationClient) {
             window.globalNotificationClient.disconnect();
@@ -58,6 +66,28 @@ const LoginPage = () => {
       setLoginError(message);
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotSuccess('');
+    setForgotLoading(true);
+    try {
+      const { data } = await api.post('/api/v1/auth/forgotpassword', {
+        email: forgotEmail.trim(),
+      });
+      if (data?.success) {
+        setForgotSuccess('Reset email sent. Please check your inbox.');
+      } else {
+        setForgotError(data?.error || 'Email could not be sent.');
+      }
+    } catch (err) {
+      const message = err?.response?.data?.error || 'Network error. Please try again.';
+      setForgotError(message);
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -113,9 +143,19 @@ const LoginPage = () => {
               <label className="checkbox-label">
                 <input type="checkbox" id="remember-me" /> Remember for 30 days
               </label>
-              <Link to="/forgot" className="link-small">
+              <button
+                type="button"
+                className="link-small"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onClick={() => {
+                  setForgotOpen(true);
+                  setForgotEmail(loginEmail || localStorage.getItem('hrm_last_email') || '');
+                  setForgotError('');
+                  setForgotSuccess('');
+                }}
+              >
                 Forgot password?
-              </Link>
+              </button>
             </div>
 
             <button type="submit" className="btn btn-solid btn-block" disabled={loginLoading}>
@@ -130,6 +170,75 @@ const LoginPage = () => {
             </Link>
           </p>
         </div>
+
+        {forgotOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.5)',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setForgotOpen(false);
+            }}
+          >
+            <div className="login-card-modern" style={{ maxWidth: 460, width: '100%' }}>
+              <h3 className="auth-heading" style={{ marginBottom: 8 }}>Forgot Password</h3>
+              <p className="auth-sub-text" style={{ marginBottom: 20 }}>
+                Enter your account email to receive a reset link.
+              </p>
+
+              {forgotError && <div className="login-error" style={{ marginBottom: 12 }}>{forgotError}</div>}
+              {forgotSuccess && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    border: '1px solid #bbf7d0',
+                    background: '#f0fdf4',
+                    color: '#166534',
+                    fontSize: '0.9rem',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                  }}
+                >
+                  {forgotSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPassword}>
+                <div className="form-group">
+                  <label htmlFor="forgot-email">Email Address</label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    required
+                    placeholder="name@company.com"
+                    value={forgotEmail}
+                    onChange={(e) => {
+                      setForgotEmail(e.target.value);
+                      setForgotError('');
+                      setForgotSuccess('');
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                  <button type="button" className="btn btn-outline btn-block" onClick={() => setForgotOpen(false)}>
+                    Close
+                  </button>
+                  <button type="submit" className="btn btn-solid btn-block" disabled={forgotLoading}>
+                    {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

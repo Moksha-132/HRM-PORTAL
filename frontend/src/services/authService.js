@@ -15,6 +15,11 @@ export const updateProfile = async (payload) => {
   return data;
 };
 
+export const registerPublic = async (payload) => {
+  const { data } = await api.post('/api/v1/auth/register/public', payload);
+  return data;
+};
+
 export const registerAdmin = async (payload) => {
   const { data } = await api.post('/api/v1/auth/register', payload);
   return data;

@@ -38,8 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const visual = document.getElementById('hero-bg-container');
-      if (visual && s.backgroundImage) {
-        visual.style.backgroundImage = `url('${s.backgroundImage}')`;
+      if (visual) {
+        const imageUrl = s.backgroundImage || '/website-img.jpeg';
+        visual.style.backgroundImage = `url('${imageUrl}')`;
       }
     }
   } catch (e) {
@@ -259,6 +260,75 @@ function showNotificationDetails(redirectData) {
 
 // Call redirect handler on page load
 handleLoginRedirect();
+
+// ── Forgot Password Logic ──
+const forgotLink = document.getElementById('forgot-password-link');
+const forgotModal = document.getElementById('forgot-password-modal');
+const forgotForm = document.getElementById('forgot-password-form');
+const forgotError = document.getElementById('forgot-error');
+const forgotSuccess = document.getElementById('forgot-success');
+const closeForgot = document.getElementById('close-forgot-modal');
+
+forgotLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!forgotModal) return;
+  forgotModal.style.display = 'block';
+  forgotModal.setAttribute('aria-hidden', 'false');
+  if (forgotError) forgotError.style.display = 'none';
+  if (forgotSuccess) forgotSuccess.style.display = 'none';
+});
+
+closeForgot?.addEventListener('click', () => {
+  if (!forgotModal) return;
+  forgotModal.style.display = 'none';
+  forgotModal.setAttribute('aria-hidden', 'true');
+});
+
+window.addEventListener('click', (e) => {
+  if (forgotModal && e.target === forgotModal) {
+    forgotModal.style.display = 'none';
+    forgotModal.setAttribute('aria-hidden', 'true');
+  }
+});
+
+forgotForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const emailInput = document.getElementById('forgot-email');
+  const submitBtn = document.getElementById('forgot-submit');
+  if (!emailInput || !submitBtn) return;
+
+  const email = emailInput.value.trim();
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Sending...';
+  if (forgotError) forgotError.style.display = 'none';
+  if (forgotSuccess) forgotSuccess.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/v1/auth/forgotpassword', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (forgotSuccess) forgotSuccess.style.display = 'block';
+      forgotForm.reset();
+    } else {
+      if (forgotError) {
+        forgotError.textContent = data.error || 'Email could not be sent.';
+        forgotError.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (forgotError) {
+      forgotError.textContent = 'Network error. Please try again.';
+      forgotError.style.display = 'block';
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Reset Link';
+  }
+});
 
 loginForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
