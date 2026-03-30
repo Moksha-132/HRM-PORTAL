@@ -6,10 +6,12 @@ import ContactPage from './pages/ContactPage';
 import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
 import './index.css';
+import GlobalNotificationListener from './components/common/GlobalNotificationListener.jsx';
 
 import ChatbotApp from './components/chatbot/ChatbotApp.jsx';
-import GlobalNotificationListener from './components/common/GlobalNotificationListener.jsx';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/employee" element={<EmployeeDashboard />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ChatbotApp />

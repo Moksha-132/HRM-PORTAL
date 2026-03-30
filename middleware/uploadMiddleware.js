@@ -12,11 +12,13 @@ const storage = multer.diskStorage({
 // Check file type
 function checkFileType(file, cb) {
     // Allowed ext
-    const filetypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx|xls|xlsx|txt/;
+    const filetypes = /jpeg|jpg|png|gif|webp|avif|svg|pdf|doc|docx|xls|xlsx|txt/;
     // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     // Check mime
     const mimetype = filetypes.test(file.mimetype) ||
+        file.mimetype === 'image/avif' ||
+        file.mimetype === 'image/svg+xml' ||
         file.mimetype === 'application/pdf' ||
         file.mimetype === 'application/msword' ||
         file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||

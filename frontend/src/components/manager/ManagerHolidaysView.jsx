@@ -34,6 +34,7 @@ const ManagerHolidaysView = () => {
   };
 
   const openEdit = (item) => {
+    const holidayId = item.holiday_id || item.id;
     setModalFields([
       { label: 'Title', key: 'holiday_name', value: item.holiday_name, type: 'text' },
       { label: 'Date', key: 'date', value: item.date, type: 'date' },
@@ -42,7 +43,7 @@ const ManagerHolidaysView = () => {
     saveRef.current = async (values) => {
       setSaving(true);
       try {
-        await updateHoliday(item.id, values);
+        await updateHoliday(holidayId, values);
         load();
       } finally {
         setSaving(false);
@@ -101,7 +102,7 @@ const ManagerHolidaysView = () => {
                   </tr>
                 ) : (
                   holidays.map((holiday, index) => (
-                    <tr key={holiday.id}>
+                    <tr key={holiday.holiday_id || holiday.id}>
                       <td>{index + 1}</td>
                       <td>{holiday.date}</td>
                       <td>
@@ -111,7 +112,7 @@ const ManagerHolidaysView = () => {
                         <button type="button" className="action-btn edit-btn" onClick={() => openEdit(holiday)}>
                           <i className="fas fa-edit" />
                         </button>
-                        <button type="button" className="action-btn delete-btn" onClick={() => deleteHoliday(holiday.id).then(load)}>
+                        <button type="button" className="action-btn delete-btn" onClick={() => deleteHoliday(holiday.holiday_id || holiday.id).then(load)}>
                           <i className="fas fa-trash" />
                         </button>
                       </td>

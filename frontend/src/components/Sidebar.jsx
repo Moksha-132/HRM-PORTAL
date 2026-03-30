@@ -1,10 +1,13 @@
 import React from 'react';
+import { useSiteLogo } from '../hooks/useSiteLogo';
 
 const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, isCollapsed }) => {
+  const logoUrl = useSiteLogo();
+
   return (
     <aside className={`sidebar${isOpen ? ' open' : ''}${isCollapsed ? ' collapsed' : ''}`} id="sidebar">
       <div className="sidebar-top" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <img src="/logo.avif" alt="Logo" style={{ height: '48px' }} />
+        <img src={logoUrl || '/logo.avif'} alt="Logo" style={{ height: '48px' }} />
         <span className="sidebar-brand">{brand}</span>
         <span className="sidebar-tag">{tag}</span>
       </div>

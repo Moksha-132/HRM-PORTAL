@@ -13,6 +13,7 @@ import ManagerOffboardingsView from '../components/manager/ManagerOffboardingsVi
 import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
 import ManagerLettersView from '../components/manager/ManagerLettersView';
+import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
@@ -98,6 +99,7 @@ const ManagerDashboard = () => {
         title={pageTitle}
       >
         {ViewComponent ? <ViewComponent /> : null}
+        {activeView === 'dashboard' ? <ManagerDashboardAddons /> : null}
       </DashboardLayout>
     </div>
   );

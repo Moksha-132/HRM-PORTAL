@@ -53,7 +53,7 @@ const EmployeeProfileView = () => {
           </div>
           <div className="panel-body">
             <form onSubmit={handleProfileSubmit}>
-              <div className="grid grid-2" style={{ gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px' }}>
                 <div>
                   <label className="form-label">Full Name</label>
                   <input className="input" value={profile.employee_name} onChange={(e) => setProfile((prev) => ({ ...prev, employee_name: e.target.value }))} required />
@@ -64,7 +64,7 @@ const EmployeeProfileView = () => {
                 </div>
               </div>
 
-              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px', marginTop: '10px' }}>
                 <div>
                   <label className="form-label">Contact Number</label>
                   <input className="input" value={profile.phone} onChange={(e) => setProfile((prev) => ({ ...prev, phone: e.target.value }))} />
@@ -75,7 +75,7 @@ const EmployeeProfileView = () => {
                 </div>
               </div>
 
-              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px', marginTop: '10px' }}>
                 <div>
                   <label className="form-label">Department</label>
                   <input className="input" value={profile.department || 'N/A'} readOnly />
@@ -86,7 +86,7 @@ const EmployeeProfileView = () => {
                 </div>
               </div>
 
-              <div className="grid grid-2" style={{ gap: '15px', marginTop: '10px', marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px', marginTop: '10px', marginBottom: '20px' }}>
                 <div>
                   <label className="form-label">Work Allotment</label>
                   <input className="input" value={profile.work_mode || 'N/A'} readOnly />

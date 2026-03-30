@@ -98,6 +98,15 @@ class GlobalNotificationClient {
   }
 
   handleGlobalNotification(data) {
+    const recipients = Array.isArray(data?.recipientEmails) ? data.recipientEmails : [];
+    if (recipients.length > 0) {
+      const me = String(this.userEmail || '').toLowerCase();
+      const sender = String(data?.senderEmail || '').toLowerCase();
+      const isRecipient = recipients.some((email) => String(email || '').toLowerCase() === me);
+      const isSender = me && sender && me === sender;
+      if (!isRecipient && !isSender) return;
+    }
+
     if (!this.isUserLoggedIn()) {
       this.notificationQueue.push(data);
     }
@@ -108,20 +117,24 @@ class GlobalNotificationClient {
   }
 
   showDesktopNotification(data) {
-    if (!this.hasPermission) return;
+    if (Notification.permission === 'default') {
+      this.requestNotificationPermission();
+    }
+
+    if (!this.hasPermission || Notification.permission !== 'granted') return false;
 
     const fromEmail = data?.senderEmail || '';
     const toEmail = data?.recipientEmail || data?.recipientEmails?.[0] || this.userEmail || '';
     const preview = data?.preview || data?.fullMessage || data?.message || '';
     const id = data?.id || Date.now();
 
-    const title = 'HRM Portal - New message';
-    const body = `From: ${fromEmail}\nTo: ${toEmail}\n${preview}`.trim();
+    const title = `HRM Portal - Message for ${toEmail || this.userEmail || 'user'}`;
+    const body = `From: ${data?.senderRole || 'admin'} (${fromEmail})\n${preview}`.trim();
 
     const notification = new Notification(title, {
       body,
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
       tag: `hrm-global-${id}`,
       requireInteraction: true,
       silent: false,
@@ -133,6 +146,7 @@ class GlobalNotificationClient {
     };
 
     setTimeout(() => notification.close(), 30000);
+    return true;
   }
 
   showToast(data) {
@@ -180,8 +194,8 @@ class GlobalNotificationClient {
     }
 
     toast.addEventListener('click', (e) => {
-      const t = e.target;
-      if (t && t.getAttribute && t.getAttribute('data-close') === '1') {
+      const target = e.target;
+      if (target && target.getAttribute && target.getAttribute('data-close') === '1') {
         toast.remove();
         return;
       }

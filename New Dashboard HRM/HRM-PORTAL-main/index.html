@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shnoor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="chatbot/chatbot.css" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">shnoor</a>
+
+      <nav class="nav-links">
+        <a href="#home"     class="nav-link active">Home</a>
+        <a href="#about"    class="nav-link">About Us</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#pricing"  class="nav-link">Pricing</a>
+        <a href="#contact"  class="nav-link">Contact</a>
+      </nav>
+
+      <div class="nav-right">
+        <div class="lang-wrap">
+          <span>🌐</span>
+          <select id="lang">
+            <option value="en">EN</option>
+            <option value="ar">AR</option>
+            <option value="fr">FR</option>
+            <option value="ur">UR</option>
+          </select>
+        </div>
+        <a href="#register" class="btn btn-outline">Register</a>
+        <a href="#login"    class="btn btn-solid">Login</a>
+      </div>
+
+      <button class="hamburger" id="hamburger">&#9776;</button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="section hero" id="home">
+    <div class="container center">
+      <div class="hero-badge" id="hero-subtitle" style="display: none;"></div>
+      <h1 class="hero-title" id="hero-title">Loading...</h1>
+      <p class="hero-desc" id="hero-desc" style="display: none;"></p>
+      <div class="btn-row" id="hero-btn-row" style="display: none;">
+        <a href="#" class="btn btn-solid" id="hero-btn"></a>
+        <a href="#features" class="btn btn-outline" id="hero-btn-secondary">Explore Features</a>
+      </div>
+      <div class="hero-visual" id="hero-bg-container">
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT US -->
+  <section class="section" id="about">
+    <div class="container center">
+      <div class="section-label">About Us</div>
+      <h2 class="section-title" id="about-title">Our Story</h2>
+      <p class="section-desc" id="about-desc" style="max-width: 800px; text-align: center; margin: 0 auto; line-height: 1.6;">Loading...</p>
+      
+      <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: left; width: 100%;">
+        <div class="card" style="background:var(--bg-light); border:none;">
+          <h3 style="font-size: 1.25rem; font-weight:700; color:var(--primary); margin-bottom:12px;">Our Mission</h3>
+          <p style="color:var(--text-light); line-height:1.6;" id="about-mission">Loading...</p>
+        </div>
+        <div class="card" style="background:var(--bg-light); border:none;">
+          <h3 style="font-size: 1.25rem; font-weight:700; color:var(--primary); margin-bottom:12px;">Our Vision</h3>
+          <p style="color:var(--text-light); line-height:1.6;" id="about-vision">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container center">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Everything you need</h2>
+      <p class="section-desc">Tools built for modern HR teams to manage their workforce effectively.</p>
+      <div class="grid-3" id="features-grid">
+        <!-- Injected via main.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section bg-light" id="pricing">
+    <div class="container center">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">Simple, transparent pricing</h2>
+      <p class="section-desc">No hidden fees. Choose the plan that works best for your team.</p>
+      
+      <div class="grid-3" id="pricing-grid">
+        <!-- Injected via main.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section" id="contact">
+    <div class="container contact-layout">
+      <div class="contact-left">
+        <div class="section-label">Contact Us</div>
+        <h2 class="section-title" style="text-align: left; margin-bottom: 24px;">Get in touch</h2>
+        <p class="section-desc" style="text-align: left; margin-bottom: 30px; max-width: 100%;">Have questions? Reach out to our team via email or visit us at our office.</p>
+        <div class="contact-items">
+          <div class="contact-row" id="contact-address-row" style="display:none;">
+            <div class="contact-icon">📍</div>
+            <div class="contact-text" id="contact-address"></div>
+          </div>
+          <div class="contact-row" id="contact-email-row" style="display:none;">
+            <div class="contact-icon">✉️</div>
+            <div class="contact-text" id="contact-email"></div>
+          </div>
+          <div class="contact-row" id="contact-phone-row" style="display:none;">
+            <div class="contact-icon">📞</div>
+            <div class="contact-text" id="contact-phone"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGIN -->
+  <section class="section" id="login">
+    <div class="container center">
+      <div class="auth-card">
+        <div class="auth-logo-wrap">
+          <span class="auth-brand">shnoor</span>
+        </div>
+        <h2 class="auth-heading">Welcome back</h2>
+        <p class="auth-sub-text">Sign in to your account</p>
+
+        <div id="login-error" class="login-error" style="display:none;">
+          Invalid email or password.
+        </div>
+
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" name="email"
+                   placeholder="you@example.com" autocomplete="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password"
+                   placeholder="••••••••" autocomplete="current-password" required />
+          </div>
+          <div class="auth-row" style="margin-bottom:12px; gap: 8px;">
+            <label class="checkbox-label" style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" id="show-login-password" /> <span style="font-size: 0.8rem;">Show Password</span>
+            </label>
+          </div>
+          <div class="auth-row" style="margin-bottom:20px;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="remember-me" /> Remember me
+            </label>
+            <a href="#" id="forgot-password-link" class="link-small">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn btn-solid btn-block" id="login-submit">
+            Sign In
+          </button>
+        </form>
+
+        <p class="auth-foot-text">
+          Don't have an account? <a href="#register" class="link-small">Register</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgot-password-modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content auth-card" style="margin: 10% auto; width: 400px; position: relative; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+      <button id="close-forgot-modal" style="position: absolute; right: 20px; top: 20px; border: none; background: none; font-size: 24px; cursor: pointer;">&times;</button>
+      <h2 class="auth-heading" style="text-align: center; margin-bottom: 8px; font-size: 1.5rem; font-weight: 700;">Forgot Password</h2>
+      <p class="auth-sub-text" style="text-align: center; margin-bottom: 24px; color: #6b7280; font-size: 0.9rem;">Enter your email to receive a reset link</p>
+      
+      <div id="forgot-error" class="login-error" style="display:none; margin-bottom: 20px; color: #dc2626; background: #fef2f2; padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #fee2e2;"></div>
+      <div id="forgot-success" style="display:none; margin-bottom: 20px; color: #059669; background: #ecfdf5; padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #d1fae5;">
+        Reset link sent! Check your email.
+      </div>
+
+      <form id="forgot-password-form">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="forgot-email" style="text-align: left; display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 500; color: #374151;">Email Address</label>
+          <input type="email" id="forgot-email" name="email" placeholder="you@example.com" required style="width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;" />
+        </div>
+        <button type="submit" class="btn btn-solid btn-block" id="forgot-submit" style="width: 100%; padding: 12px; background: #4f46e5; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+          Send Reset Link
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner" style="display:flex; justify-content:center; text-align:center;">
+      <div class="footer-brand" style="align-items:center;">
+        <span class="logo">shnoor</span>
+        <div class="footer-text" style="font-size: 0.85rem; color: var(--text-light); margin-top: 10px;">Empowering Next-Gen Workforce</div>
+        <div class="social-row" id="footer-social-row" style="margin-top:20px; gap: 20px;">
+          <!-- Injected via main.js -->
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div style="font-size: 0.85rem; color: var(--text-light);">&copy; 2026 Shnoor International LLC. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <div id="chatbot-root" data-role="public"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/babel" src="chatbot/MessageBubble.jsx"></script>
+  <script type="text/babel" src="chatbot/ChatbotIcon.jsx"></script>
+  <script type="text/babel" src="chatbot/ChatWindow.jsx"></script>
+  <script type="text/babel" src="chatbot/AdminChatPanel.jsx"></script>
+  <script type="text/babel" src="chatbot/UserHistoryPanel.jsx"></script>
+  <script type="text/babel" src="chatbot/app.jsx"></script>
+  <script src="main.js"></script>
+  <script src="globalNotifications.js"></script>
+</body>
+</html>

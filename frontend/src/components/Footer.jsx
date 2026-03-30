@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useSiteLogo } from '../hooks/useSiteLogo';
 
 const clean = (value) => (value || '').toString().trim();
 
 const Footer = ({ socialLinks = [], contact = {} }) => {
+  const logoUrl = useSiteLogo();
   const email = clean(contact.email);
   const phone = clean(contact.phone);
   const address = clean(contact.address);
@@ -12,7 +14,10 @@ const Footer = ({ socialLinks = [], contact = {} }) => {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <div className="logo">shnoor</div>
+          <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src={logoUrl || '/logo.avif'} alt="shnoor logo" style={{ height: 32, width: 32, objectFit: 'contain', borderRadius: 6, marginRight: 8 }} />
+            <span style={{ fontWeight: 700, fontSize: '1.3rem', letterSpacing: 1 }}>shnoor</span>
+          </div>
           <div className="footer-text">Empowering Next-Gen Workforce</div>
           {socialLinks.length > 0 && (
             <div className="social-row" style={{ marginTop: 18, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
@@ -23,6 +28,14 @@ const Footer = ({ socialLinks = [], contact = {} }) => {
               ))}
             </div>
           )}
+          <div style={{ marginTop: 18, fontSize: '0.95rem' }}>
+            <Link className="footer-link" to="/privacy-policy" style={{ marginRight: 12 }}>
+              Privacy Policy
+            </Link>
+            <Link className="footer-link" to="/terms-and-conditions">
+              Terms & Conditions
+            </Link>
+          </div>
         </div>
 
         <div className="footer-col">

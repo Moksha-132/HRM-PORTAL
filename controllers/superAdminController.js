@@ -21,7 +21,9 @@ const normalizeAdminRole = (inputRole) => {
 
 const sendTokenResponse = (user, statusCode, res) => {
     // Include role in payload to help middleware distinguish between tables if necessary
-    const token = jwt.sign({ id: user.id || user.employee_id, role: user.role, email: user.email }, JWT_SECRET, {
+    // For Employee: use employee_id, for SuperAdmin: use id
+    const userId = user.employee_id !== undefined ? user.employee_id : user.id;
+    const token = jwt.sign({ id: userId, role: user.role, email: user.email }, JWT_SECRET, {
         expiresIn: '30d'
     });
 
@@ -29,7 +31,7 @@ const sendTokenResponse = (user, statusCode, res) => {
         success: true,
         token,
         user: { 
-            id: user.id || user.employee_id, 
+            id: userId, 
             name: user.name || user.employee_name, 
             email: user.email, 
             role: user.role 

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   addFeature,
   addPricing,
@@ -9,12 +10,17 @@ import {
   getFeatures,
   getHeaderSettings,
   getPricing,
+  getWebsiteSettings,
   updateAboutSettings,
   updateContactSettings,
   updateHeaderSettings,
+  updateWebsiteSettings,
 } from '../../services/settingsService';
 
 const AdminWebsiteView = () => {
+  const [websiteForm, setWebsiteForm] = useState({ logoUrl: null });
+  const [logoPreview, setLogoPreview] = useState('');
+  const logoFileInputRef = useRef(null);
   const [headerForm, setHeaderForm] = useState({
     title: '',
     subtitle: '',
@@ -42,13 +48,17 @@ const AdminWebsiteView = () => {
 
   const loadSettings = async () => {
     try {
-      const [headerRes, aboutRes, contactRes, featureRes, pricingRes] = await Promise.allSettled([
+      const [websiteRes, headerRes, aboutRes, contactRes, featureRes, pricingRes] = await Promise.allSettled([
+        getWebsiteSettings(),
         getHeaderSettings(),
         getAboutSettings(),
         getContactSettings(),
         getFeatures(),
         getPricing(),
       ]);
+      if (websiteRes.status === 'fulfilled' && websiteRes.value?.success && websiteRes.value?.data) {
+        setLogoPreview(websiteRes.value.data.logoUrl || '');
+      }
       if (headerRes.status === 'fulfilled' && headerRes.value?.success && headerRes.value?.data) {
         const data = headerRes.value.data;
         setHeaderForm((prev) => ({
@@ -82,6 +92,60 @@ const AdminWebsiteView = () => {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  const handleWebsiteSubmit = async (e) => {
+    e.preventDefault();
+    if (!websiteForm.logoUrl) {
+      alert('Please choose a logo file first.');
+      return;
+    }
+
+    const formData = new FormData();
+    if (websiteForm.logoUrl) formData.append('logoUrl', websiteForm.logoUrl);
+    try {
+      const res = await updateWebsiteSettings(formData);
+      if (res.success) {
+        alert('Company Logo saved successfully!');
+        const nextLogo = res.data?.logoUrl || '';
+        setLogoPreview(nextLogo);
+        setWebsiteForm({ logoUrl: null });
+        if (logoFileInputRef.current) {
+          logoFileInputRef.current.value = '';
+        }
+        window.dispatchEvent(new CustomEvent('site-logo-updated', { detail: { logoUrl: nextLogo } }));
+        loadSettings();
+      }
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to save company logo.');
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('removeLogo', 'true');
+      const res = await updateWebsiteSettings(formData);
+      if (res.success) {
+        setWebsiteForm({ logoUrl: null });
+        setLogoPreview('');
+        if (logoFileInputRef.current) {
+          logoFileInputRef.current.value = '';
+        }
+        window.dispatchEvent(new CustomEvent('site-logo-updated', { detail: { logoUrl: '' } }));
+        alert('Company logo removed successfully!');
+        loadSettings();
+      }
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to remove company logo.');
+    }
+  };
+
+  const handleClearSelectedLogoFile = () => {
+    setWebsiteForm({ logoUrl: null });
+    if (logoFileInputRef.current) {
+      logoFileInputRef.current.value = '';
+    }
+  };
 
   const handleHeaderSubmit = async (e) => {
     e.preventDefault();
@@ -159,6 +223,49 @@ const AdminWebsiteView = () => {
       </div>
 
       <div className="panel">
+        <div className="panel-head">
+          <div className="panel-title">Company Logo</div>
+        </div>
+        <div className="panel-body">
+          <form onSubmit={handleWebsiteSubmit}>
+            <label className="form-label">Upload New Logo</label>
+            <input
+              ref={logoFileInputRef}
+              className="input"
+              type="file"
+              accept="image/*,.avif,.svg"
+              onChange={(e) => setWebsiteForm({ logoUrl: e.target.files?.[0] || null })}
+            />
+            {websiteForm.logoUrl && (
+              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: '0.85rem', color: '#475569' }}>Selected: {websiteForm.logoUrl.name}</span>
+                <button type="button" className="btn btn-outline" style={{ padding: '6px 10px', fontSize: '0.8rem' }} onClick={handleClearSelectedLogoFile}>
+                  Remove Selected File
+                </button>
+              </div>
+            )}
+            {logoPreview && (
+              <div style={{ marginTop: 10, marginBottom: 16 }}>
+                 <p className="form-label">Current Logo:</p>
+                 <img src={logoPreview} alt="Company Logo" style={{ maxHeight: 60, borderRadius: 4, background: '#f1f5f9', padding: '8px' }} />
+              </div>
+            )}
+            <button type="submit" className="btn btn-solid" style={{ marginTop: 10 }}>
+              Save Company Logo
+            </button>
+            <button type="button" className="btn btn-outline" style={{ marginTop: 10, marginLeft: 10, borderColor: '#ef4444', color: '#ef4444' }} onClick={handleRemoveLogo}>
+              Remove Current Logo
+            </button>
+            <div style={{ marginTop: 14, fontSize: '0.9rem', color: '#64748b' }}>
+              Legal pages:
+              <Link to="/privacy-policy" style={{ marginLeft: 8, marginRight: 8, color: '#4f46e5' }}>Privacy Policy</Link>
+              <Link to="/terms-and-conditions" style={{ color: '#4f46e5' }}>Terms & Conditions</Link>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="panel mt">
         <div className="panel-head">
           <div className="panel-title">Header Settings</div>
         </div>

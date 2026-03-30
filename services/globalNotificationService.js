@@ -83,25 +83,28 @@ class GlobalNotificationService {
             // Emit real-time notification to all connected users
             const partialPreview = this.buildPartialPreview(message);
             console.log('📡 Emitting Socket.IO notification to room "global-notifications"');
-            console.log('📡 Connected clients:', this.io.sockets.sockets.size);
+            console.log('📡 Connected clients in io:', this.io.sockets.sockets.size);
             console.log('📡 Preview:', partialPreview);
             
             const notificationPayload = {
                 id: notifications[0]?.id,
                 senderRole,
                 senderEmail,
-                recipientEmails, // Include recipient emails
+                recipientEmails: recipientEmails || [], // Include recipient emails
                 preview: partialPreview,
                 fullMessage: message, // Only sent after login
+                message: message,
                 type: type || 'global_message',
                 timestamp: new Date(),
                 redirectUrl: this.buildRedirectUrl(senderRole, type, recipientEmails)
             };
             
-            console.log('📡 Notification payload:', notificationPayload);
+            console.log('📡 Notification payload:', JSON.stringify(notificationPayload, null, 2));
             
-            const result = this.io.to('global-notifications').emit('global-notification', notificationPayload);
-            console.log('📡 Emit result:', result);
+            // Emit to all clients in global-notifications room
+            const emitResult = this.io.to('global-notifications').emit('global-notification', notificationPayload);
+            console.log('📡 Emit completed for room "global-notifications"');
+            console.log('📡 Sockets in global-notifications room:', this.io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
 
             console.log(`🔔 Global notification sent from ${senderRole} to ${notifications.length} users:`, message.substring(0, 50) + '...');
             return { success: true, notificationsSent: notifications.length };

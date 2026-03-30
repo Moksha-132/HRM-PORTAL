@@ -1,0 +1,108 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../components/DashboardLayout';
+import AdminOverviewView from '../components/admin/AdminOverviewView';
+import AdminCompaniesView from '../components/admin/AdminCompaniesView';
+import AdminSubscriptionsView from '../components/admin/AdminSubscriptionsView';
+import AdminTransactionsView from '../components/admin/AdminTransactionsView';
+import AdminOfflineView from '../components/admin/AdminOfflineView';
+import AdminSuperAdminView from '../components/admin/AdminSuperAdminView';
+import AdminWebsiteView from '../components/admin/AdminWebsiteView';
+import AdminSystemView from '../components/admin/AdminSystemView';
+import AdminChatSupportView from '../components/admin/AdminChatSupportView';
+
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState('dashboard');
+  const [email, setEmail] = useState('admin@shnoor.com');
+
+  const navItems = useMemo(
+    () => [
+      { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
+      { id: 'companies', label: 'Companies', icon: 'fas fa-building' },
+      { id: 'subscriptions', label: 'Subscriptions', icon: 'fas fa-credit-card' },
+      { id: 'transactions', label: 'Transactions', icon: 'fas fa-file-invoice-dollar' },
+      { id: 'offline', label: 'Offline Requests', icon: 'fas fa-download' },
+      { id: 'superadmin', label: 'Super Admin Management', icon: 'fas fa-user-shield' },
+      { id: 'website', label: 'Website Settings', icon: 'fas fa-globe' },
+      { id: 'system', label: 'Settings', icon: 'fas fa-cog' },
+      { id: 'chat', label: 'Chat Support', icon: 'fas fa-comments' },
+    ],
+    []
+  );
+
+  const pageTitle = useMemo(() => {
+    const match = navItems.find((item) => item.id === activeView);
+    return match ? match.label : 'Dashboard';
+  }, [activeView, navItems]);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
+    const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+    if (!token) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (role === 'Employee') {
+      navigate('/employee', { replace: true });
+      return;
+    }
+    if (role === 'Manager') {
+      navigate('/manager', { replace: true });
+      return;
+    }
+    if (role !== 'Admin' && role !== 'Super Admin') {
+      navigate('/login', { replace: true });
+      return;
+    }
+    setEmail(
+      sessionStorage.getItem('shnoor_email') ||
+        sessionStorage.getItem('shnoor_admin_email') ||
+        localStorage.getItem('shnoor_email') ||
+        localStorage.getItem('shnoor_admin_email') ||
+        'admin@shnoor.com'
+    );
+  }, [navigate]);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('shnoor_token');
+    sessionStorage.removeItem('shnoor_role');
+    sessionStorage.removeItem('shnoor_email');
+    sessionStorage.removeItem('shnoor_admin_email');
+    localStorage.removeItem('shnoor_token');
+    localStorage.removeItem('shnoor_role');
+    localStorage.removeItem('shnoor_email');
+    localStorage.removeItem('shnoor_admin_email');
+    navigate('/login');
+  };
+
+  const ViewComponent = {
+    dashboard: AdminOverviewView,
+    companies: AdminCompaniesView,
+    subscriptions: AdminSubscriptionsView,
+    transactions: AdminTransactionsView,
+    offline: AdminOfflineView,
+    superadmin: AdminSuperAdminView,
+    website: AdminWebsiteView,
+    system: AdminSystemView,
+    chat: AdminChatSupportView,
+  }[activeView];
+
+  return (
+    <div className="dashboard-mode">
+      <DashboardLayout
+        roleLabel="Admin"
+        email={email}
+        navItems={navItems}
+        activeId={activeView}
+        onSelect={setActiveView}
+        onLogout={handleLogout}
+        title={pageTitle}
+      >
+        {ViewComponent ? <ViewComponent /> : null}
+      </DashboardLayout>
+    </div>
+  );
+};
+
+export default AdminDashboard;

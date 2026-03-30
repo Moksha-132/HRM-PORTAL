@@ -56,6 +56,7 @@ const ChatbotApp = () => {
   const [historyItems, setHistoryItems] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('chat');
+  const [notificationReceived, setNotificationReceived] = React.useState(0);
 
   React.useEffect(() => {
     if (!root) return;
@@ -187,6 +188,15 @@ const ChatbotApp = () => {
 
   return (
     <>
+      <ChatNotificationListener 
+        role={role} 
+        userId={getUserId()} 
+        onNewMessage={(data) => {
+          console.log('🔔 [ChatApp] New chat notification received, refreshing...');
+          setNotificationReceived(prev => prev + 1);
+          fetchHistory(); // Refresh chat history when notification arrives
+        }} 
+      />
       <ChatbotIcon onClick={() => setOpen(o => !o)} />
       <ChatWindow
         open={open}

@@ -8,8 +8,14 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
-  const [loginEmail, setLoginEmail] = useState(() => new URLSearchParams(window.location.search).get('email') || '');
+  const [loginEmail, setLoginEmail] = useState(() => {
+    const fromQuery = new URLSearchParams(window.location.search).get('email');
+    if (fromQuery) return fromQuery;
+    const remembered = localStorage.getItem('hrm_remember_email') || '';
+    return remembered;
+  });
   const [loginPassword, setLoginPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('hrm_remember_me') === 'true');
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -19,6 +25,10 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
+    if (localStorage.getItem('privacyAccepted') !== 'true' || localStorage.getItem('termsAccepted') !== 'true') {
+      setLoginError('You must accept both the Privacy Policy and Terms & Conditions before logging in.');
+      return;
+    }
     setLoginLoading(true);
     try {
       const data = await loginRequest({ email: loginEmail.trim(), password: loginPassword });
@@ -31,6 +41,13 @@ const LoginPage = () => {
         localStorage.setItem('shnoor_role', data.user.role);
         localStorage.setItem('shnoor_email', data.user.email);
         localStorage.setItem('hrm_last_email', data.user.email);
+        localStorage.setItem('hrm_last_role', data.user.role);
+        localStorage.setItem('hrm_remember_me', rememberMe ? 'true' : 'false');
+        if (rememberMe) {
+          localStorage.setItem('hrm_remember_email', data.user.email);
+        } else {
+          localStorage.removeItem('hrm_remember_email');
+        }
 
         if (data.user.role === 'Admin' || data.user.role === 'Super Admin') {
           sessionStorage.setItem('shnoor_admin_email', data.user.email);
@@ -141,7 +158,7 @@ const LoginPage = () => {
 
             <div className="auth-row">
               <label className="checkbox-label">
-                <input type="checkbox" id="remember-me" /> Remember for 30 days
+                <input type="checkbox" id="remember-me" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} /> Remember for 30 days
               </label>
               <button
                 type="button"
@@ -156,6 +173,18 @@ const LoginPage = () => {
               >
                 Forgot password?
               </button>
+            </div>
+
+            <div style={{ margin: '18px 0 8px', fontSize: '0.95rem', color: '#666', textAlign: 'left' }}>
+              To login, you must first review and accept our
+              <span style={{ margin: '0 4px', textDecoration: 'underline', cursor: 'pointer', color: '#3b82f6' }}>
+                <Link to="/privacy-policy" style={{ color: '#3b82f6' }}> Privacy Policy </Link>
+              </span>
+              and
+              <span style={{ margin: '0 4px', textDecoration: 'underline', cursor: 'pointer', color: '#3b82f6' }}>
+                <Link to="/terms-and-conditions" style={{ color: '#3b82f6' }}> Terms & Conditions </Link>
+              </span>
+              .
             </div>
 
             <button type="submit" className="btn btn-solid btn-block" disabled={loginLoading}>

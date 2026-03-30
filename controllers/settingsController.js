@@ -1,11 +1,59 @@
 const { HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing } = require('../models/Settings');
 
+const getLatestWebsiteSetting = async () => {
+    return WebsiteSetting.findOne({
+        order: [
+            ['updatedAt', 'DESC'],
+            ['id', 'DESC']
+        ]
+    });
+};
+
 // @desc    Get Header Settings
 // @route   GET /api/v1/settings/header
 exports.getHeaderSettings = async (req, res) => {
     try {
         const settings = await HeaderSetting.findOne();
         res.status(200).json({ success: true, data: settings || {} });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Get Website Settings
+// @route   GET /api/v1/settings/website
+exports.getWebsiteSettings = async (req, res) => {
+    try {
+        const settings = await getLatestWebsiteSetting();
+        res.status(200).json({ success: true, data: settings || {} });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Update Website Settings
+// @route   PUT /api/v1/settings/website
+exports.updateWebsiteSettings = async (req, res) => {
+    try {
+        let settings = await getLatestWebsiteSetting();
+        const updateData = { ...req.body };
+
+        if (String(updateData.removeLogo).toLowerCase() === 'true') {
+            updateData.logoUrl = null;
+            delete updateData.removeLogo;
+        }
+
+        if (req.file) {
+            updateData.logoUrl = `/uploads/${req.file.filename}`;
+        }
+
+        if (settings) {
+            await settings.update(updateData);
+        } else {
+            settings = await WebsiteSetting.create(updateData);
+        }
+        const latest = await getLatestWebsiteSetting();
+        res.status(200).json({ success: true, data: latest || settings });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -40,7 +40,10 @@ const GlobalNotificationListener = () => {
     };
 
     socket.on('connect', () => {
-      console.log('Connected to global notification service (React)');
+      console.log('🔌✅ [React] Connected to Socket.IO');
+      console.log('🔌✅ [React] Socket ID:', socket.id);
+      console.log('🔌✅ [React] User Email:', userEmail);
+      console.log('🔌✅ [React] Registering for global notifications...');
       socket.emit('register-global-notifications', {
         email: userEmail,
         role: inferRole(userEmail),
@@ -48,17 +51,45 @@ const GlobalNotificationListener = () => {
       });
     });
 
+    socket.on('registration-confirmed', (data) => {
+      console.log('🔌✅ [React] Registration confirmed:', data);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('🔌❌ [React] Connection error:', error);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔌❌ [React] Disconnected from Socket.IO');
+    });
+
+    socket.on('error', (error) => {
+      console.error('🔌❌ [React] Socket error:', error);
+    });
+
     socket.on('global-notification', (data) => {
-      console.log('Received global notification (React):', data);
+      console.log('🔔📨 [React] Received global notification:', data);
       
       // Filter by recipient if specified
       if (data.recipientEmails && data.recipientEmails.length > 0) {
+        console.log('🔔📨 [React] Checking recipient filter. Recipient emails:', data.recipientEmails);
+        const userEmailLower = userEmail.toLowerCase();
+        const senderEmailLower = (data.senderEmail || 'unknown').toLowerCase();
+        
+        // Show to intended recipients OR the sender
         const isRecipient = data.recipientEmails.some(e => 
-          e.toLowerCase() === userEmail.toLowerCase()
+          e.toLowerCase() === userEmailLower
         );
-        if (!isRecipient) return;
+        const isSender = userEmailLower === senderEmailLower;
+        
+        console.log('🔔📨 [React] Is recipient?', isRecipient, '| Is sender?', isSender);
+        if (!isRecipient && !isSender) {
+          console.log('🔔📨 [React] Filtered out notification - not a recipient or sender');
+          return;
+        }
       }
 
+      console.log('🔔📨 [React] Showing notification to user');
       const id = Date.now();
       const newToast = {
         id,

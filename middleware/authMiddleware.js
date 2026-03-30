@@ -27,8 +27,14 @@ exports.protect = async (req, res, next) => {
             return res.status(401).json({ success: false, error: 'User no longer exists' });
         }
 
+        // Ensure email is always available
+        if (!req.user.email) {
+            return res.status(401).json({ success: false, error: 'Invalid user data' });
+        }
+
         next();
     } catch (err) {
+        console.error('Auth error:', err.message);
         return res.status(401).json({ success: false, error: 'Not authorized to access this route' });
     }
 };

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useSiteLogo } from '../hooks/useSiteLogo';
 
 const Header = () => {
   const location = useLocation();
+  const logoUrl = useSiteLogo();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -14,7 +16,7 @@ const Header = () => {
       <header className="navbar">
         <div className="nav-container">
           <Link to="/" className="logo" aria-label="Shnoor Home" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src="/logo.avif" alt="shnoor logo" style={{ height: '48px' }} />
+            <img src={logoUrl || '/logo.avif'} alt="shnoor logo" style={{ height: '48px' }} />
             shnoor
           </Link>
 

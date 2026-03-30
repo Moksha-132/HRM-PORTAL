@@ -39,26 +39,44 @@ const globalNotificationService = new GlobalNotificationService(io);
 
 // Socket connection handling
 io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+    console.log('🔌 [Socket.IO] New client connected:', socket.id);
+    console.log('🔌 [Socket.IO] Total connected clients:', io.sockets.sockets.size);
 
     // Users join a room with their email/ID for explicit personalized alerts
     socket.on('join_room', (userId) => {
         if (userId) {
             socket.join(userId);
-            console.log(`User ${userId} joined their notification room`);
+            console.log(`🔌 [Socket.IO] User ${userId} joined their notification room`);
         }
     });
 
     // Register user for broadcasting global notifications
     socket.on('register-global-notifications', (userData) => {
-        console.log('User registered for global notifications:', userData);
+        console.log('🔌 [Socket.IO] User registered for global notifications:', userData);
+        console.log('🔌 [Socket.IO] Socket ID:', socket.id);
         globalNotificationService.registerUser(socket.id, userData);
         socket.join('global-notifications');
+        console.log('🔌 [Socket.IO] User joined "global-notifications" room');
+        console.log('🔌 [Socket.IO] Total in global-notifications room:', io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
+        
+        // Send acknowledgment back to client
+        socket.emit('registration-confirmed', { 
+            success: true, 
+            message: 'Registered for global notifications',
+            roomSize: io.sockets.adapter.rooms.get('global-notifications')?.size || 0
+        });
     });
 
     socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+        console.log('🔌 [Socket.IO] Client disconnected:', socket.id);
+        console.log('🔌 [Socket.IO] Total connected clients:', io.sockets.sockets.size);
         globalNotificationService.unregisterUser(socket.id);
+    });
+
+    // Test event for debugging
+    socket.on('test-notification', (data) => {
+        console.log('🔌 [Socket.IO] Test notification received:', data);
+        socket.emit('test-response', { success: true, echo: data });
     });
 });
 

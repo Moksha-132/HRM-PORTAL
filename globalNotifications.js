@@ -80,15 +80,25 @@ class GlobalNotificationClient {
     handleGlobalNotification(data) {
         console.log('Received global notification:', data);
 
+        const recipients = Array.isArray(data?.recipientEmails) ? data.recipientEmails : [];
+        if (recipients.length > 0) {
+            const me = String(this.userEmail || '').toLowerCase();
+            const sender = String(data?.senderEmail || '').toLowerCase();
+            const isRecipient = recipients.some(email => String(email || '').toLowerCase() === me);
+            const isSender = me && sender && me === sender;
+            if (!isRecipient && !isSender) {
+                console.log('Skipping notification - not intended for this user');
+                return;
+            }
+        }
+
         // Store in queue for later if user is not logged in
         if (!this.isUserLoggedIn()) {
             this.notificationQueue.push(data);
         }
 
-        // Show desktop notification immediately
+        // Explicitly show both notifications: system desktop + in-app popup.
         this.showDesktopNotification(data);
-
-        // Show in-app toast
         this.showToast(data);
 
         // Also store in local storage for persistence
@@ -97,15 +107,23 @@ class GlobalNotificationClient {
 
     // Show desktop notification
     showDesktopNotification(data) {
-        if (!this.hasPermission) {
+        if (Notification.permission === 'default') {
+            this.requestNotificationPermission();
+        }
+
+        if (!this.hasPermission || Notification.permission !== 'granted') {
             console.warn('Notification permission not granted');
-            return;
+            return false;
         }
 
         const { id, senderRole, senderEmail, preview, type, timestamp, redirectUrl } = data;
+        const fromEmail = senderEmail || '';
+        const toEmail = data?.recipientEmail || data?.recipientEmails?.[0] || this.userEmail || '';
 
-        const notification = new Notification(`HRM Portal - ${senderRole.charAt(0).toUpperCase() + senderRole.slice(1)} Message`, {
-            body: preview,
+        const title = `HRM Portal - Message for ${toEmail || this.userEmail || 'user'}`;
+        const body = `From: ${data?.senderRole || 'admin'} (${fromEmail})\n${preview || ''}`.trim();
+        const notification = new Notification(title, {
+            body: body,
             icon: '/favicon.ico', // Add your favicon path
             badge: '/favicon.ico',
             tag: `hrm-global-${id}`,
@@ -124,6 +142,8 @@ class GlobalNotificationClient {
         setTimeout(() => {
             notification.close();
         }, 10000);
+
+        return true;
     }
 
     // Handle notification click - redirect to login with pre-filled email
@@ -144,14 +164,14 @@ class GlobalNotificationClient {
         toast.id = toastId;
         toast.className = 'global-toast';
         toast.style.cssText = `
-            position: fixed; top: 20px; right: 20px; 
-            background: white; border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            position: fixed; top: 20px; right: 20px;
+            background: white; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             padding: 16px; border-left: 4px solid var(--primary);
-            z-index: 9999; display: flex; align-items: start; 
+            z-index: 9999; display: flex; align-items: start;
             gap: 12px; min-width: 300px; animation: slideIn 0.3s ease forwards;
         `;
-        
+
         toast.innerHTML = `
             <div style="font-size: 1.5rem; color: var(--primary);">
                 <i class="fas fa-bell"></i>
@@ -161,41 +181,36 @@ class GlobalNotificationClient {
                 <div style="font-size: 0.85rem; color: #4b5563;">${data.preview || data.fullMessage || data.message}</div>
                 <div style="margin-top: 8px; font-size: 0.75rem; color: #9ca3af;">Click to view</div>
             </div>
-            <button onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color: #9ca3af; font-size: 1.2rem;">&times;</button>
+            <button data-close="1" style="background:none; border:none; cursor:pointer; color: #9ca3af; font-size: 1.2rem;">&times;</button>
         `;
 
-        // Add slideIn animation if style tag isn't there
         if (!document.getElementById('global-toast-styles')) {
             const style = document.createElement('style');
             style.id = 'global-toast-styles';
             style.innerHTML = `
-                @keyframes slideIn { 
-                    from { transform: translateX(100%); opacity: 0; } 
-                    to { transform: translateX(0); opacity: 1; } 
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
                 }
             `;
             document.head.appendChild(style);
         }
 
-        toast.onclick = (e) => {
-            if (e.target.tagName !== 'BUTTON') {
-                this.handleNotificationClick(data);
+        toast.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.getAttribute && target.getAttribute('data-close') === '1') {
                 toast.remove();
+                return;
             }
-        };
-
-        const closeBtn = toast.querySelector('button');
-        if (closeBtn) {
-            closeBtn.onclick = (e) => {
-                e.stopPropagation();
-                toast.remove();
-            };
-        }
+            this.handleNotificationClick(data);
+            toast.remove();
+        });
 
         document.body.appendChild(toast);
 
-        // Auto-remove after 8 seconds
-        setTimeout(() => { if (toast.parentElement) toast.remove(); }, 8000);
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 12000);
     }
 
     // Build login redirect URL with email pre-fill

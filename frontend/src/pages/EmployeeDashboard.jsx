@@ -13,6 +13,7 @@ import EmployeePayrollView from '../components/employee/EmployeePayrollView';
 import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
 import EmployeeProfileView from '../components/employee/EmployeeProfileView';
 import EmployeeLettersView from '../components/employee/EmployeeLettersView';
+import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -98,6 +99,7 @@ const EmployeeDashboard = () => {
         title={pageTitle}
       >
         {ViewComponent ? <ViewComponent /> : null}
+        {activeView === 'dashboard' ? <EmployeeDashboardAddons /> : null}
       </DashboardLayout>
     </div>
   );
