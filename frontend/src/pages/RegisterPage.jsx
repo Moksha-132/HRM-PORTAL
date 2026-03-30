@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { registerPublic } from '../services/authService';
+import { acceptPolicies, clearAcceptedPolicies, hasAcceptedPolicies } from '../utils/policyAcceptance';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const RegisterPage = () => {
     confirmPassword: '',
     role: 'Employee'
   });
-  const [policyAccepted, setPolicyAccepted] = useState(false);
+  const [policyAccepted, setPolicyAccepted] = useState(() => hasAcceptedPolicies());
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +27,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setRegisterError('');
 
-    if (!policyAccepted) {
+    if (!policyAccepted || !hasAcceptedPolicies()) {
       setRegisterError('You must accept the Privacy Policy and Terms & Conditions to register.');
       return;
     }
@@ -158,7 +159,15 @@ const RegisterPage = () => {
                   <input
                     type="checkbox"
                     checked={policyAccepted}
-                    onChange={(e) => setPolicyAccepted(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setPolicyAccepted(checked);
+                      if (checked) {
+                        acceptPolicies();
+                      } else {
+                        clearAcceptedPolicies();
+                      }
+                    }}
                     style={{ marginRight: 8 }}
                   />
                   I accept the Privacy Policy and Terms & Conditions

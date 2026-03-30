@@ -95,9 +95,7 @@ const LandingPage = () => {
             <Link to="/register" className="btn btn-solid" id="hero-btn">
               {header.buttonText || 'Discover More'}
             </Link>
-            <a href="#features" className="btn btn-outline" id="hero-btn-secondary">
-              Explore Features
-            </a>
+            <Link to="/login" className="btn btn-outline" id="hero-btn-secondary">Login</Link>
           </div>
           <div
             className="hero-visual animate-fade-in delay-400"

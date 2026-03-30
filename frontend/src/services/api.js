@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '',
@@ -27,6 +28,7 @@ api.interceptors.response.use(
       sessionStorage.removeItem('shnoor_role');
       sessionStorage.removeItem('shnoor_email');
       sessionStorage.removeItem('shnoor_admin_email');
+      clearAcceptedPolicies();
     }
     return Promise.reject(error);
   }

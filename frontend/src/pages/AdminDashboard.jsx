@@ -10,6 +10,7 @@ import AdminSuperAdminView from '../components/admin/AdminSuperAdminView';
 import AdminWebsiteView from '../components/admin/AdminWebsiteView';
 import AdminSystemView from '../components/admin/AdminSystemView';
 import AdminChatSupportView from '../components/admin/AdminChatSupportView';
+import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ const AdminDashboard = () => {
     localStorage.removeItem('shnoor_role');
     localStorage.removeItem('shnoor_email');
     localStorage.removeItem('shnoor_admin_email');
+    clearAcceptedPolicies();
     navigate('/login');
   };
 

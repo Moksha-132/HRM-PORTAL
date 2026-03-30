@@ -14,6 +14,7 @@ import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
 import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
+import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ const ManagerDashboard = () => {
     localStorage.removeItem('shnoor_token');
     localStorage.removeItem('shnoor_role');
     localStorage.removeItem('shnoor_email');
+    clearAcceptedPolicies();
     navigate('/login');
   };
 

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import { login as loginRequest } from '../services/authService';
 import api from '../services/api';
+import { acceptPolicies, clearAcceptedPolicies, hasAcceptedPolicies } from '../utils/policyAcceptance';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -21,11 +22,12 @@ const LoginPage = () => {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
+  const [policyAccepted, setPolicyAccepted] = useState(() => hasAcceptedPolicies());
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
-    if (localStorage.getItem('privacyAccepted') !== 'true' || localStorage.getItem('termsAccepted') !== 'true') {
+    if (!policyAccepted || !hasAcceptedPolicies()) {
       setLoginError('You must accept both the Privacy Policy and Terms & Conditions before logging in.');
       return;
     }
@@ -186,6 +188,24 @@ const LoginPage = () => {
               </span>
               .
             </div>
+
+            <label className="checkbox-label" style={{ alignItems: 'flex-start', margin: '8px 0 6px' }}>
+              <input
+                type="checkbox"
+                checked={policyAccepted}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setPolicyAccepted(checked);
+                  if (checked) {
+                    acceptPolicies();
+                  } else {
+                    clearAcceptedPolicies();
+                  }
+                  setLoginError('');
+                }}
+              />
+              <span>I have reviewed and accept the Privacy Policy and Terms & Conditions</span>
+            </label>
 
             <button type="submit" className="btn btn-solid btn-block" disabled={loginLoading}>
               {loginLoading ? 'Signing in...' : 'Sign In'}

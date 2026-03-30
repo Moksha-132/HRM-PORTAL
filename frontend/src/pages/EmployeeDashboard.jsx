@@ -14,6 +14,7 @@ import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
 import EmployeeProfileView from '../components/employee/EmployeeProfileView';
 import EmployeeLettersView from '../components/employee/EmployeeLettersView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
+import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ const EmployeeDashboard = () => {
     localStorage.removeItem('shnoor_token');
     localStorage.removeItem('shnoor_role');
     localStorage.removeItem('shnoor_email');
+    clearAcceptedPolicies();
     navigate('/login');
   };
 
