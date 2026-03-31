@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification, PrePayment, IncrementPromotion } = require('../models');
 const { sequelize } = require('../config/db');
 const fs = require('fs');
 const path = require('path');
@@ -143,6 +143,8 @@ exports.deleteEmployee = async (req, res) => {
         await Leave.destroy({ where: { employee_id: empId } });
         await Payroll.destroy({ where: { employee_id: empId } });
         await Expense.destroy({ where: { employee_id: empId } });
+        await PrePayment.destroy({ where: { employee_id: empId } });
+        await IncrementPromotion.destroy({ where: { employee_id: empId } });
         await Appreciation.destroy({ where: { employee_id: empId } });
         await Offboarding.destroy({ where: { employee_id: empId } });
         await Payslip.destroy({ where: { employee_id: empId } });
@@ -482,6 +484,180 @@ exports.deleteExpense = async (req, res) => {
         const ex = await Expense.findByPk(req.params.id);
         if(!ex) return res.status(404).json({ success: false, error: "Not found" });
         await ex.destroy();
+        res.status(200).json({ success: true, message: "Record deleted" });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+// PRE PAYMENTS
+exports.getPrePayments = async (req, res) => {
+    try {
+        const records = await PrePayment.findAll({ include: [Employee], order: [['created_at', 'DESC']] });
+        res.status(200).json({ success: true, data: records });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.createPrePayment = async (req, res) => {
+    try {
+        const emp = await Employee.findByPk(req.body.employee_id);
+        if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
+
+        const payload = {
+            ...req.body,
+            status: 'Pending'
+        };
+        const record = await PrePayment.create(payload);
+        const result = await PrePayment.findByPk(record.id, { include: [Employee] });
+        res.status(201).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.updatePrePayment = async (req, res) => {
+    try {
+        const record = await PrePayment.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+
+        await record.update(req.body);
+        const result = await PrePayment.findByPk(record.id, { include: [Employee] });
+        res.status(200).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.updatePrePaymentStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({ success: false, error: "Invalid status" });
+        }
+
+        const record = await PrePayment.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+
+        const payload = { status };
+        if (status === 'Approved' || status === 'Rejected') {
+            payload.approved_by = req.user.name || req.user.email || 'Manager';
+            payload.approval_date = new Date();
+        } else {
+            payload.approved_by = null;
+            payload.approval_date = null;
+        }
+
+        await record.update(payload);
+        const result = await PrePayment.findByPk(record.id, { include: [Employee] });
+        res.status(200).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.deletePrePayment = async (req, res) => {
+    try {
+        const record = await PrePayment.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        await record.destroy();
+        res.status(200).json({ success: true, message: "Record deleted" });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+// INCREMENT / PROMOTION
+exports.getIncrementPromotions = async (req, res) => {
+    try {
+        const records = await IncrementPromotion.findAll({ include: [Employee], order: [['created_at', 'DESC']] });
+        res.status(200).json({ success: true, data: records });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.createIncrementPromotion = async (req, res) => {
+    try {
+        const emp = await Employee.findByPk(req.body.employee_id);
+        if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
+
+        const currentSalary = parseFloat(req.body.current_salary || 0);
+        const newSalary = parseFloat(req.body.new_salary || 0);
+        if (!Number.isNaN(currentSalary) && !Number.isNaN(newSalary) && newSalary <= currentSalary) {
+            return res.status(400).json({ success: false, error: "New salary must be greater than current salary" });
+        }
+
+        if (req.body.change_type === 'Promotion' && !String(req.body.new_designation || '').trim()) {
+            return res.status(400).json({ success: false, error: "New designation is required for promotion" });
+        }
+
+        const payload = {
+            ...req.body,
+            department: req.body.department || emp.department,
+            designation: req.body.designation || emp.designation,
+            current_role: req.body.current_role || emp.designation,
+            joining_date: req.body.joining_date || emp.joining_date,
+            status: req.body.status || 'Pending'
+        };
+
+        const record = await IncrementPromotion.create(payload);
+        const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
+        res.status(201).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.updateIncrementPromotion = async (req, res) => {
+    try {
+        const record = await IncrementPromotion.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+
+        const payload = { ...req.body };
+        const effectiveType = payload.change_type || record.change_type;
+        const effectiveCurrentSalary = parseFloat(payload.current_salary ?? record.current_salary ?? 0);
+        const effectiveNewSalary = parseFloat(payload.new_salary ?? record.new_salary ?? 0);
+
+        if (!Number.isNaN(effectiveCurrentSalary) && !Number.isNaN(effectiveNewSalary) && effectiveNewSalary <= effectiveCurrentSalary) {
+            return res.status(400).json({ success: false, error: "New salary must be greater than current salary" });
+        }
+
+        const effectiveDesignation = String(payload.new_designation ?? record.new_designation ?? '').trim();
+        if (effectiveType === 'Promotion' && !effectiveDesignation) {
+            return res.status(400).json({ success: false, error: "New designation is required for promotion" });
+        }
+
+        if (payload.status && (payload.status === 'Approved' || payload.status === 'Rejected')) {
+            payload.approved_by = req.user.name || req.user.email || 'Manager';
+            payload.approval_date = new Date();
+        }
+        if (payload.status === 'Pending') {
+            payload.approved_by = null;
+            payload.approval_date = null;
+        }
+
+        await record.update(payload);
+        const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
+        res.status(200).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.updateIncrementPromotionStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({ success: false, error: "Invalid status" });
+        }
+
+        const record = await IncrementPromotion.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+
+        const payload = { status };
+        if (status === 'Approved' || status === 'Rejected') {
+            payload.approved_by = req.user.name || req.user.email || 'Manager';
+            payload.approval_date = new Date();
+        } else {
+            payload.approved_by = null;
+            payload.approval_date = null;
+        }
+
+        await record.update(payload);
+        const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
+        res.status(200).json({ success: true, data: result });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.deleteIncrementPromotion = async (req, res) => {
+    try {
+        const record = await IncrementPromotion.findByPk(req.params.id);
+        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        await record.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };

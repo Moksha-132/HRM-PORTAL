@@ -5,8 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch('/api/v1/settings/website').then(r=>r.json()).then(d => { if(d.success && d.data?.logoUrl) window.companyLogoUrl = d.data.logoUrl; }).catch(()=>{});
 
     const token = sessionStorage.getItem('shnoor_token');
+    const sessionRole = sessionStorage.getItem('shnoor_role');
+    let tokenRole = null;
+    try {
+        tokenRole = token ? JSON.parse(atob(token.split('.')[1] || 'e30=')).role : null;
+    } catch (e) {
+        tokenRole = null;
+    }
+    const effectiveRole = sessionRole || tokenRole;
     if (!token) {
         window.location.href = 'index.html#login';
+        return;
+    }
+    if (effectiveRole && effectiveRole !== 'Employee') {
+        if (effectiveRole === 'Manager') {
+            window.location.href = 'manager-dashboard.html';
+        } else {
+            window.location.href = 'admin-dashboard.html';
+        }
         return;
     }
 
@@ -14,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = document.querySelectorAll('.sidebar-link');
     const views = document.querySelectorAll('.view');
     const emailDisplay = document.getElementById('employee-email-display');
+    const payrollGroup = document.getElementById('payroll-group');
+    const payrollParent = document.getElementById('nav-payroll-parent');
 
     if (emailDisplay) {
         emailDisplay.textContent = sessionStorage.getItem('shnoor_admin_email') || 'emp@shnoor.com';
@@ -69,14 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
         'nav-appreciations': 'view-appreciations',
         'nav-offboarding': 'view-offboarding',
         'nav-expenses': 'view-expenses',
+        'nav-payroll-prepayments': 'view-expenses',
+        'nav-payroll-increment': 'view-letters',
         'nav-payroll': 'view-payroll',
         'nav-policies': 'view-policies',
         'nav-letters': 'view-letters',
         'nav-profile': 'view-profile'
     };
 
+    payrollParent?.addEventListener('click', (e) => {
+        e.preventDefault();
+        payrollGroup?.classList.toggle('open');
+    });
+
     links.forEach(link => {
-        if (link.id === 'nav-logout') return;
+        if (link.id === 'nav-logout' || link.id === 'nav-payroll-parent') return;
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const viewId = sections[link.id];
@@ -86,7 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
             link.classList.add('active');
             views.forEach(v => v.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
-            pageTitle.textContent = link.textContent.trim();
+            pageTitle.textContent = link.dataset.title || link.textContent.trim();
+
+            if (link.closest('#payroll-group')) {
+                payrollGroup?.classList.add('open');
+            }
 
             loadData(viewId);
         });

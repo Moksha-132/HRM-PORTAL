@@ -1,5 +1,5 @@
 const express = require('express');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const router = express.Router();
 const controller = require('../controllers/managerController');
 const multer = require('multer');
@@ -19,86 +19,102 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// For simplicity, using protect to verify token. Depending on exact role logic, authorize('Manager') might be added.
-// Here we assume any valid token works if testing locally, but adding 'Manager' or 'Super Admin' for security.
+router.use(protect);
+router.use(authorize('Manager'));
 
-router.get('/dashboard', protect, controller.getDashboardStats);
+router.get('/dashboard', controller.getDashboardStats);
 
 router.route('/employees')
-    .get(protect, controller.getEmployees)
-    .post(protect, controller.createEmployee);
+    .get(controller.getEmployees)
+    .post(controller.createEmployee);
 router.route('/employees/:id')
-    .put(protect, controller.updateEmployee)
-    .delete(protect, controller.deleteEmployee);
+    .put(controller.updateEmployee)
+    .delete(controller.deleteEmployee);
 
 router.route('/attendance')
-    .get(protect, controller.getAttendance)
-    .post(protect, controller.createAttendance);
+    .get(controller.getAttendance)
+    .post(controller.createAttendance);
 router.route('/attendance/:id')
-    .put(protect, controller.updateAttendance)
-    .delete(protect, controller.deleteAttendance);
+    .put(controller.updateAttendance)
+    .delete(controller.deleteAttendance);
 
 router.route('/leaves')
-    .get(protect, controller.getLeaves);
+    .get(controller.getLeaves);
 router.route('/leaves/:id')
-    .put(protect, controller.updateLeave)
-    .delete(protect, controller.deleteLeave);
+    .put(controller.updateLeave)
+    .delete(controller.deleteLeave);
 
 router.route('/assets')
-    .get(protect, controller.getAssets)
-    .post(protect, controller.createAsset);
+    .get(controller.getAssets)
+    .post(controller.createAsset);
 router.route('/assets/:id')
-    .put(protect, controller.updateAsset)
-    .delete(protect, controller.deleteAsset);
+    .put(controller.updateAsset)
+    .delete(controller.deleteAsset);
 
 router.route('/payroll')
-    .get(protect, controller.getPayrolls)
-    .post(protect, controller.createPayroll);
+    .get(controller.getPayrolls)
+    .post(controller.createPayroll);
 router.route('/payroll/:id')
-    .put(protect, controller.updatePayroll)
-    .delete(protect, controller.deletePayroll);
-router.post('/payroll/:id/generate-payslip', protect, controller.generatePayslip);
+    .put(controller.updatePayroll)
+    .delete(controller.deletePayroll);
+router.post('/payroll/:id/generate-payslip', controller.generatePayslip);
 
 router.route('/appreciations')
-    .get(protect, controller.getAppreciations)
-    .post(protect, controller.createAppreciation);
+    .get(controller.getAppreciations)
+    .post(controller.createAppreciation);
 router.route('/appreciations/:id')
-    .put(protect, controller.updateAppreciation)
-    .delete(protect, controller.deleteAppreciation);
+    .put(controller.updateAppreciation)
+    .delete(controller.deleteAppreciation);
 
 router.route('/policies')
-    .get(protect, controller.getPolicies)
-    .post(protect, upload.single('file'), controller.createPolicy);
+    .get(controller.getPolicies)
+    .post(upload.single('file'), controller.createPolicy);
 router.route('/policies/:id')
-    .put(protect, upload.single('file'), controller.updatePolicy)
-    .delete(protect, controller.deletePolicy);
+    .put(upload.single('file'), controller.updatePolicy)
+    .delete(controller.deletePolicy);
 
 router.route('/offboardings')
-    .get(protect, controller.getOffboardings)
-    .post(protect, controller.createOffboarding);
+    .get(controller.getOffboardings)
+    .post(controller.createOffboarding);
 router.route('/offboardings/:id')
-    .put(protect, controller.updateOffboarding)
-    .delete(protect, controller.deleteOffboarding);
+    .put(controller.updateOffboarding)
+    .delete(controller.deleteOffboarding);
 
 router.route('/expenses')
-    .get(protect, controller.getExpenses)
-    .post(protect, controller.createExpense);
+    .get(controller.getExpenses)
+    .post(controller.createExpense);
 router.route('/expenses/:id')
-    .put(protect, controller.updateExpense)
-    .delete(protect, controller.deleteExpense);
+    .put(controller.updateExpense)
+    .delete(controller.deleteExpense);
+
+router.route('/prepayments')
+    .get(controller.getPrePayments)
+    .post(controller.createPrePayment);
+router.route('/prepayments/:id')
+    .put(controller.updatePrePayment)
+    .delete(controller.deletePrePayment);
+router.put('/prepayments/:id/status', controller.updatePrePaymentStatus);
+
+router.route('/increment-promotions')
+    .get(controller.getIncrementPromotions)
+    .post(controller.createIncrementPromotion);
+router.route('/increment-promotions/:id')
+    .put(controller.updateIncrementPromotion)
+    .delete(controller.deleteIncrementPromotion);
+router.put('/increment-promotions/:id/status', controller.updateIncrementPromotionStatus);
 
 router.route('/holidays')
-    .get(protect, controller.getHolidays)
-    .post(protect, controller.createHoliday);
+    .get(controller.getHolidays)
+    .post(controller.createHoliday);
 router.route('/holidays/:id')
-    .put(protect, controller.updateHoliday)
-    .delete(protect, controller.deleteHoliday);
+    .put(controller.updateHoliday)
+    .delete(controller.deleteHoliday);
 
 router.route('/letters')
-    .get(protect, controller.getManagerLetters)
-    .post(protect, controller.sendLetter);
+    .get(controller.getManagerLetters)
+    .post(controller.sendLetter);
 router.route('/letters/:id')
-    .put(protect, controller.updateLetter)
-    .delete(protect, controller.deleteLetter);
+    .put(controller.updateLetter)
+    .delete(controller.deleteLetter);
 
 module.exports = router;

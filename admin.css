@@ -51,6 +51,22 @@ a { text-decoration: none; color: inherit; }
 .sidebar-link { display: flex; align-items: center; gap: 10px; font-size: 0.875rem; font-weight: 500; color: var(--sidebar-text); padding: 9px 12px; border-radius: var(--radius); transition: all 0.2s; cursor: pointer; }
 .sidebar-link:hover { background: var(--sidebar-hover); color: #fff; }
 .sidebar-link.active { background: var(--primary-light); color: #fff; font-weight: 600; }
+.sidebar-link.has-children { justify-content: space-between; }
+.sidebar-link-main { display: flex; align-items: center; gap: 10px; }
+.sidebar-chevron { font-size: 0.75rem; transition: transform 0.2s ease; }
+.payroll-group.open .sidebar-chevron { transform: rotate(180deg); }
+.sidebar-submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+  margin-left: 18px;
+}
+.payroll-group.open .sidebar-submenu { max-height: 180px; }
+.sidebar-sublink {
+  font-size: 0.84rem;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
 .sidebar-bottom { padding: 10px 10px 16px; border-top: 1px solid rgba(255,255,255,.07); }
 .sidebar-logout { color: var(--danger); }
 
