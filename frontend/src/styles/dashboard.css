@@ -167,6 +167,40 @@
   flex-shrink: 0;
 }
 
+.dashboard-mode .sidebar-submenu {
+  margin-left: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-left: 1px solid var(--border);
+}
+
+.dashboard-mode .sidebar-sublink {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--sidebar-text);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboard-mode .sidebar-sublink:hover {
+  background: var(--sidebar-hover);
+  color: var(--primary);
+}
+
+.dashboard-mode .sidebar-sublink.active {
+  background: var(--sidebar-active);
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .dashboard-mode .sidebar-bottom {
   padding: 10px 10px 16px;
   border-top: 1px solid var(--border);
@@ -582,9 +616,56 @@
   display: block;
 }
 
+/* —— Tabs & Filters —— */
+.dashboard-mode .view-tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.dashboard-mode .tab-btn { background: none; border: none; padding: 10px 4px; font-size: 0.9rem; font-weight: 600; color: var(--text-light); cursor: pointer; position: relative; transition: color 0.2s; }
+.dashboard-mode .tab-btn:hover { color: var(--primary); }
+.dashboard-mode .tab-btn.active { color: var(--primary); }
+.dashboard-mode .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--primary-gradient); border-radius: 99px; }
+
+.dashboard-mode .filters-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.dashboard-mode .filter-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 0.85rem; color: var(--text); outline: none; cursor: pointer; }
+
+/* —— Custom Table Layouts —— */
+.dashboard-mode .leave-table th { background: transparent; color: var(--text); font-weight: 700; border-bottom: 1px solid var(--border); }
+.dashboard-mode .leave-table td { vertical-align: middle; }
+
+/* Breadcrumb */
+.dashboard-mode .breadcrumb { display: flex; gap: 6px; font-size: 0.75rem; color: var(--text-light); margin-bottom: 12px; }
+.dashboard-mode .breadcrumb span:not(:last-child)::after { content: '›'; margin-left: 6px; }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* —— Sidebar Sub-menus —— */
+.dashboard-mode .sidebar-submenu { padding-left: 15px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+.dashboard-mode .sidebar-sublink { 
+    display: flex; 
+    align-items: center; 
+    font-size: 0.85rem; 
+    padding: 8px 12px; 
+    color: var(--text-light); 
+    background: none; 
+    border: none; 
+    width: 100%; 
+    text-align: left; 
+    cursor: pointer; 
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.dashboard-mode .sidebar-sublink:hover { 
+    color: var(--primary); 
+    background: rgba(59, 130, 246, 0.05);
+}
+.dashboard-mode .sidebar-sublink.active { 
+    color: var(--primary); 
+    font-weight: 600;
+    background: rgba(59, 130, 246, 0.1);
+}
+.dashboard-mode .sidebar-sublink.active .sub-icon i {
+    color: var(--primary);
+    opacity: 1;
 }
 
 /* —— Responsive —— */

@@ -1,21 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useSiteLogo } from '../hooks/useSiteLogo';
 
 const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, isCollapsed }) => {
   const logoUrl = useSiteLogo();
-  const initialOpenGroups = useMemo(() => {
-    const groups = {};
-    navItems.forEach((item) => {
-      if (Array.isArray(item.children) && item.children.length) {
-        groups[item.id] = item.children.some((child) => child.id === activeId);
-      }
-    });
-    return groups;
-  }, [activeId, navItems]);
-  const [openGroups, setOpenGroups] = useState(initialOpenGroups);
+  const [expandedMenus, setExpandedMenus] = useState({});
 
-  const toggleGroup = (groupId) => {
-    setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  const toggleMenu = (id) => {
+    setExpandedMenus((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   return (
@@ -27,56 +18,43 @@ const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, i
       </div>
       <nav className="sidebar-nav">
         {navItems.map((item) => {
-          if (Array.isArray(item.children) && item.children.length) {
-            const isOpenGroup = !!openGroups[item.id];
-            const groupActive = item.children.some((child) => child.id === activeId);
+          const childItems = item.children || item.subItems || [];
+          const hasSubItems = childItems.length > 0;
+          const isExpanded = expandedMenus[item.id] ?? childItems.some((sub) => sub.id === activeId);
 
-            return (
-              <div key={item.id} className="sidebar-group">
-                <button
-                  type="button"
-                  className={`sidebar-link sidebar-parent${groupActive ? ' active' : ''}`}
-                  onClick={() => toggleGroup(item.id)}
-                >
-                  <span className="nav-icon">
-                    <i className={item.icon} />
-                  </span>
-                  <span>{item.label}</span>
-                  <span className={`submenu-caret${isOpenGroup ? ' open' : ''}`}>
-                    <i className="fas fa-chevron-down" />
-                  </span>
-                </button>
-                <div className={`sidebar-submenu${isOpenGroup ? ' open' : ''}`}>
-                  {item.children.map((child) => (
+          return (
+            <div key={item.id} className="sidebar-item-group">
+              <button
+                type="button"
+                className={`sidebar-link${activeId === item.id || (hasSubItems && item.subItems.some((s) => s.id === activeId)) ? ' active' : ''}`}
+                onClick={() => (hasSubItems ? toggleMenu(item.id) : onSelect(item.id))}
+              >
+                <span className="nav-icon">
+                  <i className={item.icon} />
+                </span>
+                {item.label}
+                {hasSubItems && (
+                  <span className={`caret fas fa-chevron-${isExpanded ? 'up' : 'down'}`} style={{ marginLeft: 'auto', fontSize: '0.7rem' }} />
+                )}
+              </button>
+              {hasSubItems && isExpanded && (
+                <div className="sidebar-submenu">
+                  {childItems.map((sub) => (
                     <button
-                      key={child.id}
+                      key={sub.id}
                       type="button"
-                      className={`sidebar-link sidebar-sublink${activeId === child.id ? ' active' : ''}`}
+                      className={`sidebar-sublink${activeId === sub.id ? ' active' : ''}`}
                       onClick={() => {
-                        setOpenGroups((prev) => ({ ...prev, [item.id]: true }));
-                        onSelect(child.id);
+                        setExpandedMenus((prev) => ({ ...prev, [item.id]: true }));
+                        onSelect(sub.id);
                       }}
                     >
-                      {child.label}
+                      {sub.label}
                     </button>
                   ))}
                 </div>
-              </div>
-            );
-          }
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              className={`sidebar-link${activeId === item.id ? ' active' : ''}`}
-              onClick={() => onSelect(item.id)}
-            >
-              <span className="nav-icon">
-                <i className={item.icon} />
-              </span>
-              {item.label}
-            </button>
+              )}
+            </div>
           );
         })}
       </nav>

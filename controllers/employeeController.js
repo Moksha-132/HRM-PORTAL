@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin, Notification, PrePayment, IncrementPromotion } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin, Notification, PrePayment, IncrementPromotion, AppreciationComment } = require('../models');
 const { Op } = require('sequelize');
 
 // Dashboard Statistics
@@ -9,7 +9,7 @@ exports.getDashboardStats = async (req, res) => {
 
         // Today's attendance
         const todayAttendance = await Attendance.findOne({ where: { employee_id: empId, date: today } });
-        
+
         // Late count (let's assume after 10:00 AM is late)
         const lateAttendance = await Attendance.count({
             where: {
@@ -22,7 +22,12 @@ exports.getDashboardStats = async (req, res) => {
         const totalDuration = await Attendance.sum('work_duration', { where: { employee_id: empId } });
 
         // Recent Appreciations
-        const recentAppreciations = await Appreciation.findAll({ where: { employee_id: empId }, limit: 5, order: [['date', 'DESC']] });
+        const recentAppreciations = await Appreciation.findAll({
+            where: { employee_id: empId },
+            include: [{ model: Employee, as: 'Sender', attributes: ['employee_name'] }],
+            limit: 5,
+            order: [['date', 'DESC']]
+        });
 
         // Assigned Assets (Only count those currently 'Assigned')
         const assignedAssets = await Asset.count({ where: { assigned_employee: empId, status: 'Assigned' } });
@@ -81,11 +86,11 @@ exports.clockOut = async (req, res) => {
         const empId = req.user.employee_id;
 
         // Find the most recent active clock-in session (even if from a previous day)
-        const record = await Attendance.findOne({ 
+        const record = await Attendance.findOne({
             where: { employee_id: empId, clock_out: null },
             order: [['clock_in', 'DESC']]
         });
-        
+
         if (!record) return res.status(400).json({ success: false, error: 'No active clock-in found. Please clock in first.' });
 
         const clockOutTime = new Date();
@@ -112,13 +117,69 @@ exports.applyLeave = async (req, res) => {
     try {
         const data = { ...req.body, employee_id: req.user.employee_id, status: 'Pending' };
         const leave = await Leave.create(data);
+
+        // Notify Manager
+        // 1. Try specific manager_id
+        // 2. Fallback to any Manager designation
+        let managerObj = null;
+        if (req.user.manager_id) {
+            managerObj = await Employee.findByPk(req.user.manager_id);
+        }
+        if (!managerObj) {
+            managerObj = await Employee.findOne({ where: { designation: 'Manager' } });
+        }
+
+        if (managerObj && managerObj.email) {
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'employee',
+                    senderEmail: req.user.email,
+                    recipientEmails: [managerObj.email],
+                    message: `${req.user.employee_name} has applied for ${data.leave_type} (${data.start_date} to ${data.end_date})`,
+                    type: 'leave_application'
+                });
+            }
+            // Also create a persistent notification in DB
+            await Notification.create({
+                userId: managerObj.email.toLowerCase(),
+                role: 'manager',
+                message: `${req.user.employee_name} has applied for leave.`,
+                type: 'Leave',
+                senderRole: 'employee',
+                senderEmail: req.user.email
+            });
+        }
+
+        // Notify Employee (Self confirmation)
+        await Notification.create({
+            userId: req.user.email.toLowerCase(),
+            role: 'employee',
+            message: `You have successfully applied for ${data.leave_type} from ${data.start_date} to ${data.end_date}.`,
+            type: 'Leave',
+            senderRole: 'system'
+        });
+
+        // Trigger Email Notification (manager172243@gmail.com)
+        const { sendLeaveNotification } = require('../services/mailService');
+        await sendLeaveNotification({
+            employeeName: req.user.employee_name,
+            leaveType: data.leave_type,
+            startDate: data.start_date,
+            endDate: data.end_date,
+            managerEmail: 'lmoksha.132@gmail.com'
+        });
+
         res.status(201).json({ success: true, data: leave });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.getMyLeaves = async (req, res) => {
     try {
-        const leaves = await Leave.findAll({ where: { employee_id: req.user.employee_id }, order: [['leave_id', 'DESC']] });
+        const leaves = await Leave.findAll({
+            where: { employee_id: req.user.employee_id },
+            include: [{ model: Employee, attributes: ['employee_name'] }],
+            order: [['leave_id', 'DESC']]
+        });
         res.status(200).json({ success: true, data: leaves });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
@@ -134,7 +195,12 @@ exports.getMyAssets = async (req, res) => {
 // --- APPRECIATIONS ---
 exports.getMyAppreciations = async (req, res) => {
     try {
-        const list = await Appreciation.findAll({ where: { employee_id: req.user.employee_id }, order: [['date', 'DESC']] });
+        const list = await Appreciation.findAll({
+            where: { employee_id: req.user.employee_id },
+            include: [{ model: Employee, as: 'Sender', attributes: ['employee_name'] }],
+            order: [['date', 'DESC']]
+        });
+
         res.status(200).json({ success: true, data: list });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
@@ -176,7 +242,7 @@ exports.submitExpense = async (req, res) => {
     try {
         const data = { ...req.body, employee_id: req.user.employee_id, status: 'Pending' };
         const exp = await Expense.create(data);
-        
+
         const manager = await Employee.findOne({ where: { designation: 'Manager' } });
         if (manager && manager.email) { // Notify Manager via Global Service (Real-time)
             if (global.globalNotificationService) {
@@ -189,7 +255,7 @@ exports.submitExpense = async (req, res) => {
                 });
             }
         }
-        
+
         res.status(201).json({ success: true, data: exp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -256,9 +322,9 @@ exports.deleteExpense = async (req, res) => {
 exports.getMyPayroll = async (req, res) => {
     try {
         // Display only payroll records that have an associated Payslip (meaning they are "published")
-        const slips = await Payslip.findAll({ 
-            where: { employee_id: req.user.employee_id }, 
-            order: [['payment_date', 'DESC']] 
+        const slips = await Payslip.findAll({
+            where: { employee_id: req.user.employee_id },
+            order: [['payment_date', 'DESC']]
         });
         res.status(200).json({ success: true, data: slips });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
@@ -421,22 +487,22 @@ exports.getEmployeeLetters = async (req, res) => {
 exports.updateLetter = async (req, res) => {
     try {
         const letter = await Letter.findByPk(req.params.id);
-        if(!letter) return res.status(404).json({ success: false, error: "Not found" });
-        
+        if (!letter) return res.status(404).json({ success: false, error: "Not found" });
+
         // Ensure the letter belongs to the employee
         if (letter.employee_id !== req.user.employee_id) {
             return res.status(403).json({ success: false, error: "Not authorized to edit this letter" });
         }
-        
+
         // Update content and change status
         const { content } = req.body;
         if (!content) return res.status(400).json({ success: false, error: "Content is required" });
-        
+
         await letter.update({
             content,
             status: 'Edited'
         });
-        
+
         const updatedLetter = await Letter.findByPk(letter.letter_id, {
             include: [{ model: SuperAdmin, as: 'Sender' }]
         });
@@ -453,4 +519,174 @@ exports.updateLetter = async (req, res) => {
 
         res.status(200).json({ success: true, data: updatedLetter });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+// --- APPRECIATIONS (THANKS) ---
+exports.sendAppreciation = async (req, res) => {
+    try {
+        const { recipient_id, title, description } = req.body;
+        // If the sender is a Manager (SuperAdmin), they don't have an employee_id.
+        // We set sender_id to null to avoid ID collisions with the Employee table.
+        const sender_id = req.user.employee_id || null;
+
+        const app = await Appreciation.create({
+            employee_id: recipient_id,
+            sender_id,
+            title,
+            description,
+            date: new Date()
+        });
+
+        // Find recipient details for notification
+        const recipient = await Employee.findByPk(recipient_id);
+        if (recipient && recipient.email) {
+            const message = `${req.user.employee_name} sent you a "${title}" badge!`;
+
+            // Create in-app notification
+            await Notification.create({
+                userId: recipient.email.toLowerCase(),
+                role: 'employee', // Recipient role
+                message,
+                type: 'Appreciation',
+                senderRole: 'employee',
+                senderEmail: req.user.email
+            });
+
+            // Trigger Real-time notification
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'employee',
+                    senderEmail: req.user.email,
+                    recipientEmails: [recipient.email],
+                    message,
+                    type: 'appreciation'
+                });
+            }
+        }
+        res.status(201).json({ success: true, data: appreciation });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.getMyAppreciations = async (req, res) => {
+    try {
+        const { Op } = require('sequelize');
+        const appreciations = await Appreciation.findAll({
+            where: {
+                [Op.or]: [
+                    { employee_id: req.user.employee_id },
+                    { sender_id: req.user.employee_id }
+                ]
+            },
+            include: [
+                { model: Employee, as: 'Sender', attributes: ['employee_name', 'email'] },
+                { model: Employee, as: 'Recipient', attributes: ['employee_name', 'email'] },
+                { model: AppreciationComment, attributes: ['comment_id', 'commenter_name', 'content', 'created_at'] }
+            ],
+            order: [['date', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: appreciations });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.getAllEmployees = async (req, res) => {
+    try {
+        const employees = await Employee.findAll({
+            where: { status: 'Active' },
+            attributes: ['employee_id', 'employee_name', 'email']
+        });
+        res.status(200).json({ success: true, data: employees });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+exports.deleteAppreciation = async (req, res) => {
+    try {
+        const appreciation = await Appreciation.findByPk(req.params.id);
+        if (!appreciation) {
+            return res.status(404).json({ success: false, error: "Appreciation not found" });
+        }
+
+        // Only sender or recipient or a Manager/Admin can delete? 
+        // User just said "add an option to delete badge". 
+        // I'll allow the sender or the recipient to delete it.
+        const isSender = appreciation.sender_id === req.user.employee_id;
+        const isRecipient = appreciation.employee_id === req.user.employee_id;
+        const isManager = req.user.role === 'Manager' || req.user.role === 'Super Admin';
+
+        if (!isSender && !isRecipient && !isManager) {
+            return res.status(403).json({ success: false, error: "Not authorized to delete this badge" });
+        }
+
+        await appreciation.destroy();
+        res.status(200).json({ success: true, message: "Badge deleted successfully" });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+};
+
+exports.addAppreciationComment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { content } = req.body;
+        
+        const appreciation = await Appreciation.findByPk(id, {
+            include: [
+                { model: Employee, as: 'Sender' },
+                { model: Employee, as: 'Recipient' }
+            ]
+        });
+
+        if (!appreciation) return res.status(404).json({ success: false, error: "Appreciation not found" });
+
+        const comment = await AppreciationComment.create({
+            appreciation_id: id,
+            commenter_name: req.user.employee_name || req.user.name || 'User',
+            commenter_email: req.user.email,
+            content
+        });
+
+        // NOTIFY SENDER
+        // If the sender is an employee, notify them.
+        // If sender is null (Manager), notify the manager panel.
+        let recipientEmail = null;
+        let recipientRole = 'employee';
+
+        if (appreciation.Sender) {
+            recipientEmail = appreciation.Sender.email;
+        } else {
+            // It was a Manager (SuperAdmin). Fallback to a target manager email.
+            // For now, use the first manager found or a hardcoded one if needed.
+            const manager = await SuperAdmin.findOne({ where: { role: 'Manager' } });
+            if (manager) {
+                recipientEmail = manager.email;
+                recipientRole = 'manager';
+            }
+        }
+
+        if (recipientEmail && recipientEmail.toLowerCase() !== req.user.email.toLowerCase()) {
+            const message = `${req.user.employee_name || req.user.name} commented on a badge: "${content}"`;
+            
+            await Notification.create({
+                userId: recipientEmail.toLowerCase(),
+                role: recipientRole,
+                message,
+                type: 'AppreciationComment',
+                senderRole: req.user.employee_id ? 'employee' : 'manager',
+                senderEmail: req.user.email
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: req.user.employee_id ? 'employee' : 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [recipientEmail],
+                    message,
+                    type: 'appreciation_comment'
+                });
+            }
+        }
+
+        res.status(201).json({ success: true, data: comment });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
 };

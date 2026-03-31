@@ -15,6 +15,9 @@ import EmployeeIncrementPromotionView from '../components/employee/EmployeeIncre
 import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
 import EmployeeProfileView from '../components/employee/EmployeeProfileView';
 import EmployeeLettersView from '../components/employee/EmployeeLettersView';
+import EmployeeRemainingLeavesView from '../components/employee/EmployeeRemainingLeavesView';
+import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeavesView';
+import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
@@ -27,10 +30,15 @@ const EmployeeDashboard = () => {
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
       { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
-      { id: 'leaves', label: 'Leaves', icon: 'fas fa-calendar-alt' },
+      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', children: [
+        { id: 'leaves', label: 'Leaves' },
+        { id: 'remaining_leaves', label: 'Remaining Leaves' },
+        { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
+        { id: 'paid_leaves', label: 'Paid Leaves' },
+      ]},
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
       { id: 'calendar', label: 'Holiday Calendar', icon: 'fas fa-calendar-day' },
-      { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
+      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
       { id: 'offboarding', label: 'Offboarding', icon: 'fas fa-user-minus' },
       { id: 'expenses', label: 'Expenses', icon: 'fas fa-receipt' },
       {
@@ -95,6 +103,9 @@ const EmployeeDashboard = () => {
     dashboard: EmployeeOverviewView,
     attendance: EmployeeAttendanceView,
     leaves: EmployeeLeavesView,
+    remaining_leaves: EmployeeRemainingLeavesView,
+    unpaid_leaves: EmployeeUnpaidLeavesView,
+    paid_leaves: EmployeePaidLeavesView,
     assets: EmployeeAssetsView,
     calendar: EmployeeCalendarView,
     appreciations: EmployeeAppreciationsView,

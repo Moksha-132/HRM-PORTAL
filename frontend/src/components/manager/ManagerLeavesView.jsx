@@ -97,12 +97,16 @@ const ManagerLeavesView = () => {
                       <span className={`badge ${leave.status === 'Approved' ? 'bg-green' : leave.status === 'Rejected' ? 'bg-red' : 'bg-yellow'}`}>{leave.status}</span>
                     </td>
                     <td>
-                      <button type="button" className="action-btn" style={{ color: 'green' }} onClick={() => updateStatus(leave.leave_id, 'Approved')} title="Approve">
-                        <i className="fas fa-check-circle" />
-                      </button>
-                      <button type="button" className="action-btn" style={{ color: 'red' }} onClick={() => updateStatus(leave.leave_id, 'Rejected')} title="Reject">
-                        <i className="fas fa-times-circle" />
-                      </button>
+                      {leave.status === 'Pending' && (
+                        <>
+                          <button type="button" className="action-btn" style={{ color: '#10b981' }} onClick={() => updateStatus(leave.leave_id, 'Approved')} title="Approve">
+                            <i className="fas fa-check-circle" />
+                          </button>
+                          <button type="button" className="action-btn" style={{ color: '#ef4444' }} onClick={() => updateStatus(leave.leave_id, 'Rejected')} title="Reject">
+                            <i className="fas fa-times-circle" />
+                          </button>
+                        </>
+                      )}
                       <button type="button" className="action-btn edit-btn" onClick={() => openEdit(leave)}>
                         <i className="fas fa-edit" />
                       </button>

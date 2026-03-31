@@ -25,6 +25,7 @@ const Holiday = require('./HolidayModel');
 const Letter = require('./LetterModel');
 const PrePayment = require('./PrePaymentModel');
 const IncrementPromotion = require('./IncrementPromotionModel');
+const AppreciationComment = require('./AppreciationCommentModel');
 
 // Define Associations here if necessary
 // e.g.
@@ -48,7 +49,8 @@ Employee.hasMany(Payroll, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Expense.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(Expense, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Appreciation.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Appreciation.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Appreciation.belongsTo(Employee, { as: 'Sender', foreignKey: 'sender_id', onDelete: 'CASCADE' });
 Employee.hasMany(Appreciation, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
 Offboarding.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
@@ -65,10 +67,12 @@ Employee.hasMany(PrePayment, { foreignKey: 'employee_id', onDelete: 'CASCADE' })
 
 IncrementPromotion.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(IncrementPromotion, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Appreciation.hasMany(AppreciationComment, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
+AppreciationComment.belongsTo(Appreciation, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
 
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
-    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, PrePayment, IncrementPromotion,
+    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, PrePayment, IncrementPromotion, AppreciationComment,
     ChatMessage, Notification
 };
