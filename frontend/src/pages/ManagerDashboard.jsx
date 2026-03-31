@@ -29,7 +29,7 @@ const ManagerDashboard = () => {
       { id: 'leaves', label: 'Leaves', icon: 'fas fa-calendar-alt' },
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
       { id: 'payroll', label: 'Payroll', icon: 'fas fa-money-check-alt' },
-      { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
+      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'offboardings', label: 'Offboardings', icon: 'fas fa-user-minus' },
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },

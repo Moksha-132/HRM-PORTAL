@@ -23,6 +23,7 @@ const Offboarding = require('./OffboardingModel');
 const Payslip = require('./PayslipModel');
 const Holiday = require('./HolidayModel');
 const Letter = require('./LetterModel');
+const AppreciationComment = require('./AppreciationCommentModel');
 
 // Define Associations here if necessary
 // e.g.
@@ -46,7 +47,8 @@ Employee.hasMany(Payroll, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Expense.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Employee.hasMany(Expense, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
-Appreciation.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Appreciation.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Appreciation.belongsTo(Employee, { as: 'Sender', foreignKey: 'sender_id', onDelete: 'CASCADE' });
 Employee.hasMany(Appreciation, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
 Offboarding.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
@@ -58,9 +60,12 @@ Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Letter.belongsTo(SuperAdmin, { as: 'Sender', foreignKey: 'manager_id', onDelete: 'CASCADE' });
 Letter.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
+Appreciation.hasMany(AppreciationComment, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
+AppreciationComment.belongsTo(Appreciation, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
+
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
-    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter,
+    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, AppreciationComment,
     ChatMessage, Notification
 };

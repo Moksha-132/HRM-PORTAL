@@ -45,6 +45,26 @@ export const getAppreciations = async () => {
   return data;
 };
 
+export const sendAppreciation = async (payload) => {
+  const { data } = await api.post('/api/v1/employee/appreciations', payload);
+  return data;
+};
+
+export const deleteAppreciation = async (id) => {
+  const { data } = await api.delete(`/api/v1/employee/appreciations/${id}`);
+  return data;
+};
+
+export const addAppreciationComment = async (id, payload) => {
+  const { data } = await api.post(`/api/v1/employee/appreciations/${id}/comments`, payload);
+  return data;
+};
+
+export const getEmployees = async () => {
+  const { data } = await api.get('/api/v1/employee/all-employees');
+  return data;
+};
+
 export const getOffboardings = async () => {
   const { data } = await api.get('/api/v1/employee/offboarding');
   return data;

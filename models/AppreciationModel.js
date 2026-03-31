@@ -8,20 +8,25 @@ const Appreciation = sequelize.define('Appreciation', {
         autoIncrement: true
     },
     employee_id: {
-        type: DataTypes.INTEGER, // References Employee
+        type: DataTypes.INTEGER, // Recipient
         allowNull: false
     },
+    sender_id: {
+        type: DataTypes.INTEGER, // Sender
+        allowNull: true
+    },
     title: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, // Badge Name
         allowNull: false
     },
     description: {
-        type: DataTypes.TEXT,
+        type: DataTypes.TEXT, // Comment
         allowNull: true
     },
     date: {
         type: DataTypes.DATEONLY,
-        allowNull: false
+        allowNull: false,
+        defaultValue: DataTypes.NOW
     }
 }, {
     tableName: 'appreciations',

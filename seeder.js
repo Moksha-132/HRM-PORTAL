@@ -37,8 +37,8 @@ const importData = async () => {
 
         await SuperAdmin.create({
             name: 'Shnoor Manager',
-            email: 'rshnoor.manager@gmail.com',
-            password: 'password123',
+            email: 'manager@shnoor.com',
+            password: 'Manager@1234',
             role: 'Manager'
         });
 
@@ -47,6 +47,28 @@ const importData = async () => {
             employee_name: 'Shnoor Employee',
             email: 'hrm.employee123@gmail.com',
             password: 'password123',
+            role: 'Employee',
+            department: 'Human Resources',
+            department_id: hrDep.department_id,
+            designation: 'Software Engineer',
+            joining_date: new Date()
+        });
+
+        await Employee.create({
+            employee_name: 'Moksha',
+            email: 'moksha@shnoor.com',
+            password: 'Moksha@1234',
+            role: 'Employee',
+            department: 'Human Resources',
+            department_id: hrDep.department_id,
+            designation: 'Software Engineer',
+            joining_date: new Date()
+        });
+
+        await Employee.create({
+            employee_name: 'Ram',
+            email: 'ram@shnoor.com',
+            password: 'Ram@shnoor.com',
             role: 'Employee',
             department: 'Human Resources',
             department_id: hrDep.department_id,

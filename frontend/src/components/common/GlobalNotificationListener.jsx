@@ -72,38 +72,36 @@ const GlobalNotificationListener = () => {
       
       // Filter by recipient if specified
       if (data.recipientEmails && data.recipientEmails.length > 0) {
-        console.log('🔔📨 [React] Checking recipient filter. Recipient emails:', data.recipientEmails);
         const userEmailLower = userEmail.toLowerCase();
-        const senderEmailLower = (data.senderEmail || 'unknown').toLowerCase();
-        
-        // Show to intended recipients OR the sender
-        const isRecipient = data.recipientEmails.some(e => 
-          e.toLowerCase() === userEmailLower
-        );
-        const isSender = userEmailLower === senderEmailLower;
-        
-        console.log('🔔📨 [React] Is recipient?', isRecipient, '| Is sender?', isSender);
-        if (!isRecipient && !isSender) {
-          console.log('🔔📨 [React] Filtered out notification - not a recipient or sender');
-          return;
-        }
+        const isRecipient = data.recipientEmails.some(e => e.toLowerCase() === userEmailLower);
+        if (!isRecipient) return;
       }
 
       console.log('🔔📨 [React] Showing notification to user');
       const id = Date.now();
-      const newToast = {
-        id,
-        message: data.preview || data.fullMessage || data.message,
-        sender: data.senderRole
-      };
-
+      const message = data.preview || data.fullMessage || data.message;
+      
+      const newToast = { id, message, sender: data.senderRole };
       setToasts(prev => [...prev, newToast]);
+
+      // BROWSER DESKTOP NOTIFICATION
+      if (Notification.permission === 'granted') {
+        new Notification("Shnoor HRM", {
+          body: message,
+          icon: '/favicon.ico' // Or a specific icon
+        });
+      }
 
       // Auto-remove after 8 seconds
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== id));
       }, 8000);
     });
+
+    // Request permission on mount
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
     return () => {
       socket.disconnect();

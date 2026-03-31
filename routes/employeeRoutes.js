@@ -16,8 +16,12 @@ router.route('/leaves')
     .get(controller.getMyLeaves)
     .post(controller.applyLeave);
 
-router.get('/assets', controller.getMyAssets);
-router.get('/appreciations', controller.getMyAppreciations);
+router.route('/appreciations')
+    .get(controller.getMyAppreciations)
+    .post(controller.sendAppreciation);
+router.delete('/appreciations/:id', controller.deleteAppreciation);
+router.post('/appreciations/:id/comments', controller.addAppreciationComment);
+router.get('/all-employees', controller.getAllEmployees);
 router.get('/holidays', controller.getUpcomingHolidays);
 router.get('/policies', controller.getPolicies);
 
