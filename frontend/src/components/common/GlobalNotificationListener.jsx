@@ -81,14 +81,14 @@ const GlobalNotificationListener = () => {
       const id = Date.now();
       const message = data.preview || data.fullMessage || data.message;
       
-      const newToast = { id, message, sender: data.senderRole };
+      const newToast = { id, message, sender: data.senderRole, logo: data.logo };
       setToasts(prev => [...prev, newToast]);
 
       // BROWSER DESKTOP NOTIFICATION
       if (Notification.permission === 'granted') {
         new Notification("Shnoor HRM", {
           body: message,
-          icon: '/favicon.ico' // Or a specific icon
+          icon: data.logo || '/logo.avif' // ✅ Use company logo
         });
       }
 
@@ -107,6 +107,12 @@ const GlobalNotificationListener = () => {
       socket.disconnect();
     };
   }, [authVersion]);
+
+  // Resolve Logo URL
+  const getLogo = (toast) => {
+    // If the notification data doesn't have a specific logo, use default
+    return toast.logo || '/logo.avif';
+  };
 
   return (
     <div 
@@ -132,23 +138,29 @@ const GlobalNotificationListener = () => {
             boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
             padding: '16px 20px',
             borderLeft: '4px solid #4f46e5',
-            minWidth: '300px',
-            maxWidth: '400px',
+            minWidth: '330px',
+            maxWidth: '450px',
             display: 'flex',
-            alignItems: 'start',
-            gap: '12px',
+            alignItems: 'center',
+            gap: '16px',
             pointerEvents: 'auto',
             animation: 'toastSlideIn 0.3s ease-out'
           }}
         >
-          <div style={{ color: '#4f46e5', fontSize: '1.2rem', marginTop: '2px' }}>
-            <i className="fas fa-bell"></i>
+          {/* ✅ Display Company Logo */}
+          <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+            <img 
+               src={toast.logo || '/logo.avif'} 
+               alt="logo" 
+               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+               onError={(e) => { e.target.src = '/logo.avif'; }} 
+            />
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px', color: '#111827' }}>
-              New Notification
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '2px', color: '#111827' }}>
+              HRM Notification
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: '1.4' }}>
+            <div style={{ fontSize: '0.82rem', color: '#4b5563', lineHeight: '1.4' }}>
               {toast.message}
             </div>
           </div>

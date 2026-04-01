@@ -34,3 +34,13 @@ export const deleteAdmin = async (id) => {
   const { data } = await api.delete(`/api/v1/auth/users/${id}`);
   return data;
 };
+
+export const getTrialManagers = async () => {
+  const { data } = await api.get('/api/v1/auth/trials');
+  return data;
+};
+
+export const updateTrialManager = async (id, payload) => {
+  const { data } = await api.put(`/api/v1/auth/trials/${id}`, payload);
+  return data;
+};

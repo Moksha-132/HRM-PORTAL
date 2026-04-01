@@ -165,16 +165,16 @@ const AdminOverviewView = () => {
          </div>
       </div>
 
-      {/* 4. Existing Administrator Details */}
+      {/* 4. Existing Manager Details */}
       <div className="panel" style={{ marginBottom: '24px' }}>
          <div className="panel-head">
-            <div className="panel-title">Platform Administrators</div>
+            <div className="panel-title">Platform Managers</div>
          </div>
          <div className="table-wrap" style={{ maxHeight: 350, overflowY: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                   <tr>
-                     <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>Admin Profile</th>
+                     <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>Manager Profile</th>
                      <th style={{ padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>Access Role</th>
                      <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '2px solid #e2e8f0', color: '#475569' }}>Status</th>
                   </tr>
@@ -207,7 +207,7 @@ const AdminOverviewView = () => {
                         </td>
                      </tr>
                   )) : (
-                     <tr><td colSpan="3" style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>No administrators found.</td></tr>
+                     <tr><td colSpan="3" style={{ padding: 16, textAlign: 'center', color: '#64748b' }}>No managers found.</td></tr>
                   )}
                </tbody>
             </table>

@@ -12,24 +12,11 @@ exports.getDashboardStats = async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
 
-        // 1. Fetch and unify personnel headcount
+        // 1. Fetch only personnel from Employee table (headcount excluding admins/managers)
         const employees = await Employee.findAll({ attributes: ['employee_id', 'status', 'email'] });
-        const admins = await SuperAdmin.findAll({ 
-            where: { role: { [Op.in]: ['Manager', 'Admin', 'Super Admin'] } },
-            attributes: ['id', 'email'] 
-        });
-
-        const map = new Map();
-        employees.forEach(e => map.set(e.email.toLowerCase(), { status: e.status || 'Active' }));
-        admins.forEach(a => {
-            const email = a.email.toLowerCase();
-            if (!map.has(email)) {
-                map.set(email, { status: 'Active' });
-            }
-        });
-
-        const totalEmployeesCount = map.size;
-        const activeEmployeesCount = Array.from(map.values()).filter(e => e.status === 'Active').length;
+        
+        const totalEmployeesCount = employees.length;
+        const activeEmployeesCount = employees.filter(e => e.status === 'Active').length;
         
         // 2. Attendance Stats
         const todaysAttendance = await Attendance.count({ 
@@ -80,38 +67,14 @@ exports.getDashboardStats = async (req, res) => {
 exports.getEmployees = async (req, res) => {
     try {
         const employees = await Employee.findAll({
+            where: {
+                status: 'Active',
+                role: 'Employee',
+                email: { [Op.ne]: req.user.email }
+            },
             attributes: ['employee_id', 'employee_name', 'email', 'role', 'status', 'department', 'designation', 'joining_date', 'work_mode', 'location']
         });
-
-        // Also fetch Managers/Admins from SuperAdmin
-        const admins = await SuperAdmin.findAll({
-            where: {
-                role: { [Op.in]: ['Manager', 'Admin', 'Super Admin'] }
-            },
-            attributes: [['id', 'employee_id'], ['name', 'employee_name'], 'email', 'role']
-        });
-
-        // Combine and deduplicate by email
-        const map = new Map();
-        employees.forEach(e => map.set(e.email.toLowerCase(), e.get ? e.get({ plain: true }) : e));
-        admins.forEach(a => {
-            const email = a.email.toLowerCase();
-            if (!map.has(email)) {
-                // For admins not in the Employee table, provide default values for missing fields
-                const plain = a.get ? a.get({ plain: true }) : a;
-                map.set(email, { 
-                    ...plain, 
-                    status: 'Active', 
-                    department: 'Management',
-                    designation: plain.role || 'Admin',
-                    joining_date: new Date().toISOString().split('T')[0],
-                    work_mode: 'Work from Office',
-                    location: 'Remote'
-                });
-            }
-        });
-
-        res.status(200).json({ success: true, data: Array.from(map.values()) });
+        res.status(200).json({ success: true, count: employees.length, data: employees });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

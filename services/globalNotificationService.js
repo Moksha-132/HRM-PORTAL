@@ -1,4 +1,4 @@
-const { Notification } = require('../models');
+const { Notification, WebsiteSetting } = require('../models');
 
 class GlobalNotificationService {
     constructor(io) {
@@ -46,6 +46,17 @@ class GlobalNotificationService {
             console.log('📨 GlobalNotificationService.sendGlobalNotification called with:', notificationData);
             const { senderRole, senderEmail, message, type, recipientEmails } = notificationData;
             
+            // Fetch company logo
+            let logo = '/logo.avif';
+            try {
+                const settings = await WebsiteSetting.findOne();
+                if (settings && settings.logoUrl) {
+                    logo = settings.logoUrl;
+                }
+            } catch (err) {
+                console.warn('⚠️ Failed to fetch logo for notification:', err.message);
+            }
+
             // Store in database for all relevant users
             const notifications = [];
             
@@ -95,6 +106,7 @@ class GlobalNotificationService {
                 fullMessage: message, // Only sent after login
                 message: message,
                 type: type || 'global_message',
+                logo, // ✅ INCLUDE LOGO
                 timestamp: new Date(),
                 redirectUrl: this.buildRedirectUrl(senderRole, type, recipientEmails)
             };

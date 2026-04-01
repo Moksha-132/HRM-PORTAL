@@ -4,7 +4,7 @@ import { deleteAdmin, getAdmins, registerAdmin } from '../../services/authServic
 const AdminSuperAdminView = () => {
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'Super Admin' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'Manager' });
 
   const loadAdmins = async () => {
     setLoading(true);
@@ -24,7 +24,7 @@ const AdminSuperAdminView = () => {
     e.preventDefault();
     try {
       await registerAdmin(form);
-      setForm({ name: '', email: '', password: '', role: 'Super Admin' });
+      setForm({ name: '', email: '', password: '', role: 'Manager' });
       loadAdmins();
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to create admin.');
@@ -34,13 +34,13 @@ const AdminSuperAdminView = () => {
   return (
     <div className="view">
       <div className="page-header">
-        <h1 className="page-h1">Super Admin Management</h1>
-        <p className="page-sub">Manage platform administrators</p>
+        <h1 className="page-h1">Manager Management</h1>
+        <p className="page-sub">Manage platform managers</p>
       </div>
       <div className="grid grid-2" style={{ padding: 0 }}>
         <div className="panel">
           <div className="panel-head">
-            <div className="panel-title">Add New Admin</div>
+            <div className="panel-title">Add New Manager</div>
           </div>
           <div className="panel-body">
             <form onSubmit={handleSubmit}>
@@ -52,11 +52,12 @@ const AdminSuperAdminView = () => {
               <input className="input" type="password" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} required />
               <label className="form-label">Role</label>
               <select className="input" value={form.role} onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}>
-                <option value="Super Admin">Super Admin</option>
+                <option value="Manager">Manager</option>
                 <option value="Admin">Admin</option>
+                <option value="Super Admin">Super Admin</option>
               </select>
               <button type="submit" className="btn btn-solid" style={{ width: '100%' }}>
-                Create Admin
+                Create Account
               </button>
             </form>
           </div>
@@ -84,7 +85,7 @@ const AdminSuperAdminView = () => {
                 ) : admins.length === 0 ? (
                   <tr>
                     <td colSpan={3} style={{ textAlign: 'center' }}>
-                      No admins found.
+                      No managers found.
                     </td>
                   </tr>
                 ) : (

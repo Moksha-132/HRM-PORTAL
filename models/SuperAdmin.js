@@ -49,6 +49,22 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
     resetPasswordExpire: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    trialStartDate: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    trialEndDate: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    isTrial: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    status: {
+        type: DataTypes.ENUM('Active', 'Inactive'),
+        defaultValue: 'Active'
     }
 }, {
     timestamps: true, // adds createdAt and updatedAt

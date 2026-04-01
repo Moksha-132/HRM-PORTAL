@@ -1,5 +1,5 @@
 const express = require('express');
-const { login, register, registerPublic, getUsers, deleteUser, getMe, updateDetails, updatePassword, forgotPassword, resetPassword } = require('../controllers/superAdminController');
+const { login, register, registerPublic, getUsers, deleteUser, getMe, updateDetails, updatePassword, forgotPassword, resetPassword, getTrialManagers, updateTrial } = require('../controllers/superAdminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -11,8 +11,12 @@ router.put('/resetpassword/:resettoken', resetPassword);
 router.post('/register/public', registerPublic);
 // Protecting register so only Super Admins can add other admins
 router.post('/register', protect, authorize('Super Admin'), register);
-router.get('/users', protect, authorize('Super Admin'), getUsers);
+router.get('/users', protect, authorize('Super Admin', 'Admin'), getUsers);
 router.delete('/users/:id', protect, authorize('Super Admin'), deleteUser);
+
+// Trial Management
+router.get('/trials', protect, authorize('Super Admin', 'Admin'), getTrialManagers);
+router.put('/trials/:id', protect, authorize('Super Admin', 'Admin'), updateTrial);
 
 router.get('/me', protect, getMe);
 router.put('/updatedetails', protect, updateDetails);

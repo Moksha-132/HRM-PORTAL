@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import { getMe } from '../services/authService';
 
 // Manager Components
 import ManagerOverviewView from '../components/manager/ManagerOverviewView';
@@ -42,6 +43,7 @@ const ManagerDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [portalMode, setPortalMode] = useState('manager'); // 'self' or 'manager'
   const [email, setEmail] = useState('manager@shnoor.com');
+  const [userData, setUserData] = useState(null);
 
   const managementNavItems = useMemo(
     () => [
@@ -118,6 +120,82 @@ const ManagerDashboard = () => {
     setEmail(sessionStorage.getItem('shnoor_email') || localStorage.getItem('shnoor_email') || 'manager@shnoor.com');
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await getMe();
+        if (res.success) setUserData(res.data);
+      } catch (err) {
+        console.error('Failed to fetch manager profile:', err);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const TrialBanner = () => {
+    const isManager = userData?.role === 'Manager';
+    if (!userData || !isManager) return null;
+    
+    const trialEnd = userData.trialEndDate 
+        ? new Date(userData.trialEndDate) 
+        : new Date(new Date(userData.createdAt).getTime() + 15 * 24 * 60 * 60 * 1000);
+    
+    const now = new Date();
+    const diff = trialEnd - now;
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    const remaining = days > 0 ? days : 0;
+    
+    let statusMessage = "";
+    let bannerColor = "";
+    let iconClass = "";
+
+    if (remaining <= 0) {
+      statusMessage = "Your trial period has expired. Please contact admin.";
+      bannerColor = "#fee2e2"; // soft red
+      iconClass = "fa-hourglass-end";
+    } else if (remaining <= 3) {
+      statusMessage = `Your trial is expiring soon. ${remaining} days left.`;
+      bannerColor = "#ffedd5"; // soft orange/yellow
+      iconClass = "fa-hourglass-half";
+    } else {
+      statusMessage = `Your trial period is active. ${remaining} days remaining.`;
+      bannerColor = "#f0fdf4"; // soft green
+      iconClass = "fa-hourglass-start";
+    }
+    
+    return (
+      <div style={{
+        background: bannerColor,
+        border: `1px solid ${remaining <= 3 ? '#fdba74' : '#86efac'}`,
+        borderLeftWidth: '6px',
+        color: remaining <= 3 ? '#9a3412' : '#166534',
+        padding: '16px 24px',
+        borderRadius: '12px',
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        fontWeight: 600,
+        fontSize: '0.95rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <i className={`fas ${iconClass}`} style={{ fontSize: '1.2rem' }}></i>
+          <span>{statusMessage}</span>
+        </div>
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.5)', 
+          padding: '4px 12px', 
+          borderRadius: '20px', 
+          fontSize: '0.85rem',
+          border: '1px solid currentColor'
+        }}>
+          <b>{remaining} Days Left</b>
+        </div>
+      </div>
+    );
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem('shnoor_token');
     sessionStorage.removeItem('shnoor_role');
@@ -183,6 +261,7 @@ const ManagerDashboard = () => {
         portalMode={portalMode}
         onPortalChange={handlePortalChange}
       >
+        {activeView === 'dashboard' && <TrialBanner />}
         {ViewComponent ? <ViewComponent /> : null}
         {activeView === 'dashboard' && (
           portalMode === 'manager' ? <ManagerDashboardAddons /> : <EmployeeDashboardAddons />

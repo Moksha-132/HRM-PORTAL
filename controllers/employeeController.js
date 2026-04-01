@@ -572,16 +572,7 @@ exports.getAllEmployees = async (req, res) => {
             attributes: ['employee_id', 'employee_name', 'email', 'role']
         });
 
-        // Also fetch Managers from SuperAdmin
-        const managers = await SuperAdmin.findAll({
-            where: { role: 'Manager' },
-            attributes: [['id', 'employee_id'], ['name', 'employee_name'], 'email', 'role']
-        });
-
-        // Combine
-        const combined = [...employees, ...managers];
-
-        res.status(200).json({ success: true, data: combined });
+        res.status(200).json({ success: true, data: employees });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

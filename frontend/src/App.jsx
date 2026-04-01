@@ -8,6 +8,8 @@ import ManagerDashboard from './pages/ManagerDashboard';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
+import AdminRegistration from './pages/AdminRegistration';
+import ManagerRegistration from './pages/ManagerRegistration';
 import './index.css';
 import GlobalNotificationListener from './components/common/GlobalNotificationListener.jsx';
 
@@ -21,6 +23,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register/admin" element={<AdminRegistration />} />
+        <Route path="/register/manager" element={<ManagerRegistration />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/manager" element={<ManagerDashboard />} />

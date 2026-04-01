@@ -581,7 +581,8 @@ exports.updateChatResponse = async (req, res) => {
             console.error('[Chat] Failed to create user notification:', notifyErr);
         }
 
-        // Emit real-time desktop notification via Socket.IO
+        // Redundant direct socket emit removed. Now using Global Notification Service below.
+        /*
         const io = req.app.get('io');
         if (io && chat.userId) {
             io.to(chat.userId).emit('new_notification', {
@@ -591,6 +592,7 @@ exports.updateChatResponse = async (req, res) => {
                 timestamp: new Date()
             });
         }
+        */
 
         // 🚀 SEND GLOBAL NOTIFICATION FOR CHAT EDIT
         try {
@@ -723,7 +725,8 @@ exports.sendAdminReply = async (req, res) => {
             console.error('[Chat] Failed to create user notification:', notifyErr);
         }
 
-        // Emit real-time desktop notification via Socket.IO
+        // Redundant direct socket emit removed. Now using Global Notification Service below.
+        /*
         const io = req.app.get('io');
         if (io && session_id) {
             io.to(session_id).emit('new_notification', {
@@ -733,6 +736,7 @@ exports.sendAdminReply = async (req, res) => {
                 timestamp: new Date()
             });
         }
+        */
 
         // Send Email Notification
         let emailSent = false;

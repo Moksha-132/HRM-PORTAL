@@ -1,188 +1,54 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
-import { registerPublic } from '../services/authService';
-import { acceptPolicies, clearAcceptedPolicies, hasAcceptedPolicies } from '../utils/policyAcceptance';
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
-  const [registerError, setRegisterError] = useState('');
-  const [registerLoading, setRegisterLoading] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'Employee'
-  });
-  const [policyAccepted, setPolicyAccepted] = useState(() => hasAcceptedPolicies());
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setRegisterError('');
-  };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setRegisterError('');
-
-    if (!policyAccepted || !hasAcceptedPolicies()) {
-      setRegisterError('You must accept the Privacy Policy and Terms & Conditions to register.');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setRegisterError('Passwords do not match.');
-      return;
-    }
-
-    setRegisterLoading(true);
-    try {
-      const data = await registerPublic({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      });
-      
-      if (data.success) {
-        navigate('/login');
-      } else {
-        setRegisterError(data.error || data.message || 'Registration failed. Please try again.');
-      }
-    } catch (err) {
-      const message = err?.response?.data?.error || 'Network error. Please try again.';
-      setRegisterError(message);
-    } finally {
-      setRegisterLoading(false);
-    }
-  };
-
   return (
     <MainLayout>
-      <section className="section" id="register" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center' }}>
-        <div className="container center">
-          <div className="auth-card animate-fade-up" style={{ margin: '0 auto', maxWidth: 420, padding: '32px 28px', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
-            <div className="auth-logo-wrap" style={{ marginBottom: 18 }}>
-              <span className="auth-brand" style={{ fontWeight: 700, fontSize: '1.5rem', letterSpacing: 1 }}>shnoor</span>
-            </div>
-            <h2 className="auth-heading">Create an account</h2>
-            <p className="auth-sub-text">Join us today to manage your workforce</p>
-            {registerError && (
-              <div className="login-error" style={{ display: 'block' }}>
-                {registerError}
+      <section className="section" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center', background: '#f8fafc' }}>
+        <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <div className="center" style={{ marginBottom: '40px' }}>
+            <h2 className="auth-heading" style={{ fontSize: '2.5rem' }}>Join the Platform</h2>
+            <p className="auth-sub-text" style={{ fontSize: '1.1rem' }}>Choose your account type to get started</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+            {/* Admin Option */}
+            <div className="auth-card" style={{ padding: '40px 30px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+              <div style={{ fontSize: '3rem', color: '#4f46e5', marginBottom: '20px' }}>
+                <i className="fas fa-user-shield"></i>
               </div>
-            )}
-            <form id="register-form" onSubmit={handleRegister} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label htmlFor="register-name" style={{ marginBottom: 6, fontWeight: 500 }}>Full Name</label>
-                <input
-                  type="text"
-                  id="register-name"
-                  name="name"
-                  placeholder="Full Name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '1rem', marginBottom: 0 }}
-                />
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label htmlFor="register-email" style={{ marginBottom: 6, fontWeight: 500 }}>Email</label>
-                <input
-                  type="email"
-                  id="register-email"
-                  name="email"
-                  placeholder="Email address"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '1rem', marginBottom: 0 }}
-                />
-              </div>
-              <div className="form-group" style={{ display: 'flex', gap: 10, marginBottom: 0 }}>
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="register-password" style={{ marginBottom: 6, fontWeight: 500 }}>Password</label>
-                  <input
-                    type="password"
-                    id="register-password"
-                    name="password"
-                    placeholder="Password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '1rem', marginBottom: 0 }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label htmlFor="register-confirm" style={{ marginBottom: 6, fontWeight: 500 }}>Confirm Password</label>
-                  <input
-                    type="password"
-                    id="register-confirm"
-                    name="confirmPassword"
-                    placeholder="Confirm Password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '1rem', marginBottom: 0 }}
-                  />
-                </div>
-              </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label htmlFor="register-role" style={{ marginBottom: 6, fontWeight: 500 }}>Register As</label>
-                <select 
-                  id="register-role" 
-                  name="role" 
-                  value={formData.role} 
-                  onChange={handleChange}
-                  style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '1rem' }}
-                >
-                  <option value="Employee">Employee</option>
-                  <option value="Manager">Manager</option>
-                </select>
-              </div>
-              <div style={{ margin: '10px 0 8px', fontSize: '0.95rem', color: '#666', textAlign: 'left' }}>
-                By registering, you agree to our
-                <span style={{ margin: '0 4px', textDecoration: 'underline', cursor: 'pointer', color: '#3b82f6' }}>
-                  <Link to="/privacy-policy" style={{ color: '#3b82f6' }}> Privacy Policy </Link>
-                </span>
-                and
-                <span style={{ margin: '0 4px', textDecoration: 'underline', cursor: 'pointer', color: '#3b82f6' }}>
-                  <Link to="/terms-and-conditions" style={{ color: '#3b82f6' }}> Terms & Conditions </Link>
-                </span>
-                .
-              </div>
-              <div style={{ marginBottom: 16, marginTop: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.95rem' }}>
-                  <input
-                    type="checkbox"
-                    checked={policyAccepted}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setPolicyAccepted(checked);
-                      if (checked) {
-                        acceptPolicies();
-                      } else {
-                        clearAcceptedPolicies();
-                      }
-                    }}
-                    style={{ marginRight: 8 }}
-                  />
-                  I accept the Privacy Policy and Terms & Conditions
-                </label>
-              </div>
-              <button type="submit" className="btn btn-solid btn-block" id="register-submit" disabled={registerLoading}>
-                {registerLoading ? 'Creating Account...' : 'Register'}
-              </button>
-            </form>
-            <p className="auth-foot-text">
-              Already have an account?{' '}
-              <Link to="/login" className="link-small">
-                Login
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Platform Admin</h3>
+              <p style={{ color: '#64748b', marginBottom: '30px', minHeight: '60px' }}>
+                Full control over the system, roles, and company settings.
+              </p>
+              <Link to="/register/admin" className="btn btn-solid w-full" style={{ display: 'block', textDecoration: 'none' }}>
+                Register as Admin
               </Link>
-            </p>
+            </div>
+
+            {/* Manager Option */}
+            <div className="auth-card" style={{ padding: '40px 30px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease', borderTop: '4px solid #10b981' }}>
+              <div style={{ position: 'absolute', top: '15px', right: '15px' }}>
+                 <span style={{ background: '#10b981', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>FREE TRIAL</span>
+              </div>
+              <div style={{ fontSize: '3rem', color: '#10b981', marginBottom: '20px' }}>
+                <i className="fas fa-users-cog"></i>
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Team Manager</h3>
+              <p style={{ color: '#64748b', marginBottom: '30px', minHeight: '60px' }}>
+                Manage departments, employees, and team performance with a 15-day free trial.
+              </p>
+              <Link to="/register/manager" className="btn btn-solid w-full" style={{ display: 'block', textDecoration: 'none', backgroundColor: '#10b981' }}>
+                Start Free Trial
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '40px' }}>
+             <p className="auth-foot-text">
+               Already part of our portal? <Link to="/login" className="link-small">Login to your account</Link>
+             </p>
           </div>
         </div>
       </section>

@@ -34,7 +34,11 @@ const sendTokenResponse = (user, statusCode, res) => {
             id: userId, 
             name: user.name || user.employee_name, 
             email: user.email, 
-            role: user.role 
+            role: user.role,
+            status: user.status,
+            isTrial: user.isTrial,
+            trialStartDate: user.trialStartDate,
+            trialEndDate: user.trialEndDate
         }
     });
 };
@@ -70,9 +74,17 @@ exports.login = async (req, res) => {
         }
 
         const isMatch = await user.matchPassword(password);
-
         if (!isMatch) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        // Check if user is deactivated (Inactive)
+        if (user.status === 'Inactive') {
+            const roleStr = user.role === 'Manager' ? 'manager' : 'user';
+            return res.status(403).json({ 
+                success: false, 
+                error: `Account Inactive: Your access has been restricted by an administrator. You are no longer authorized as a ${roleStr} on this platform.` 
+            });
         }
 
         sendTokenResponse(user, 200, res);
@@ -153,15 +165,34 @@ exports.registerPublic = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
-        const allowedPublicRoles = ['Employee', 'Manager'];
-        const normalizedRole = allowedPublicRoles.includes(role) ? role : 'Employee';
+        // Only allow Admin or Manager for public registration
+        const allowedRoles = ['Admin', 'Manager'];
+        const normalizedRole = allowedRoles.includes(role) ? role : null;
+        
+        if (!normalizedRole) {
+            return res.status(400).json({ success: false, error: 'Registration is currently limited to Admin and Manager roles.' });
+        }
 
-        const user = await SuperAdmin.create({
+        const userData = {
             name,
             email,
             password,
-            role: normalizedRole
-        });
+            role: normalizedRole,
+            status: 'Active'
+        };
+
+        // Manager trial logic: 15-day trial period
+        if (normalizedRole === 'Manager') {
+            const now = new Date();
+            const trialEnd = new Date();
+            trialEnd.setDate(now.getDate() + 15);
+            
+            userData.isTrial = true;
+            userData.trialStartDate = now;
+            userData.trialEndDate = trialEnd;
+        }
+
+        const user = await SuperAdmin.create(userData);
 
         sendTokenResponse(user, 201, res);
     } catch (err) {
@@ -169,15 +200,50 @@ exports.registerPublic = async (req, res) => {
     }
 };
 
-// @desc    Get all Super Admins
+// @desc    Get all managers with trial info (Admin only)
+// @route   GET /api/v1/auth/trials
+exports.getTrialManagers = async (req, res) => {
+    try {
+        const managers = await SuperAdmin.findAll({
+            where: { role: 'Manager' },
+            attributes: ['id', 'name', 'email', 'role', 'status', 'createdAt', 'trialStartDate', 'trialEndDate', 'isTrial'],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).json({ success: true, count: managers.length, data: managers });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Update manager trial or status (Admin only)
+// @route   PUT /api/v1/auth/trials/:id
+exports.updateTrial = async (req, res) => {
+    try {
+        const user = await SuperAdmin.findByPk(req.params.id);
+        if (!user) return res.status(404).json({ success: false, error: 'Manager not found' });
+        
+        const { status, trialStartDate, trialEndDate, isTrial } = req.body;
+        
+        if (status) user.status = status;
+        if (trialStartDate) user.trialStartDate = trialStartDate;
+        if (trialEndDate) user.trialEndDate = trialEndDate;
+        if (isTrial !== undefined) user.isTrial = isTrial;
+        
+        await user.save();
+        res.status(200).json({ success: true, data: user });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+};
+
+// @desc    Get only Active Managers (for Admin view)
 // @route   GET /api/v1/auth/users
 exports.getUsers = async (req, res) => {
     try {
         const users = await SuperAdmin.findAll({
             where: {
-                role: {
-                    [Op.in]: ['Super Admin', 'Admin']
-                }
+                role: 'Manager',
+                status: 'Active'
             }
         });
         res.status(200).json({ success: true, count: users.length, data: users });

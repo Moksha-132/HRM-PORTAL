@@ -10,6 +10,7 @@ import AdminSuperAdminView from '../components/admin/AdminSuperAdminView';
 import AdminWebsiteView from '../components/admin/AdminWebsiteView';
 import AdminSystemView from '../components/admin/AdminSystemView';
 import AdminChatSupportView from '../components/admin/AdminChatSupportView';
+import AdminManagerTrialView from '../components/admin/AdminManagerTrialView';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const AdminDashboard = () => {
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
       { id: 'transactions', label: 'Transactions', icon: 'fas fa-file-invoice-dollar' },
       { id: 'offline', label: 'Offline Requests', icon: 'fas fa-download' },
       { id: 'superadmin', label: 'Super Admin Management', icon: 'fas fa-user-shield' },
+      { id: 'trials', label: 'Manager Trials', icon: 'fas fa-hourglass-half' },
       { id: 'website', label: 'Website Settings', icon: 'fas fa-globe' },
       { id: 'system', label: 'Settings', icon: 'fas fa-cog' },
       { id: 'chat', label: 'Chat Support', icon: 'fas fa-comments' },
@@ -85,6 +87,7 @@ const AdminDashboard = () => {
     transactions: AdminTransactionsView,
     offline: AdminOfflineView,
     superadmin: AdminSuperAdminView,
+    trials: AdminManagerTrialView,
     website: AdminWebsiteView,
     system: AdminSystemView,
     chat: AdminChatSupportView,
