@@ -80,6 +80,7 @@ const ManagerOverviewView = () => {
   // We identify who is present today
   const todaysAttendanceRecords = data.attendance.filter(a => a.date === today || (a.clock_in && a.clock_in.startsWith(today)));
   const presentEmpIds = new Set(todaysAttendanceRecords.map(a => a.employee_id));
+  const presentTodayCount = data.dashboard?.todaysAttendance || presentEmpIds.size;
   
   const employeeStatusList = data.employees.map(emp => {
     return {
@@ -88,18 +89,11 @@ const ManagerOverviewView = () => {
     };
   });
 
-  // 4. Leave Details
-  const activeLeavesToday = data.leaves.filter(l => {
-      if(l.status !== 'Approved') return false;
-      const start = new Date(l.start_date);
-      const end = new Date(l.end_date);
-      const now = new Date();
-      return now >= start && now <= end;
-  });
-  const employeesOnLeaveCount = new Set(activeLeavesToday.map(l => l.employee_id)).size;
-  const totalLeavesCount = data.leaves.length;
-  const approvedLeavesCount = data.leaves.filter(l => l.status === 'Approved').length;
-  const rejectedLeavesCount = data.leaves.filter(l => l.status === 'Rejected').length;
+  // 4. Leave Details (Using backend pre-calculated stats)
+  const employeesOnLeaveCount = data.dashboard?.onLeaveToday || 0;
+  const totalLeavesCount = data.dashboard?.totalLeaveRequests || 0;
+  const approvedLeavesCount = data.dashboard?.approvedLeaves || 0;
+  const rejectedLeavesCount = data.dashboard?.rejectedLeaves || 0;
 
    const todayStart = new Date();
    todayStart.setHours(0, 0, 0, 0);
@@ -138,7 +132,7 @@ const ManagerOverviewView = () => {
              <div className="panel-body">
                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Total Employees:</span> <strong>{totalEmployeesCount}</strong></div>
                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Active Roster:</span> <strong style={{color: '#10b981'}}>{activeEmployeesCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Present Today:</span> <strong style={{color: '#3b82f6'}}>{presentEmpIds.size}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Present Today:</span> <strong style={{color: '#3b82f6'}}>{presentTodayCount}</strong></div>
              </div>
         </div>
         

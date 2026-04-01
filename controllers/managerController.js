@@ -1,5 +1,6 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification, AppreciationComment } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification, AppreciationComment, SuperAdmin } = require('../models');
 const { sequelize } = require('../config/db');
+const { Op } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 const { sendEmail } = require('../services/emailService');
@@ -9,25 +10,64 @@ const DEFAULT_EMPLOYEE_PASSWORD = process.env.EMPLOYEE_DEFAULT_PASSWORD || 'Emp@
 // DASHBOARD
 exports.getDashboardStats = async (req, res) => {
     try {
-        const employees = await Employee.findAll();
-        const activeEmployees = employees.filter(e => e.status === 'Active').length;
-        
-        const pendingLeaves = await Leave.count({ where: { status: 'Pending' } });
-        
-        // Today's attendance - simple logic (requires date formatting in real app)
         const today = new Date().toISOString().split('T')[0];
-        const todaysAttendance = await Attendance.count({ where: { date: today } });
 
-        // recent activities (leaves, assets etc)
+        // 1. Fetch and unify personnel headcount
+        const employees = await Employee.findAll({ attributes: ['employee_id', 'status', 'email'] });
+        const admins = await SuperAdmin.findAll({ 
+            where: { role: { [Op.in]: ['Manager', 'Admin', 'Super Admin'] } },
+            attributes: ['id', 'email'] 
+        });
+
+        const map = new Map();
+        employees.forEach(e => map.set(e.email.toLowerCase(), { status: e.status || 'Active' }));
+        admins.forEach(a => {
+            const email = a.email.toLowerCase();
+            if (!map.has(email)) {
+                map.set(email, { status: 'Active' });
+            }
+        });
+
+        const totalEmployeesCount = map.size;
+        const activeEmployeesCount = Array.from(map.values()).filter(e => e.status === 'Active').length;
+        
+        // 2. Attendance Stats
+        const todaysAttendance = await Attendance.count({ 
+            where: { date: today },
+            distinct: true,
+            col: 'employee_id'
+        });
+
+        // 3. Leave Stats
+        const totalLeaveRequests = await Leave.count();
+        const pendingLeaves = await Leave.count({ where: { status: 'Pending' } });
+        const approvedLeaves = await Leave.count({ where: { status: 'Approved' } });
+        const rejectedLeaves = await Leave.count({ where: { status: 'Rejected' } });
+
+        // Count employees on approved leave TODAY
+        const onLeaveToday = await Leave.count({
+            where: {
+                status: 'Approved',
+                start_date: { [Op.lte]: today },
+                end_date: { [Op.gte]: today }
+            },
+            distinct: true,
+            col: 'employee_id'
+        });
+
         const recentLeaves = await Leave.findAll({ include: [Employee], limit: 3, order: [['leave_id', 'DESC']] });
 
         res.status(200).json({
             success: true,
             data: {
-                totalEmployees: employees.length,
-                activeEmployees,
-                pendingLeaves,
+                totalEmployees: totalEmployeesCount,
+                activeEmployees: activeEmployeesCount,
                 todaysAttendance,
+                onLeaveToday,
+                totalLeaveRequests,
+                pendingLeaves,
+                approvedLeaves,
+                rejectedLeaves,
                 recentActivities: recentLeaves
             }
         });
@@ -39,8 +79,39 @@ exports.getDashboardStats = async (req, res) => {
 // EMPLOYEES
 exports.getEmployees = async (req, res) => {
     try {
-        const employees = await Employee.findAll();
-        res.status(200).json({ success: true, data: employees });
+        const employees = await Employee.findAll({
+            attributes: ['employee_id', 'employee_name', 'email', 'role', 'status', 'department', 'designation', 'joining_date', 'work_mode', 'location']
+        });
+
+        // Also fetch Managers/Admins from SuperAdmin
+        const admins = await SuperAdmin.findAll({
+            where: {
+                role: { [Op.in]: ['Manager', 'Admin', 'Super Admin'] }
+            },
+            attributes: [['id', 'employee_id'], ['name', 'employee_name'], 'email', 'role']
+        });
+
+        // Combine and deduplicate by email
+        const map = new Map();
+        employees.forEach(e => map.set(e.email.toLowerCase(), e.get ? e.get({ plain: true }) : e));
+        admins.forEach(a => {
+            const email = a.email.toLowerCase();
+            if (!map.has(email)) {
+                // For admins not in the Employee table, provide default values for missing fields
+                const plain = a.get ? a.get({ plain: true }) : a;
+                map.set(email, { 
+                    ...plain, 
+                    status: 'Active', 
+                    department: 'Management',
+                    designation: plain.role || 'Admin',
+                    joining_date: new Date().toISOString().split('T')[0],
+                    work_mode: 'Work from Office',
+                    location: 'Remote'
+                });
+            }
+        });
+
+        res.status(200).json({ success: true, data: Array.from(map.values()) });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 
@@ -71,6 +142,25 @@ exports.createEmployee = async (req, res) => {
         const plainPassword = data.password;
         const emp = await Employee.create(data);
 
+        // NOTIFY
+        const welcomeMsg = `Welcome to the team, ${emp.employee_name}! Your account is ready.`;
+        await Notification.create({
+            userId: emp.email.toLowerCase(),
+            role: 'employee',
+            message: welcomeMsg,
+            type: 'Welcome',
+            senderRole: 'manager',
+            senderId: req.user.email
+        });
+
+        if (global.globalNotificationService) {
+            global.globalNotificationService.sendNotification(emp.email.toLowerCase(), {
+                type: 'Welcome',
+                message: welcomeMsg,
+                from: req.user.name || 'Manager'
+            });
+        }
+
         let emailSent = false;
         let emailError = null;
         try {
@@ -89,7 +179,7 @@ exports.createEmployee = async (req, res) => {
                         </div>
                         <p>Please log in and change your password as soon as possible.</p>
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="http://localhost:5000/index.html#login" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to HRM Portal</a>
+                            <a href="http://localhost:5173/login" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to HRM Portal</a>
                         </div>
                         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                         <p style="font-size: 12px; color: #777;">This is an automated message, please do not reply to this email.</p>
@@ -110,7 +200,7 @@ exports.createEmployee = async (req, res) => {
                     `Default Password: ${plainPassword}`,
                     '',
                     'Please change your password after first login.',
-                    'Login URL: http://localhost:5000/index.html#login'
+                    'Login URL: http://localhost:5173/login'
                 ].join('\n')
             });
             emailSent = true;
@@ -260,12 +350,37 @@ exports.getAssets = async (req, res) => {
 
 exports.createAsset = async (req, res) => {
     try {
+        let emp = null;
         if (req.body.assigned_employee) {
-            const emp = await Employee.findByPk(req.body.assigned_employee);
+            emp = await Employee.findByPk(req.body.assigned_employee);
             if (!emp) return res.status(400).json({ success: false, error: "Assigned employee not found" });
         }
         const asset = await Asset.create(req.body);
         const rAsset = await Asset.findByPk(asset.asset_id, { include: [Employee] });
+
+        // NOTIFY
+        if (emp) {
+            const message = `A new asset has been assigned to you: ${rAsset.asset_name} (${rAsset.asset_type})`;
+            await Notification.create({
+                userId: emp.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'AssetAssignment',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [emp.email],
+                    message,
+                    type: 'asset_assignment'
+                });
+            }
+        }
+
         res.status(201).json({ success: true, data: rAsset });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -274,8 +389,37 @@ exports.updateAsset = async (req, res) => {
     try {
         const asset = await Asset.findByPk(req.params.id);
         if(!asset) return res.status(404).json({ success: false, error: "Not found" });
+        
+        const oldAssigned = asset.assigned_employee;
         await asset.update(req.body);
         const rAsset = await Asset.findByPk(asset.asset_id, { include: [Employee] });
+
+        // IF ASSIGNMENT CHANGED OR NEWLY ASSIGNED
+        if (rAsset.assigned_employee && rAsset.assigned_employee !== oldAssigned) {
+            const emp = rAsset.Employee;
+            if (emp) {
+                const message = `An asset has been updated/assigned to you: ${rAsset.asset_name}`;
+                await Notification.create({
+                    userId: emp.email.toLowerCase(),
+                    role: 'employee',
+                    message,
+                    type: 'AssetAssignment',
+                    senderRole: 'manager',
+                    senderEmail: req.user.email
+                });
+
+                if (global.globalNotificationService) {
+                    await global.globalNotificationService.sendGlobalNotification({
+                        senderRole: 'manager',
+                        senderEmail: req.user.email,
+                        recipientEmails: [emp.email],
+                        message,
+                        type: 'asset_assignment'
+                    });
+                }
+            }
+        }
+
         res.status(200).json({ success: true, data: rAsset });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -304,6 +448,30 @@ exports.createPayroll = async (req, res) => {
         
         const p = await Payroll.create(req.body);
         const rp = await Payroll.findByPk(p.payroll_id, { include: [Employee] });
+
+        // NOTIFY
+        if (rp.Employee) {
+            const message = `Your payroll record for ${rp.payment_date || 'this month'} has been created.`;
+            await Notification.create({
+                userId: rp.Employee.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'Payroll',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [rp.Employee.email],
+                    message,
+                    type: 'payroll'
+                });
+            }
+        }
+
         res.status(201).json({ success: true, data: rp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -314,6 +482,30 @@ exports.updatePayroll = async (req, res) => {
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
         await p.update(req.body);
         const rp = await Payroll.findByPk(p.payroll_id, { include: [Employee] });
+
+        // NOTIFY
+        if (rp.Employee) {
+            const message = `Your payroll record has been updated.`;
+            await Notification.create({
+                userId: rp.Employee.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'Payroll',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [rp.Employee.email],
+                    message,
+                    type: 'payroll'
+                });
+            }
+        }
+
         res.status(200).json({ success: true, data: rp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -341,6 +533,30 @@ exports.generatePayslip = async (req, res) => {
             net_salary: payroll.net_salary,
             payment_date: payroll.payment_date || new Date()
         });
+
+        // NOTIFY
+        if (payroll.Employee) {
+            const message = `A new payslip has been generated for you for the date ${ps.payment_date}.`;
+            await Notification.create({
+                userId: payroll.Employee.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'Payslip',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [payroll.Employee.email],
+                    message,
+                    type: 'payslip'
+                });
+            }
+        }
+
         res.status(201).json({ success: true, data: ps, message: "Payslip generated and saved" });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -443,6 +659,36 @@ exports.createPolicy = async (req, res) => {
             data.file_url = req.body.external_url;
         }
         const p = await CompanyPolicy.create(data);
+
+        // BROADCAST NOTIFY ALL EMPLOYEES
+        try {
+            const employees = await Employee.findAll({ where: { status: 'Active' }, attributes: ['email'] });
+            const emails = employees.map(e => e.email.toLowerCase());
+            const message = `A new company policy has been uploaded: ${p.title}`;
+
+            // Persistent notifications
+            const notifData = employees.map(e => ({
+                userId: e.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'Policy',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            }));
+            await Notification.bulkCreate(notifData);
+
+            // Real-time broadcast
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: emails,
+                    message,
+                    type: 'policy_upload'
+                });
+            }
+        } catch (err) { console.error("Broadcast failed:", err); }
+
         res.status(201).json({ success: true, data: p });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -501,8 +747,37 @@ exports.updateOffboarding = async (req, res) => {
     try {
         const o = await Offboarding.findByPk(req.params.id);
         if(!o) return res.status(404).json({ success: false, error: "Not found" });
+        
+        const oldStatus = o.status;
         await o.update(req.body);
         const ro = await Offboarding.findByPk(o.offboarding_id, { include: [Employee] });
+
+        // NOTIFY STATUS CHANGE
+        if (ro.status && ro.status !== oldStatus) {
+            const emp = ro.Employee;
+            if (emp) {
+                const message = `Your offboarding/resignation status has been updated to: ${ro.status}`;
+                await Notification.create({
+                    userId: emp.email.toLowerCase(),
+                    role: 'employee',
+                    message,
+                    type: 'Offboarding',
+                    senderRole: 'manager',
+                    senderEmail: req.user.email
+                });
+
+                if (global.globalNotificationService) {
+                    await global.globalNotificationService.sendGlobalNotification({
+                        senderRole: 'manager',
+                        senderEmail: req.user.email,
+                        recipientEmails: [emp.email],
+                        message,
+                        type: 'offboarding_status'
+                    });
+                }
+            }
+        }
+
         res.status(200).json({ success: true, data: ro });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -570,6 +845,36 @@ exports.getHolidays = async (req, res) => {
 exports.createHoliday = async (req, res) => {
     try {
         const h = await Holiday.create(req.body);
+
+        // BROADCAST NOTIFY ALL EMPLOYEES
+        try {
+            const employees = await Employee.findAll({ where: { status: 'Active' }, attributes: ['email'] });
+            const emails = employees.map(e => e.email.toLowerCase());
+            const message = `New Holiday Added: ${h.holiday_name} on ${h.date}`;
+
+            // Persistent notifications
+            const notifData = employees.map(e => ({
+                userId: e.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'Holiday',
+                senderRole: 'manager',
+                senderEmail: req.user.email
+            }));
+            await Notification.bulkCreate(notifData);
+
+            // Real-time broadcast
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: emails,
+                    message,
+                    type: 'new_holiday'
+                });
+            }
+        } catch (err) { console.error("Holiday broadcast failed:", err); }
+
         res.status(201).json({ success: true, data: h });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -707,12 +1012,25 @@ exports.updateLetter = async (req, res) => {
         await letter.save();
 
         if (letter.Recipient && letter.Recipient.email) {
+            const message = `Your letter "${letter.title}" has been updated by your manager.`;
             await Notification.create({
                 userId: letter.Recipient.email.toLowerCase(),
                 role: 'employee',
-                message: `Your letter "${letter.title}" has been updated by your manager.`,
-                type: 'Letter'
+                message,
+                type: 'Letter',
+                senderRole: 'manager',
+                senderEmail: req.user.email
             });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [letter.Recipient.email],
+                    message,
+                    type: 'letter_update'
+                });
+            }
         }
         res.status(200).json({ success: true, data: letter });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }

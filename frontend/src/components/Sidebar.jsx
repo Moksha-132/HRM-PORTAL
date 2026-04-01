@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
 import { useSiteLogo } from '../hooks/useSiteLogo';
 
-const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, isCollapsed }) => {
+const Sidebar = ({ 
+  brand, 
+  tag, 
+  navItems, 
+  activeId, 
+  onSelect, 
+  onLogout, 
+  isOpen, 
+  isCollapsed,
+  portalMode,
+  onPortalChange
+}) => {
   const logoUrl = useSiteLogo();
   const [expandedMenus, setExpandedMenus] = useState({});
 
@@ -16,6 +27,27 @@ const Sidebar = ({ brand, tag, navItems, activeId, onSelect, onLogout, isOpen, i
         <span className="sidebar-brand">{brand}</span>
         <span className="sidebar-tag">{tag}</span>
       </div>
+
+      {/* Portal Toggle for Managers */}
+      {portalMode && onPortalChange && (
+        <div className="sidebar-portal-toggle">
+          <button
+            type="button"
+            className={`portal-btn${portalMode === 'self' ? ' active' : ''}`}
+            onClick={() => onPortalChange('self')}
+          >
+            <i className="fas fa-user" /> <span>Self</span>
+          </button>
+          <button
+            type="button"
+            className={`portal-btn${portalMode === 'manager' ? ' active' : ''}`}
+            onClick={() => onPortalChange('manager')}
+          >
+            <i className="fas fa-user-tie" /> <span>Manager</span>
+          </button>
+        </div>
+      )}
+
       <nav className="sidebar-nav">
         {navItems.map((item) => {
           const isExpanded = expandedMenus[item.id];

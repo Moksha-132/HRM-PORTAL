@@ -17,15 +17,43 @@ exports.protect = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         
+        let user;
         if (decoded.role === 'Employee') {
-            req.user = await Employee.findByPk(decoded.id);
+            user = await Employee.findByPk(decoded.id);
         } else {
-            req.user = await SuperAdmin.findByPk(decoded.id);
+            user = await SuperAdmin.findByPk(decoded.id);
+            if (user) {
+                // Ensure every Manager/Admin has a record in the Employee table for self-service
+                let empRecord = await Employee.findOne({ where: { email: user.email } });
+                
+                if (!empRecord) {
+                    // Create a shadow employee record if it doesn't exist
+                    empRecord = await Employee.create({
+                        employee_name: user.name,
+                        email: user.email,
+                        role: user.role, // e.g. 'Manager'
+                        status: 'Active',
+                        designation: user.role,
+                        department: 'Management',
+                        joining_date: new Date()
+                    });
+                }
+
+                // Attach employee properties to the user object for the controllers
+                user.employee_id = empRecord.employee_id;
+                user.employee_name = empRecord.employee_name;
+                user.department = empRecord.department;
+                user.designation = empRecord.designation;
+                user.joining_date = empRecord.joining_date;
+                user.manager_id = empRecord.manager_id;
+            }
         }
 
-        if (!req.user) {
+        if (!user) {
             return res.status(401).json({ success: false, error: 'User no longer exists' });
         }
+
+        req.user = user;
 
         // Ensure email is always available
         if (!req.user.email) {

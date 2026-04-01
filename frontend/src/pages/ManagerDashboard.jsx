@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+
+// Manager Components
 import ManagerOverviewView from '../components/manager/ManagerOverviewView';
 import ManagerEmployeesView from '../components/manager/ManagerEmployeesView';
 import ManagerAttendanceView from '../components/manager/ManagerAttendanceView';
@@ -14,14 +16,34 @@ import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
 import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
+
+// Employee Components (for Self Portal)
+import EmployeeOverviewView from '../components/employee/EmployeeOverviewView';
+import EmployeeAttendanceView from '../components/employee/EmployeeAttendanceView';
+import EmployeeLeavesView from '../components/employee/EmployeeLeavesView';
+import EmployeeAssetsView from '../components/employee/EmployeeAssetsView';
+import EmployeeCalendarView from '../components/employee/EmployeeCalendarView';
+import EmployeeAppreciationsView from '../components/employee/EmployeeAppreciationsView';
+import EmployeeOffboardingView from '../components/employee/EmployeeOffboardingView';
+import EmployeeExpensesView from '../components/employee/EmployeeExpensesView';
+import EmployeePayrollView from '../components/employee/EmployeePayrollView';
+import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
+import EmployeeProfileView from '../components/employee/EmployeeProfileView';
+import EmployeeLettersView from '../components/employee/EmployeeLettersView';
+import EmployeeRemainingLeavesView from '../components/employee/EmployeeRemainingLeavesView';
+import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeavesView';
+import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
+import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
+
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
+  const [portalMode, setPortalMode] = useState('manager'); // 'self' or 'manager'
   const [email, setEmail] = useState('manager@shnoor.com');
 
-  const navItems = useMemo(
+  const managementNavItems = useMemo(
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
       { id: 'employees', label: 'Employees', icon: 'fas fa-users' },
@@ -39,9 +61,43 @@ const ManagerDashboard = () => {
     []
   );
 
+  const selfNavItems = useMemo(
+    () => [
+      { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
+      { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
+      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', subItems: [
+        { id: 'leaves', label: 'Leaves' },
+        { id: 'remaining_leaves', label: 'Remaining Leaves' },
+        { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
+        { id: 'paid_leaves', label: 'Paid Leaves' },
+      ]},
+      { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
+      { id: 'calendar', label: 'Holiday Calendar', icon: 'fas fa-calendar-day' },
+      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
+      { id: 'offboarding', label: 'Offboarding', icon: 'fas fa-user-minus' },
+      { id: 'expenses', label: 'Expenses', icon: 'fas fa-receipt' },
+      { id: 'payroll', label: 'Payroll', icon: 'fas fa-money-check-alt' },
+      { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
+      { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
+      { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
+    ],
+    []
+  );
+
+  const navItems = portalMode === 'manager' ? managementNavItems : selfNavItems;
+
   const pageTitle = useMemo(() => {
-    const match = navItems.find((item) => item.id === activeView);
-    return match ? match.label : 'Dashboard';
+    const findLabel = (items) => {
+      for (const item of items) {
+        if (item.id === activeView) return item.label;
+        if (item.subItems) {
+          const subMatch = findLabel(item.subItems);
+          if (subMatch) return subMatch;
+        }
+      }
+      return null;
+    };
+    return findLabel(navItems) || 'Dashboard';
   }, [activeView, navItems]);
 
   useEffect(() => {
@@ -74,7 +130,12 @@ const ManagerDashboard = () => {
     navigate('/login');
   };
 
-  const ViewComponent = {
+  const handlePortalChange = (mode) => {
+    setPortalMode(mode);
+    setActiveView('dashboard');
+  };
+
+  const managementComponents = {
     dashboard: ManagerOverviewView,
     employees: ManagerEmployeesView,
     attendance: ManagerAttendanceView,
@@ -87,7 +148,27 @@ const ManagerDashboard = () => {
     finance: ManagerFinanceView,
     holidays: ManagerHolidaysView,
     letters: ManagerLettersView,
-  }[activeView];
+  };
+
+  const selfComponents = {
+    dashboard: EmployeeOverviewView,
+    attendance: EmployeeAttendanceView,
+    leaves: EmployeeLeavesView,
+    remaining_leaves: EmployeeRemainingLeavesView,
+    unpaid_leaves: EmployeeUnpaidLeavesView,
+    paid_leaves: EmployeePaidLeavesView,
+    assets: EmployeeAssetsView,
+    calendar: EmployeeCalendarView,
+    appreciations: EmployeeAppreciationsView,
+    offboarding: EmployeeOffboardingView,
+    expenses: EmployeeExpensesView,
+    payroll: EmployeePayrollView,
+    policies: EmployeePoliciesView,
+    letters: EmployeeLettersView,
+    profile: EmployeeProfileView,
+  };
+
+  const ViewComponent = portalMode === 'manager' ? managementComponents[activeView] : selfComponents[activeView];
 
   return (
     <div className="dashboard-mode">
@@ -99,9 +180,13 @@ const ManagerDashboard = () => {
         onSelect={setActiveView}
         onLogout={handleLogout}
         title={pageTitle}
+        portalMode={portalMode}
+        onPortalChange={handlePortalChange}
       >
         {ViewComponent ? <ViewComponent /> : null}
-        {activeView === 'dashboard' ? <ManagerDashboardAddons /> : null}
+        {activeView === 'dashboard' && (
+          portalMode === 'manager' ? <ManagerDashboardAddons /> : <EmployeeDashboardAddons />
+        )}
       </DashboardLayout>
     </div>
   );

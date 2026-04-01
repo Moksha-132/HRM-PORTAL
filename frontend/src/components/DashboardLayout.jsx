@@ -2,7 +2,18 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
-const DashboardLayout = ({ roleLabel, email, navItems, activeId, onSelect, onLogout, title, children }) => {
+const DashboardLayout = ({ 
+  roleLabel, 
+  email, 
+  navItems, 
+  activeId, 
+  onSelect, 
+  onLogout, 
+  title, 
+  children,
+  portalMode,
+  onPortalChange
+}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const roleKey = (roleLabel || '').toString().trim().toLowerCase();
@@ -43,6 +54,8 @@ const DashboardLayout = ({ roleLabel, email, navItems, activeId, onSelect, onLog
         onLogout={onLogout}
         isOpen={sidebarOpen}
         isCollapsed={sidebarCollapsed}
+        portalMode={portalMode}
+        onPortalChange={onPortalChange}
       />
       <div className={`main-wrap${sidebarCollapsed ? ' expanded' : ''}`}>
         <Topbar title={title} roleLabel={roleLabel} roleKey={roleKey} email={email} onToggle={handleToggle} />

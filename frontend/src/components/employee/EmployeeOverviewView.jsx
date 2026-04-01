@@ -72,18 +72,28 @@ const EmployeeOverviewView = () => {
   const empProfile = data.dashboard?.employee || {};
   
   // Attendance metrics
-  const totalAttendanceDays = data.attendance.length;
-  const presentDays = data.attendance.filter(a => a.clock_out !== null).length;
-  // Let's count "late" as any record having clock_in after 10:00 AM (approximated logically from backend approach)
-  const lateAttendance = data.attendance.filter(a => {
-      if (!a.clock_in) return false;
-      const d = new Date(a.clock_in);
+  const uniqueDates = Array.from(new Set(data.attendance.map(a => a.date)));
+  const totalAttendanceDays = uniqueDates.length;
+  
+  const presentDays = Array.from(new Set(
+    data.attendance
+      .filter(a => a.clock_out !== null)
+      .map(a => a.date)
+  )).length;
+
+  // Let's count "late" as any day having its *first* clock_in after 10:00 AM
+  const lateAttendance = uniqueDates.filter(date => {
+      const dayRecords = data.attendance.filter(a => a.date === date && a.clock_in);
+      if (dayRecords.length === 0) return false;
+      // Sort to find the first clock-in of the day
+      const firstClockIn = dayRecords.sort((a, b) => new Date(a.clock_in) - new Date(b.clock_in))[0];
+      const d = new Date(firstClockIn.clock_in);
       return d.getHours() >= 10 && d.getMinutes() > 0;
   }).length;
 
   // Working Hours (summing work_duration if available)
   const totalWorkTime = data.attendance.reduce((sum, a) => sum + (parseFloat(a.work_duration) || 0), 0);
-  const totalOfficeTime = totalWorkTime + (data.attendance.length * 0.5); // Just roughly padding break times, if needed; representing raw hours if not.
+  const totalOfficeTime = totalWorkTime + (totalAttendanceDays * 0.5); // Padding based on unique days
   const totalLateTime = lateAttendance * 0.5; // Example scalar for late mapping 
 
   // Leaves

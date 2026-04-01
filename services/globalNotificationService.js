@@ -132,7 +132,7 @@ class GlobalNotificationService {
     // Build redirect URL for notification click
     buildRedirectUrl(senderRole, type, recipientEmails) {
         // Server-side URL building
-        const baseUrl = 'http://localhost:5000';
+        const baseUrl = 'http://localhost:5001';
         const loginUrl = `${baseUrl}/index.html#login`;
         
         // Add role-specific redirect info

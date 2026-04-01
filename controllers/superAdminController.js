@@ -104,17 +104,15 @@ exports.register = async (req, res) => {
                 </div>
                 <div style="padding: 20px;">
                     <p>Hello <strong>${name}</strong>,</p>
-                    <p>Congratulations! A new account has been created for you as a <strong>${normalizedRole}</strong> in our HRM Portal.</p>
+                    <p>Your account has been created with role: ${normalizedRole}.</p>
                     <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
                         <p style="margin: 5px 0;"><strong>Login Email:</strong> ${email}</p>
                         <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${password}</p>
                     </div>
-                    <p>For security reasons, we strongly recommend that you change your password immediately after your first login.</p>
-                    <p>Follow the link below to access the portal:</p>
+                    <p>Please log in and change your password as soon as possible.</p>
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="http://localhost:5000/index.html#login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to HRM Portal</a>
+                        <a href="http://localhost:5173/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to HRM Portal</a>
                     </div>
-                    <p>If you have any questions, please contact the IT department.</p>
                     <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
                     <p style="font-size: 12px; color: #777;">This is an automated message, please do not reply to this email.</p>
                 </div>
@@ -135,7 +133,7 @@ exports.register = async (req, res) => {
                     `Temporary Password: ${password}`,
                     '',
                     'Please change your password after first login.',
-                    'Login URL: http://localhost:5000/index.html#login'
+                    'Login URL: http://localhost:5173/login'
                 ].join('\n')
             });
             console.log(`[Auth] Welcome credentials email sent to ${user.email}`);

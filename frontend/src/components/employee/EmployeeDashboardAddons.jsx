@@ -40,15 +40,19 @@ const EmployeeDashboardAddons = () => {
     };
   }, []);
 
+  const uniqueDates = useMemo(() => Array.from(new Set(attendance.map(a => a.date))), [attendance]);
+
   const lateAttendanceCount = useMemo(
     () =>
-      attendance.filter((item) => {
-        if (!item.clock_in) return false;
-        const clockIn = new Date(item.clock_in);
-        if (Number.isNaN(clockIn.getTime())) return false;
+      uniqueDates.filter((date) => {
+        const dayRecords = attendance.filter(a => a.date === date && a.clock_in);
+        if (dayRecords.length === 0) return false;
+        // Find the first clock-in of the day
+        const firstClockIn = dayRecords.sort((a, b) => new Date(a.clock_in) - new Date(b.clock_in))[0];
+        const clockIn = new Date(firstClockIn.clock_in);
         return clockIn.getHours() > 10 || (clockIn.getHours() === 10 && clockIn.getMinutes() > 0);
       }).length,
-    [attendance]
+    [uniqueDates, attendance]
   );
 
   const halfDaysCount = useMemo(
@@ -65,8 +69,8 @@ const EmployeeDashboardAddons = () => {
   );
 
   const totalOfficeTime = useMemo(
-    () => totalWorkedTime + attendance.length * 0.5,
-    [attendance.length, totalWorkedTime]
+    () => totalWorkedTime + uniqueDates.length * 0.5,
+    [uniqueDates.length, totalWorkedTime]
   );
 
   const lateTime = useMemo(() => lateAttendanceCount * 0.5, [lateAttendanceCount]);

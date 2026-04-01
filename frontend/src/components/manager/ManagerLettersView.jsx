@@ -61,15 +61,7 @@ const ManagerLettersView = () => {
   }, []);
 
   const selectableEmployees = useMemo(() => {
-    const list = employees || [];
-    return list.filter((e) => {
-      const role = (e.role || '').toString().toLowerCase();
-      const name = (e.employee_name || '').toString().toLowerCase();
-      if (role.includes('manager')) return false;
-      if (role.includes('admin')) return false;
-      if (name === 'shnoor manager') return false;
-      return true;
-    });
+    return employees || [];
   }, [employees]);
 
   const handleSend = async (e) => {

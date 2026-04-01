@@ -23,6 +23,7 @@ router.delete('/appreciations/:id', controller.deleteAppreciation);
 router.post('/appreciations/:id/comments', controller.addAppreciationComment);
 router.get('/all-employees', controller.getAllEmployees);
 router.get('/holidays', controller.getUpcomingHolidays);
+router.get('/assets', controller.getMyAssets);
 router.get('/policies', controller.getPolicies);
 
 router.route('/offboarding')

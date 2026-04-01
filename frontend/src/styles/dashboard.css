@@ -99,6 +99,52 @@
   letter-spacing: 0.03em;
 }
 
+/* —— Portal Toggle —— */
+.dashboard-mode .sidebar-portal-toggle {
+  display: flex;
+  margin: 16px 10px 8px;
+  background: rgba(15, 23, 42, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+}
+
+.dashboard-mode .portal-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-light);
+}
+
+.dashboard-mode .portal-btn i {
+  font-size: 1rem;
+}
+
+.dashboard-mode .portal-btn span {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dashboard-mode .portal-btn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--primary);
+}
+
+.dashboard-mode .portal-btn.active {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
 .dashboard-mode .sidebar-nav {
   flex: 1;
   padding: 12px 10px;

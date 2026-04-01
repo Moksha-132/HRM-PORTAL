@@ -10,11 +10,19 @@ exports.getDashboardStats = async (req, res) => {
         // Today's attendance
         const todayAttendance = await Attendance.findOne({ where: { employee_id: empId, date: today } });
 
-        // Late count (let's assume after 10:00 AM is late)
-        const lateAttendance = await Attendance.count({
-            where: {
-                employee_id: empId,
-                clock_in: { [Op.gt]: new Date(`${today}T10:00:00`) }
+        // Late count (unique days where the first clock-in was late)
+        const allAttendance = await Attendance.findAll({ where: { employee_id: empId } });
+        const uniqueDates = Array.from(new Set(allAttendance.map(a => a.date)));
+        
+        let lateAttendanceCount = 0;
+        uniqueDates.forEach(date => {
+            const dayRecords = allAttendance.filter(a => a.date === date && a.clock_in);
+            if (dayRecords.length > 0) {
+                const firstClockIn = dayRecords.sort((a, b) => new Date(a.clock_in) - new Date(b.clock_in))[0];
+                const clockInTime = new Date(firstClockIn.clock_in);
+                if (clockInTime.getHours() >= 10 && clockInTime.getMinutes() > 0) {
+                    lateAttendanceCount++;
+                }
             }
         });
 
@@ -46,7 +54,7 @@ exports.getDashboardStats = async (req, res) => {
                 },
                 todayStatus: todayAttendance ? (todayAttendance.clock_out ? 'Completed' : 'Checked In') : 'Not Checked In',
                 totalWorkingHours: totalDuration || 0,
-                lateAttendanceCount: lateAttendance,
+                lateAttendanceCount: lateAttendanceCount,
                 appreciationCount: recentAppreciations.length,
                 assetCount: assignedAssets,
                 recentActivities: {
@@ -234,6 +242,17 @@ exports.getMyOffboardings = async (req, res) => {
     try {
         const list = await Offboarding.findAll({ where: { employee_id: req.user.employee_id }, order: [['created_at', 'DESC']] });
         res.status(200).json({ success: true, data: list });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+// --- ASSETS ---
+exports.getMyAssets = async (req, res) => {
+    try {
+        const assets = await Asset.findAll({
+            where: { assigned_employee: req.user.employee_id },
+            order: [['asset_id', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: assets });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 
@@ -550,9 +569,19 @@ exports.getAllEmployees = async (req, res) => {
     try {
         const employees = await Employee.findAll({
             where: { status: 'Active' },
-            attributes: ['employee_id', 'employee_name', 'email']
+            attributes: ['employee_id', 'employee_name', 'email', 'role']
         });
-        res.status(200).json({ success: true, data: employees });
+
+        // Also fetch Managers from SuperAdmin
+        const managers = await SuperAdmin.findAll({
+            where: { role: 'Manager' },
+            attributes: [['id', 'employee_id'], ['name', 'employee_name'], 'email', 'role']
+        });
+
+        // Combine
+        const combined = [...employees, ...managers];
+
+        res.status(200).json({ success: true, data: combined });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

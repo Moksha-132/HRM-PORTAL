@@ -140,7 +140,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, error: 'Server Error' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 server.on('error', (err) => {
     if (err && err.code === 'EADDRINUSE') {
