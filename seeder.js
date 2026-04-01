@@ -34,6 +34,12 @@ const importData = async () => {
             password: 'password123', 
             role: 'Super Admin'
         });
+        await SuperAdmin.create({
+            name: 'System Admin',
+            email: 'admin@shnoor.com',
+            password: 'Admin@1234', 
+            role: 'Super Admin'
+        });
 
         await SuperAdmin.create({
             name: 'Shnoor Manager',
