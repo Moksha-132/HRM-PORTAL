@@ -27,6 +27,11 @@ const Payroll = sequelize.define('Payroll', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false
     },
+    status: {
+        type: DataTypes.ENUM('Pending', 'Approved', 'Rejected'),
+        allowNull: false,
+        defaultValue: 'Pending'
+    },
     payment_date: {
         type: DataTypes.DATEONLY,
         allowNull: true

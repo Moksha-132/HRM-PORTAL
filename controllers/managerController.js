@@ -5,6 +5,108 @@ const path = require('path');
 const { sendEmail } = require('../services/emailService');
 
 const DEFAULT_EMPLOYEE_PASSWORD = process.env.EMPLOYEE_DEFAULT_PASSWORD || 'Emp@1234';
+const toAmount = (value) => {
+    const amount = parseFloat(value);
+    return Number.isFinite(amount) ? amount : 0;
+};
+
+const calculateNetSalary = (basic, allowances, deductions) =>
+    parseFloat((toAmount(basic) + toAmount(allowances) - toAmount(deductions)).toFixed(2));
+
+const getLatestPayrollForEmployee = async (employeeId, transaction) => Payroll.findOne({
+    where: { employee_id: employeeId },
+    order: [['payment_date', 'DESC'], ['payroll_id', 'DESC']],
+    transaction
+});
+
+const ensurePayrollForEmployee = async (employeeId, fallbackDate, transaction) => {
+    let payroll = await getLatestPayrollForEmployee(employeeId, transaction);
+    if (!payroll) {
+        payroll = await Payroll.create({
+            employee_id: employeeId,
+            basic_salary: 0,
+            allowances: 0,
+            deductions: 0,
+            net_salary: 0,
+            payment_date: fallbackDate || new Date().toISOString().split('T')[0]
+        }, { transaction });
+    }
+    return payroll;
+};
+
+const applyPrePaymentToPayroll = async (record, direction, transaction) => {
+    const payroll = await ensurePayrollForEmployee(record.employee_id, record.date, transaction);
+    const amount = toAmount(record.amount);
+    const currentAllowances = toAmount(payroll.allowances);
+    const currentDeductions = toAmount(payroll.deductions);
+
+    let nextAllowances = currentAllowances;
+    let nextDeductions = currentDeductions;
+
+    if (record.payment_type === 'Advance') {
+        nextDeductions = Math.max(0, currentDeductions + (direction * amount));
+    } else {
+        nextAllowances = Math.max(0, currentAllowances + (direction * amount));
+    }
+
+    await payroll.update({
+        allowances: nextAllowances,
+        deductions: nextDeductions,
+        net_salary: calculateNetSalary(payroll.basic_salary, nextAllowances, nextDeductions)
+    }, { transaction });
+};
+
+const applyIncrementPromotionToPayroll = async (record, direction, transaction) => {
+    const employee = await Employee.findByPk(record.employee_id, { transaction });
+    if (!employee) {
+        throw new Error('Employee not found');
+    }
+
+    const payroll = await ensurePayrollForEmployee(record.employee_id, record.effective_date, transaction);
+    const targetSalary = direction === 1 ? toAmount(record.new_salary) : toAmount(record.current_salary);
+    const targetDesignation = direction === 1
+        ? (record.new_designation || employee.designation)
+        : (record.designation || record.current_role || employee.designation);
+
+    await payroll.update({
+        basic_salary: targetSalary,
+        net_salary: calculateNetSalary(targetSalary, payroll.allowances, payroll.deductions),
+        payment_date: payroll.payment_date || record.effective_date || null
+    }, { transaction });
+
+    if (record.change_type === 'Promotion' && targetDesignation) {
+        await employee.update({ designation: targetDesignation }, { transaction });
+    }
+};
+
+const sendPayrollStatusNotification = async (payroll, status, senderEmail) => {
+    if (!payroll?.Employee?.email || !['Approved', 'Rejected'].includes(status)) {
+        return;
+    }
+
+    const message = `Your payroll for ${payroll.payment_date || 'the selected period'} has been ${status.toLowerCase()}.`;
+
+    await Notification.create({
+        userId: payroll.Employee.email.toLowerCase(),
+        role: 'employee',
+        message,
+        type: 'PayrollStatus',
+        senderRole: 'manager',
+        senderEmail,
+        isRead: false
+    });
+
+    if (global.globalNotificationService) {
+        await global.globalNotificationService.sendGlobalNotification({
+            senderRole: 'manager',
+            senderEmail,
+            recipientEmails: [payroll.Employee.email],
+            recipientRole: 'employee',
+            message,
+            type: 'payroll_status_update'
+        });
+    }
+};
 
 // DASHBOARD
 exports.getDashboardStats = async (req, res) => {
@@ -294,7 +396,7 @@ exports.deleteAsset = async (req, res) => {
 // PAYROLL
 exports.getPayrolls = async (req, res) => {
     try {
-        const payrolls = await Payroll.findAll({ include: [Employee] });
+        const payrolls = await Payroll.findAll({ include: [Employee], order: [['payment_date', 'DESC'], ['payroll_id', 'DESC']] });
         res.status(200).json({ success: true, data: payrolls });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
@@ -303,8 +405,17 @@ exports.createPayroll = async (req, res) => {
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
-        
-        const p = await Payroll.create(req.body);
+
+        const payload = {
+            ...req.body,
+            basic_salary: toAmount(req.body.basic_salary),
+            allowances: toAmount(req.body.allowances),
+            deductions: toAmount(req.body.deductions),
+            status: req.body.status || 'Pending',
+        };
+        payload.net_salary = calculateNetSalary(payload.basic_salary, payload.allowances, payload.deductions);
+
+        const p = await Payroll.create(payload);
         const rp = await Payroll.findByPk(p.payroll_id, { include: [Employee] });
         res.status(201).json({ success: true, data: rp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
@@ -314,8 +425,23 @@ exports.updatePayroll = async (req, res) => {
     try {
         const p = await Payroll.findByPk(req.params.id);
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
-        await p.update(req.body);
+
+        const payload = {
+            ...req.body,
+            basic_salary: req.body.basic_salary !== undefined ? toAmount(req.body.basic_salary) : toAmount(p.basic_salary),
+            allowances: req.body.allowances !== undefined ? toAmount(req.body.allowances) : toAmount(p.allowances),
+            deductions: req.body.deductions !== undefined ? toAmount(req.body.deductions) : toAmount(p.deductions),
+        };
+        payload.net_salary = calculateNetSalary(payload.basic_salary, payload.allowances, payload.deductions);
+
+        const previousStatus = p.status;
+        await p.update(payload);
         const rp = await Payroll.findByPk(p.payroll_id, { include: [Employee] });
+
+        if (payload.status && payload.status !== previousStatus) {
+            await sendPayrollStatusNotification(rp, payload.status, req.user.email);
+        }
+
         res.status(200).json({ success: true, data: rp });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -333,6 +459,9 @@ exports.generatePayslip = async (req, res) => {
     try {
         const payroll = await Payroll.findByPk(req.params.id, { include: [Employee] });
         if(!payroll) return res.status(404).json({ success: false, error: "Payroll record not found" });
+        if (payroll.status !== 'Approved') {
+            return res.status(400).json({ success: false, error: "Only approved payroll records can generate payslips" });
+        }
 
         const ps = await Payslip.create({
             employee_id: payroll.employee_id,
@@ -586,11 +715,27 @@ exports.createPrePayment = async (req, res) => {
 
 exports.updatePrePayment = async (req, res) => {
     try {
-        const record = await PrePayment.findByPk(req.params.id);
-        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        const result = await sequelize.transaction(async (transaction) => {
+            const record = await PrePayment.findByPk(req.params.id, { transaction });
+            if (!record) return null;
 
-        await record.update(req.body);
-        const result = await PrePayment.findByPk(record.id, { include: [Employee] });
+            const previousRecord = record.get({ plain: true });
+            const nextStatus = req.body.status || record.status;
+
+            if (previousRecord.status === 'Approved') {
+                await applyPrePaymentToPayroll(previousRecord, -1, transaction);
+            }
+
+            await record.update(req.body, { transaction });
+
+            if (nextStatus === 'Approved') {
+                await applyPrePaymentToPayroll(record, 1, transaction);
+            }
+
+            return PrePayment.findByPk(record.id, { include: [Employee], transaction });
+        });
+
+        if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -602,20 +747,68 @@ exports.updatePrePaymentStatus = async (req, res) => {
             return res.status(400).json({ success: false, error: "Invalid status" });
         }
 
-        const record = await PrePayment.findByPk(req.params.id);
-        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        const updateOutcome = await sequelize.transaction(async (transaction) => {
+            const record = await PrePayment.findByPk(req.params.id, { transaction });
+            if (!record) return null;
 
-        const payload = { status };
-        if (status === 'Approved' || status === 'Rejected') {
-            payload.approved_by = req.user.name || req.user.email || 'Manager';
-            payload.approval_date = new Date();
-        } else {
-            payload.approved_by = null;
-            payload.approval_date = null;
+            const previousStatus = record.status;
+            const payload = { status };
+            if (status === 'Approved' || status === 'Rejected') {
+                payload.approved_by = req.user.name || req.user.email || 'Manager';
+                payload.approval_date = new Date();
+            } else {
+                payload.approved_by = null;
+                payload.approval_date = null;
+            }
+
+            if (previousStatus !== 'Approved' && status === 'Approved') {
+                await applyPrePaymentToPayroll(record, 1, transaction);
+            } else if (previousStatus === 'Approved' && status !== 'Approved') {
+                await applyPrePaymentToPayroll(record, -1, transaction);
+            }
+
+            await record.update(payload, { transaction });
+            const updatedRecord = await PrePayment.findByPk(record.id, { include: [Employee], transaction });
+            return {
+                previousStatus,
+                record: updatedRecord
+            };
+        });
+
+        if (!updateOutcome) return res.status(404).json({ success: false, error: "Not found" });
+
+        const { previousStatus, record: result } = updateOutcome;
+
+        if (
+            previousStatus !== status &&
+            (status === 'Approved' || status === 'Rejected') &&
+            result?.Employee?.email
+        ) {
+            const amountText = toAmount(result.amount).toFixed(2);
+            const message = `Your pre payment request of Rs. ${amountText} has been ${status.toLowerCase()}.`;
+
+            await Notification.create({
+                userId: result.Employee.email.toLowerCase(),
+                role: 'employee',
+                message,
+                type: 'PrePaymentStatus',
+                senderRole: 'manager',
+                senderEmail: req.user.email,
+                isRead: false
+            });
+
+            if (global.globalNotificationService) {
+                await global.globalNotificationService.sendGlobalNotification({
+                    senderRole: 'manager',
+                    senderEmail: req.user.email,
+                    recipientEmails: [result.Employee.email],
+                    recipientRole: 'employee',
+                    message,
+                    type: 'prepayment_status_update'
+                });
+            }
         }
 
-        await record.update(payload);
-        const result = await PrePayment.findByPk(record.id, { include: [Employee] });
         res.status(200).json({ success: true, data: result });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -669,34 +862,48 @@ exports.createIncrementPromotion = async (req, res) => {
 
 exports.updateIncrementPromotion = async (req, res) => {
     try {
-        const record = await IncrementPromotion.findByPk(req.params.id);
-        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        const result = await sequelize.transaction(async (transaction) => {
+            const record = await IncrementPromotion.findByPk(req.params.id, { transaction });
+            if (!record) return null;
 
-        const payload = { ...req.body };
-        const effectiveType = payload.change_type || record.change_type;
-        const effectiveCurrentSalary = parseFloat(payload.current_salary ?? record.current_salary ?? 0);
-        const effectiveNewSalary = parseFloat(payload.new_salary ?? record.new_salary ?? 0);
+            const previousRecord = record.get({ plain: true });
+            const payload = { ...req.body };
+            const effectiveType = payload.change_type || record.change_type;
+            const effectiveCurrentSalary = parseFloat(payload.current_salary ?? record.current_salary ?? 0);
+            const effectiveNewSalary = parseFloat(payload.new_salary ?? record.new_salary ?? 0);
 
-        if (!Number.isNaN(effectiveCurrentSalary) && !Number.isNaN(effectiveNewSalary) && effectiveNewSalary <= effectiveCurrentSalary) {
-            return res.status(400).json({ success: false, error: "New salary must be greater than current salary" });
-        }
+            if (!Number.isNaN(effectiveCurrentSalary) && !Number.isNaN(effectiveNewSalary) && effectiveNewSalary <= effectiveCurrentSalary) {
+                throw new Error("New salary must be greater than current salary");
+            }
 
-        const effectiveDesignation = String(payload.new_designation ?? record.new_designation ?? '').trim();
-        if (effectiveType === 'Promotion' && !effectiveDesignation) {
-            return res.status(400).json({ success: false, error: "New designation is required for promotion" });
-        }
+            const effectiveDesignation = String(payload.new_designation ?? record.new_designation ?? '').trim();
+            if (effectiveType === 'Promotion' && !effectiveDesignation) {
+                throw new Error("New designation is required for promotion");
+            }
 
-        if (payload.status && (payload.status === 'Approved' || payload.status === 'Rejected')) {
-            payload.approved_by = req.user.name || req.user.email || 'Manager';
-            payload.approval_date = new Date();
-        }
-        if (payload.status === 'Pending') {
-            payload.approved_by = null;
-            payload.approval_date = null;
-        }
+            if (payload.status && (payload.status === 'Approved' || payload.status === 'Rejected')) {
+                payload.approved_by = req.user.name || req.user.email || 'Manager';
+                payload.approval_date = new Date();
+            }
+            if (payload.status === 'Pending') {
+                payload.approved_by = null;
+                payload.approval_date = null;
+            }
 
-        await record.update(payload);
-        const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
+            if (previousRecord.status === 'Approved') {
+                await applyIncrementPromotionToPayroll(previousRecord, -1, transaction);
+            }
+
+            await record.update(payload, { transaction });
+
+            if (record.status === 'Approved') {
+                await applyIncrementPromotionToPayroll(record, 1, transaction);
+            }
+
+            return IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee], transaction });
+        });
+
+        if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
@@ -708,20 +915,31 @@ exports.updateIncrementPromotionStatus = async (req, res) => {
             return res.status(400).json({ success: false, error: "Invalid status" });
         }
 
-        const record = await IncrementPromotion.findByPk(req.params.id);
-        if (!record) return res.status(404).json({ success: false, error: "Not found" });
+        const result = await sequelize.transaction(async (transaction) => {
+            const record = await IncrementPromotion.findByPk(req.params.id, { transaction });
+            if (!record) return null;
 
-        const payload = { status };
-        if (status === 'Approved' || status === 'Rejected') {
-            payload.approved_by = req.user.name || req.user.email || 'Manager';
-            payload.approval_date = new Date();
-        } else {
-            payload.approved_by = null;
-            payload.approval_date = null;
-        }
+            const previousStatus = record.status;
+            const payload = { status };
+            if (status === 'Approved' || status === 'Rejected') {
+                payload.approved_by = req.user.name || req.user.email || 'Manager';
+                payload.approval_date = new Date();
+            } else {
+                payload.approved_by = null;
+                payload.approval_date = null;
+            }
 
-        await record.update(payload);
-        const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
+            if (previousStatus !== 'Approved' && status === 'Approved') {
+                await applyIncrementPromotionToPayroll(record, 1, transaction);
+            } else if (previousStatus === 'Approved' && status !== 'Approved') {
+                await applyIncrementPromotionToPayroll(record, -1, transaction);
+            }
+
+            await record.update(payload, { transaction });
+            return IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee], transaction });
+        });
+
+        if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };

@@ -46,9 +46,9 @@ const EmployeeDashboard = () => {
         label: 'Payroll',
         icon: 'fas fa-money-check-alt',
         children: [
-          { id: 'payroll', label: 'Payroll (History)' },
           { id: 'pre-payments', label: 'Pre Payments' },
           { id: 'increment-promotion', label: 'Increment / Promotion' },
+          { id: 'payroll', label: 'Payroll' },
         ],
       },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },

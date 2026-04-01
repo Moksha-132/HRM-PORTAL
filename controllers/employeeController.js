@@ -321,12 +321,11 @@ exports.deleteExpense = async (req, res) => {
 // --- PAYROLL / PAYSLIPS ---
 exports.getMyPayroll = async (req, res) => {
     try {
-        // Display only payroll records that have an associated Payslip (meaning they are "published")
-        const slips = await Payslip.findAll({
+        const payrolls = await Payroll.findAll({
             where: { employee_id: req.user.employee_id },
-            order: [['payment_date', 'DESC']]
+            order: [['payment_date', 'DESC'], ['payroll_id', 'DESC']]
         });
-        res.status(200).json({ success: true, data: slips });
+        res.status(200).json({ success: true, data: payrolls });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

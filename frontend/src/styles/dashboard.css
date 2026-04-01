@@ -135,13 +135,17 @@
   font-weight: 600;
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
 }
+.dashboard-mode .sidebar-link.open {
+  color: var(--primary);
+}
 .dashboard-mode .sidebar-parent {
   justify-content: space-between;
 }
 .dashboard-mode .submenu-caret {
   margin-left: auto;
   font-size: 0.75rem;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
+  color: inherit;
 }
 .dashboard-mode .submenu-caret.open {
   transform: rotate(180deg);
@@ -662,6 +666,7 @@
     color: var(--primary); 
     font-weight: 600;
     background: rgba(59, 130, 246, 0.1);
+    box-shadow: inset 2px 0 0 var(--primary);
 }
 .dashboard-mode .sidebar-sublink.active .sub-icon i {
     color: var(--primary);

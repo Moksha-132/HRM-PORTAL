@@ -100,6 +100,11 @@ export const getPayslips = async () => {
   return data;
 };
 
+export const getMyPayroll = async () => {
+  const { data } = await api.get('/api/v1/employee/payroll');
+  return data;
+};
+
 export const getMyPrePayments = async () => {
   const { data } = await api.get('/api/v1/employee/prepayments');
   return data;
