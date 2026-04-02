@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification, AppreciationComment, SuperAdmin } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, Notification, AppreciationComment, SuperAdmin, PrePayment, IncrementPromotion } = require('../models');
 const { sequelize } = require('../config/db');
 const { Op } = require('sequelize');
 const fs = require('fs');
@@ -125,10 +125,10 @@ const normalizeOffboardingStatus = (status, fallback = 'Pending') => {
 // DASHBOARD
 exports.getDashboardStats = async (req, res) => {
     try {
+        console.log(`[API TRACE] getDashboardStats triggered by ${req.user.email}`);
         const today = new Date().toISOString().split('T')[0];
-
-        // 1. Fetch only personnel from Employee table (headcount excluding admins/managers)
         const employees = await Employee.findAll({ attributes: ['employee_id', 'status', 'email'] });
+        console.log(`[API TRACE] Found ${employees.length} employees for dashboard stats.`);
         
         const totalEmployeesCount = employees.length;
         const activeEmployeesCount = employees.filter(e => e.status === 'Active').length;
@@ -181,19 +181,19 @@ exports.getDashboardStats = async (req, res) => {
 // EMPLOYEES
 exports.getEmployees = async (req, res) => {
     try {
-        const employees = await Employee.findAll({
-            where: {
-                status: 'Active',
-                role: 'Employee',
-                email: { [Op.ne]: req.user.email }
-            },
+        const fullList = await Employee.findAll({
             attributes: ['employee_id', 'employee_name', 'email', 'role', 'status', 'department', 'designation', 'joining_date', 'work_mode', 'location']
         });
-        res.status(200).json({ success: true, count: employees.length, data: employees });
-    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+        console.log(`[API] Found ${fullList.length} employees in database.`);
+        res.status(200).json({ success: true, count: fullList.length, data: fullList });
+    } catch (err) {
+        console.error('[API ERROR] Failed to fetch employees:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
 };
 
 exports.createEmployee = async (req, res) => {
+        console.log('[API DEBUG] createEmployee triggered');
     try {
         const data = { ...req.body };
         if (!data.role) data.role = 'Employee';
@@ -232,11 +232,7 @@ exports.createEmployee = async (req, res) => {
         });
 
         if (global.globalNotificationService) {
-            global.globalNotificationService.sendNotification(emp.email.toLowerCase(), {
-                type: 'Welcome',
-                message: welcomeMsg,
-                from: req.user.name || 'Manager'
-            });
+            global.globalNotificationService.sendGlobalNotification({ senderRole: 'manager', senderEmail: req.user.email, recipientEmails: [emp.email.toLowerCase()], message: welcomeMsg, type: 'welcome' });
         }
 
         let emailSent = false;
@@ -288,16 +284,17 @@ exports.createEmployee = async (req, res) => {
         }
 
         res.status(201).json({ success: true, data: emp, defaultPasswordSent: true, emailSent, emailError });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateEmployee = async (req, res) => {
+        console.log('[API DEBUG] updateEmployee triggered');
     try {
         const emp = await Employee.findByPk(req.params.id);
         if(!emp) return res.status(404).json({ success: false, error: "Not found" });
         await emp.update(req.body);
         res.status(200).json({ success: true, data: emp });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteEmployee = async (req, res) => {
@@ -322,7 +319,7 @@ exports.deleteEmployee = async (req, res) => {
 
         await emp.destroy();
         res.status(200).json({ success: true, message: "Employee and all associated records deleted permanently" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // ATTENDANCE
@@ -334,6 +331,7 @@ exports.getAttendance = async (req, res) => {
 };
 
 exports.createAttendance = async (req, res) => {
+        console.log('[API DEBUG] createAttendance triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -341,17 +339,18 @@ exports.createAttendance = async (req, res) => {
         const record = await Attendance.create(req.body);
         const rRecord = await Attendance.findByPk(record.attendance_id, { include: [Employee] });
         res.status(201).json({ success: true, data: rRecord });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateAttendance = async (req, res) => {
+        console.log('[API DEBUG] updateAttendance triggered');
     try {
         const att = await Attendance.findByPk(req.params.id);
         if(!att) return res.status(404).json({ success: false, error: "Not found" });
         await att.update(req.body);
         const rAtt = await Attendance.findByPk(att.attendance_id, { include: [Employee] });
         res.status(200).json({ success: true, data: rAtt });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteAttendance = async (req, res) => {
@@ -360,7 +359,7 @@ exports.deleteAttendance = async (req, res) => {
         if(!att) return res.status(404).json({ success: false, error: "Not found" });
         await att.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // LEAVES
@@ -372,6 +371,7 @@ exports.getLeaves = async (req, res) => {
 };
 
 exports.updateLeave = async (req, res) => {
+        console.log('[API DEBUG] updateLeave triggered');
     try {
         const leave = await Leave.findByPk(req.params.id, { include: [Employee] });
         if(!leave) return res.status(404).json({ success: false, error: "Not found" });
@@ -408,7 +408,7 @@ exports.updateLeave = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: rLeave });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteLeave = async (req, res) => {
@@ -417,7 +417,7 @@ exports.deleteLeave = async (req, res) => {
         if(!leave) return res.status(404).json({ success: false, error: "Not found" });
         await leave.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // ASSETS
@@ -429,6 +429,7 @@ exports.getAssets = async (req, res) => {
 };
 
 exports.createAsset = async (req, res) => {
+        console.log('[API DEBUG] createAsset triggered');
     try {
         let emp = null;
         if (req.body.assigned_employee) {
@@ -462,10 +463,11 @@ exports.createAsset = async (req, res) => {
         }
 
         res.status(201).json({ success: true, data: rAsset });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateAsset = async (req, res) => {
+        console.log('[API DEBUG] updateAsset triggered');
     try {
         const asset = await Asset.findByPk(req.params.id);
         if(!asset) return res.status(404).json({ success: false, error: "Not found" });
@@ -501,7 +503,7 @@ exports.updateAsset = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: rAsset });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteAsset = async (req, res) => {
@@ -510,7 +512,7 @@ exports.deleteAsset = async (req, res) => {
         if(!asset) return res.status(404).json({ success: false, error: "Not found" });
         await asset.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // PAYROLL
@@ -522,6 +524,7 @@ exports.getPayrolls = async (req, res) => {
 };
 
 exports.createPayroll = async (req, res) => {
+        console.log('[API DEBUG] createPayroll triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -562,10 +565,11 @@ exports.createPayroll = async (req, res) => {
         }
 
         res.status(201).json({ success: true, data: rp });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updatePayroll = async (req, res) => {
+        console.log('[API DEBUG] updatePayroll triggered');
     try {
         const p = await Payroll.findByPk(req.params.id);
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
@@ -606,7 +610,7 @@ exports.updatePayroll = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: rp });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deletePayroll = async (req, res) => {
@@ -615,7 +619,7 @@ exports.deletePayroll = async (req, res) => {
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
         await p.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.generatePayslip = async (req, res) => {
@@ -660,7 +664,7 @@ exports.generatePayslip = async (req, res) => {
         }
 
         res.status(201).json({ success: true, data: ps, message: "Payslip generated and saved" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // APPRECIATIONS
@@ -679,6 +683,7 @@ exports.getAppreciations = async (req, res) => {
 };
 
 exports.createAppreciation = async (req, res) => {
+        console.log('[API DEBUG] createAppreciation triggered');
     try {
         const { employee_id, title, description } = req.body;
         // If the sender is a Manager (SuperAdmin), they don't have an employee_id.
@@ -722,17 +727,18 @@ exports.createAppreciation = async (req, res) => {
 
         const rapp = await Appreciation.findByPk(app.appreciation_id, { include: [Employee] });
         res.status(201).json({ success: true, data: rapp });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateAppreciation = async (req, res) => {
+        console.log('[API DEBUG] updateAppreciation triggered');
     try {
         const app = await Appreciation.findByPk(req.params.id);
         if(!app) return res.status(404).json({ success: false, error: "Not found" });
         await app.update(req.body);
         const rapp = await Appreciation.findByPk(app.appreciation_id, { include: [Employee] });
         res.status(200).json({ success: true, data: rapp });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteAppreciation = async (req, res) => {
@@ -741,7 +747,7 @@ exports.deleteAppreciation = async (req, res) => {
         if(!app) return res.status(404).json({ success: false, error: "Not found" });
         await app.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // COMPANY POLICIES
@@ -753,6 +759,7 @@ exports.getPolicies = async (req, res) => {
 };
 
 exports.createPolicy = async (req, res) => {
+        console.log('[API DEBUG] createPolicy triggered');
     try {
         const data = { ...req.body };
         if (req.file) {
@@ -792,10 +799,11 @@ exports.createPolicy = async (req, res) => {
         } catch (err) { console.error("Broadcast failed:", err); }
 
         res.status(201).json({ success: true, data: p });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updatePolicy = async (req, res) => {
+        console.log('[API DEBUG] updatePolicy triggered');
     try {
         const p = await CompanyPolicy.findByPk(req.params.id);
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
@@ -805,7 +813,7 @@ exports.updatePolicy = async (req, res) => {
         }
         await p.update(data);
         res.status(200).json({ success: true, data: p });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deletePolicy = async (req, res) => {
@@ -814,7 +822,7 @@ exports.deletePolicy = async (req, res) => {
         if(!p) return res.status(404).json({ success: false, error: "Not found" });
         await p.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // OFFBOARDINGS
@@ -826,6 +834,7 @@ exports.getOffboardings = async (req, res) => {
 };
 
 exports.createOffboarding = async (req, res) => {
+        console.log('[API DEBUG] createOffboarding triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -861,7 +870,7 @@ exports.createOffboarding = async (req, res) => {
         const o = await Offboarding.create(payload);
         const ro = await Offboarding.findByPk(o.offboarding_id, { include: [Employee] });
         res.status(201).json({ success: true, data: ro });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteOffboarding = async (req, res) => {
@@ -870,10 +879,11 @@ exports.deleteOffboarding = async (req, res) => {
         if(!o) return res.status(404).json({ success: false, error: "Not found" });
         await o.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateOffboarding = async (req, res) => {
+        console.log('[API DEBUG] updateOffboarding triggered');
     try {
         const o = await Offboarding.findByPk(req.params.id);
         if(!o) return res.status(404).json({ success: false, error: "Not found" });
@@ -936,7 +946,7 @@ exports.updateOffboarding = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: ro });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // FINANCE / EXPENSES
@@ -948,6 +958,7 @@ exports.getExpenses = async (req, res) => {
 };
 
 exports.createExpense = async (req, res) => {
+        console.log('[API DEBUG] createExpense triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -955,10 +966,11 @@ exports.createExpense = async (req, res) => {
         const ex = await Expense.create(req.body);
         const rex = await Expense.findByPk(ex.expense_id, { include: [Employee] });
         res.status(201).json({ success: true, data: rex });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateExpense = async (req, res) => {
+        console.log('[API DEBUG] updateExpense triggered');
     try {
         const ex = await Expense.findByPk(req.params.id);
         if(!ex) return res.status(404).json({ success: false, error: "Not found" });
@@ -979,7 +991,7 @@ exports.updateExpense = async (req, res) => {
         }
         
         res.status(200).json({ success: true, data: rex });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteExpense = async (req, res) => {
@@ -988,7 +1000,7 @@ exports.deleteExpense = async (req, res) => {
         if(!ex) return res.status(404).json({ success: false, error: "Not found" });
         await ex.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // PRE PAYMENTS
@@ -1000,6 +1012,7 @@ exports.getPrePayments = async (req, res) => {
 };
 
 exports.createPrePayment = async (req, res) => {
+        console.log('[API DEBUG] createPrePayment triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -1011,10 +1024,14 @@ exports.createPrePayment = async (req, res) => {
         const record = await PrePayment.create(payload);
         const result = await PrePayment.findByPk(record.id, { include: [Employee] });
         res.status(201).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) {
+        console.error('[API ERROR] createPrePayment failed:', err);
+        res.status(400).json({ success: false, error: err.message });
+    }
 };
 
 exports.updatePrePayment = async (req, res) => {
+        console.log('[API DEBUG] updatePrePayment triggered');
     try {
         const result = await sequelize.transaction(async (transaction) => {
             const record = await PrePayment.findByPk(req.params.id, { transaction });
@@ -1038,10 +1055,11 @@ exports.updatePrePayment = async (req, res) => {
 
         if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updatePrePaymentStatus = async (req, res) => {
+        console.log('[API DEBUG] updatePrePaymentStatus triggered');
     try {
         const { status } = req.body;
         if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
@@ -1111,7 +1129,7 @@ exports.updatePrePaymentStatus = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deletePrePayment = async (req, res) => {
@@ -1120,7 +1138,7 @@ exports.deletePrePayment = async (req, res) => {
         if (!record) return res.status(404).json({ success: false, error: "Not found" });
         await record.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // INCREMENT / PROMOTION
@@ -1132,6 +1150,7 @@ exports.getIncrementPromotions = async (req, res) => {
 };
 
 exports.createIncrementPromotion = async (req, res) => {
+        console.log('[API DEBUG] createIncrementPromotion triggered');
     try {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
@@ -1158,10 +1177,11 @@ exports.createIncrementPromotion = async (req, res) => {
         const record = await IncrementPromotion.create(payload);
         const result = await IncrementPromotion.findByPk(record.increment_promotion_id, { include: [Employee] });
         res.status(201).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateIncrementPromotion = async (req, res) => {
+        console.log('[API DEBUG] updateIncrementPromotion triggered');
     try {
         const result = await sequelize.transaction(async (transaction) => {
             const record = await IncrementPromotion.findByPk(req.params.id, { transaction });
@@ -1206,10 +1226,11 @@ exports.updateIncrementPromotion = async (req, res) => {
 
         if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateIncrementPromotionStatus = async (req, res) => {
+        console.log('[API DEBUG] updateIncrementPromotionStatus triggered');
     try {
         const { status } = req.body;
         if (!['Pending', 'Approved', 'Rejected'].includes(status)) {
@@ -1242,7 +1263,7 @@ exports.updateIncrementPromotionStatus = async (req, res) => {
 
         if (!result) return res.status(404).json({ success: false, error: "Not found" });
         res.status(200).json({ success: true, data: result });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteIncrementPromotion = async (req, res) => {
@@ -1251,7 +1272,7 @@ exports.deleteIncrementPromotion = async (req, res) => {
         if (!record) return res.status(404).json({ success: false, error: "Not found" });
         await record.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // HOLIDAYS
@@ -1263,6 +1284,7 @@ exports.getHolidays = async (req, res) => {
 };
 
 exports.createHoliday = async (req, res) => {
+        console.log('[API DEBUG] createHoliday triggered');
     try {
         const h = await Holiday.create(req.body);
 
@@ -1296,16 +1318,17 @@ exports.createHoliday = async (req, res) => {
         } catch (err) { console.error("Holiday broadcast failed:", err); }
 
         res.status(201).json({ success: true, data: h });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.updateHoliday = async (req, res) => {
+        console.log('[API DEBUG] updateHoliday triggered');
     try {
         const h = await Holiday.findByPk(req.params.id);
         if(!h) return res.status(404).json({ success: false, error: "Not found" });
         await h.update(req.body);
         res.status(200).json({ success: true, data: h });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteHoliday = async (req, res) => {
@@ -1314,7 +1337,7 @@ exports.deleteHoliday = async (req, res) => {
         if(!h) return res.status(404).json({ success: false, error: "Not found" });
         await h.destroy();
         res.status(200).json({ success: true, message: "Record deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 // LETTERS
@@ -1420,6 +1443,7 @@ exports.sendLetter = async (req, res) => {
 };
 
 exports.updateLetter = async (req, res) => {
+        console.log('[API DEBUG] updateLetter triggered');
     try {
         const { title, content } = req.body;
         const letter = await Letter.findByPk(req.params.id, {
@@ -1453,7 +1477,7 @@ exports.updateLetter = async (req, res) => {
             }
         }
         res.status(200).json({ success: true, data: letter });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };
 
 exports.deleteLetter = async (req, res) => {
@@ -1462,5 +1486,5 @@ exports.deleteLetter = async (req, res) => {
         if (!letter) return res.status(404).json({ success: false, error: "Letter not found" });
         await letter.destroy();
         res.status(200).json({ success: true, message: "Letter deleted" });
-    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+    } catch (err) { console.error('[API ERROR]', err); res.status(400).json({ success: false, error: err.message }); }
 };

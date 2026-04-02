@@ -20,9 +20,19 @@ const ManagerPrePaymentsView = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [payRes, empRes] = await Promise.all([getPrePayments(), getEmployees()]);
-      if (payRes.success) setRecords(payRes.data || []);
-      if (empRes.success) setEmployees(empRes.data || []);
+      // Load employees first and independently
+      const empRes = await getEmployees();
+      if (empRes && empRes.success) {
+         setEmployees(empRes.data || []);
+         console.log('Employees loaded:', (empRes.data || []).length);
+      }
+      
+      const payRes = await getPrePayments();
+      if (payRes && payRes.success) {
+         setRecords(payRes.data || []);
+      }
+    } catch (err) {
+      console.error('Error in ManagerPrePaymentsView load:', err);
     } finally {
       setLoading(false);
     }
@@ -37,15 +47,32 @@ const ManagerPrePaymentsView = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (!form.employee_id) return alert('Please select an employee');
+    
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        employee_id: Number(form.employee_id),
+        amount: Number(form.amount)
+      };
+      
+      console.log('Submitting pre-payment payload:', payload);
+
       if (editingId) {
-        await updatePrePayment(editingId, form);
+        const res = await updatePrePayment(editingId, payload);
+        if(!res.success) throw new Error(res.error || 'Failed to update');
       } else {
-        await createPrePayment(form);
+        const res = await createPrePayment(payload);
+        if(!res.success) throw new Error(res.error || 'Failed to create');
       }
+      
+      alert(editingId ? 'Pre-payment updated successfully!' : 'Pre-payment request saved successfully!');
       resetForm();
       await load();
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Error: ' + (err.message || 'Operation failed'));
     } finally {
       setSaving(false);
     }

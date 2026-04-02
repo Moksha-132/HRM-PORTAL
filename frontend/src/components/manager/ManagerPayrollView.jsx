@@ -44,21 +44,30 @@ const ManagerPayrollView = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalFields, setModalFields] = useState([]);
-  const saveRef = useRef(() => {});
+  const saveRef = useRef(() => { });
 
   const load = async () => {
     setLoading(true);
     try {
-      const [payRes, empRes, preRes, incRes] = await Promise.all([
-        getPayroll(),
-        getEmployees(),
-        getPrePayments(),
-        getIncrementPromotions(),
-      ]);
-      if (payRes.success) setPayrolls(payRes.data || []);
-      if (empRes.success) setEmployees(empRes.data || []);
-      if (preRes.success) setPrePayments(preRes.data || []);
-      if (incRes.success) setIncrements(incRes.data || []);
+      // 1. Core: Employees List (Dropdown)
+      const empRes = await getEmployees();
+      if (empRes && empRes.success) setEmployees(empRes.data || []);
+
+      // 2. Secondary modules - should not block the dropdown if they fail
+      try {
+        const [payRes, preRes, incRes] = await Promise.all([
+          getPayroll(),
+          getPrePayments(),
+          getIncrementPromotions(),
+        ]);
+        if (payRes && payRes.success) setPayrolls(payRes.data || []);
+        if (preRes && preRes.success) setPrePayments(preRes.data || []);
+        if (incRes && incRes.success) setIncrements(incRes.data || []);
+      } catch (innerErr) {
+        console.warn('One or more secondary modules failed to load:', innerErr);
+      }
+    } catch (err) {
+      console.error('Critical failure in ManagerPayrollView load:', err);
     } finally {
       setLoading(false);
     }
@@ -124,21 +133,32 @@ const ManagerPayrollView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.employee_id) return alert('Please select an employee');
+
     setMessage('');
     setSaving(true);
 
     try {
-      await createPayroll({
-        employee_id: form.employee_id,
+      const payload = {
+        employee_id: Number(form.employee_id),
         basic_salary: toAmount(form.basic_salary),
         allowances: toAmount(form.allowances),
         deductions: toAmount(form.deductions),
         payment_date: form.payment_date || null,
         status: 'Pending',
-      });
+      };
+
+      console.log('Submitting payroll payload:', payload);
+
+      const res = await createPayroll(payload);
+      if (!res.success) throw new Error(res.error || 'Failed to save payroll');
+
       setForm({ employee_id: '', basic_salary: '', allowances: 0, deductions: 0, payment_date: '' });
-      setMessage('Payroll record created successfully.');
+      alert('Payroll record created successfully!');
       await load();
+    } catch (err) {
+      console.error('Payroll save error:', err);
+      alert('Error: ' + (err.message || 'Failed to save payroll'));
     } finally {
       setSaving(false);
     }

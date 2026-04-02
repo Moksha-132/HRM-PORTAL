@@ -32,9 +32,15 @@ const ManagerIncrementPromotionView = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [res, empRes] = await Promise.all([getIncrementPromotions(), getEmployees()]);
-      if (res.success) setRecords(res.data || []);
-      if (empRes.success) setEmployees(empRes.data || []);
+      // 1. Load employees first (Core Dropdown)
+      const empRes = await getEmployees();
+      if (empRes && empRes.success) setEmployees(empRes.data || []);
+      
+      // 2. Load increment history independently
+      const res = await getIncrementPromotions();
+      if (res && res.success) setRecords(res.data || []);
+    } catch (err) {
+      console.error('Error in ManagerIncrementPromotionView load:', err);
     } finally {
       setLoading(false);
     }
@@ -74,6 +80,8 @@ const ManagerIncrementPromotionView = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (!form.employee_id) return alert('Please select an employee');
+
     const error = validateForm(form);
     if (error) {
       setFormError(error);
@@ -82,9 +90,24 @@ const ManagerIncrementPromotionView = () => {
     setFormError('');
     setSaving(true);
     try {
-      await createIncrementPromotion(form);
+      const payload = {
+        ...form,
+        employee_id: Number(form.employee_id),
+        current_salary: Number(form.current_salary),
+        new_salary: Number(form.new_salary)
+      };
+
+      console.log('Submitting increment payload:', payload);
+      
+      const res = await createIncrementPromotion(payload);
+      if (!res.success) throw new Error(res.error || 'Operation failed');
+
+      alert('Record saved successfully!');
       setForm(initialForm);
       await load();
+    } catch (err) {
+      console.error('Increment save failed:', err);
+      alert('Error: ' + (err.message || 'Failed to save record'));
     } finally {
       setSaving(false);
     }

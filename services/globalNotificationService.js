@@ -40,7 +40,11 @@ class GlobalNotificationService {
     async sendGlobalNotification(notificationData) {
         try {
             console.log('📨 GlobalNotificationService.sendGlobalNotification called with:', notificationData);
-            const { senderRole, senderEmail, message, type, recipientEmails } = notificationData;
+            const { senderRole, senderEmail, message, type, recipientEmails, recipientRole, recipientRolesByEmail } = notificationData;
+            
+            const normalizedRecipientEmails = Array.isArray(recipientEmails) 
+                ? recipientEmails.map(e => String(e || '').trim().toLowerCase()).filter(e => !!e)
+                : [];
             
             // Fetch company logo
             let logo = '/logo.avif';

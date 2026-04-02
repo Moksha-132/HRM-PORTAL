@@ -311,8 +311,9 @@ exports.getUsers = async (req, res) => {
     try {
         const users = await SuperAdmin.findAll({
             where: {
-                role: 'Manager',
-                status: 'Active'
+                role: {
+                    [Op.in]: ['Admin', 'Super Admin', 'System Admin', 'Manager']
+                }
             }
         });
         res.status(200).json({ success: true, count: users.length, data: users });

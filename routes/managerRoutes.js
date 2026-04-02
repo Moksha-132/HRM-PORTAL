@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.use(protect);
-router.use(authorize('Manager'));
+router.use(authorize('Manager', 'Super Admin', 'Admin'));
 
 router.get('/dashboard', controller.getDashboardStats);
 
