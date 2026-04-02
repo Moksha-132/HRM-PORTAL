@@ -16,6 +16,7 @@ import ManagerAppreciationsView from '../components/manager/ManagerAppreciations
 import ManagerPoliciesView from '../components/manager/ManagerPoliciesView';
 import ManagerOffboardingsView from '../components/manager/ManagerOffboardingsView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
+import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
 
 // Employee Components (for Self Portal)
