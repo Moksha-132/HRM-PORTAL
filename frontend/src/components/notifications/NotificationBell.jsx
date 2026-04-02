@@ -14,7 +14,17 @@ const formatStamp = (value) => {
   }
 };
 
-const NotificationBell = ({ role }) => {
+const initialsFromName = (name, email) => {
+  const text = String(name || email || '').trim();
+  if (!text) return 'U';
+  return text
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('');
+};
+
+const NotificationBell = ({ role, profile }) => {
   const roleParam = toRoleParam(role);
   const wrapRef = React.useRef(null);
   const [open, setOpen] = React.useState(false);
@@ -28,6 +38,11 @@ const NotificationBell = ({ role }) => {
     sessionStorage.getItem('shnoor_admin_email') ||
     localStorage.getItem('shnoor_admin_email') ||
     '';
+
+  const profileName = String(profile?.name || profile?.employee_name || '').trim();
+  const profileEmail = String(profile?.email || userEmail || '').trim();
+  const profilePhoto = String(profile?.profile_photo || '').trim();
+  const profileInitials = initialsFromName(profileName, profileEmail);
 
   const fetchNotifications = React.useCallback(async (isFirst = false) => {
     if (!roleParam) return;
@@ -144,7 +159,20 @@ const NotificationBell = ({ role }) => {
       {open ? (
         <div className="notif-dropdown" role="dialog" aria-label="Notifications">
           <div className="notif-head">
-            <div className="notif-title">Notifications</div>
+            <div className="notif-head-row">
+              <span className="notif-profile-avatar" title={profileName || profileEmail || 'Profile'}>
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt="Profile" className="notif-profile-avatar-img" />
+                ) : (
+                  <span>{profileInitials}</span>
+                )}
+              </span>
+              <span className="notif-head-meta">
+                <span className="notif-title">Notifications</span>
+                <span className="notif-profile-name">{profileName || 'User'}</span>
+                <span className="notif-profile-email">{profileEmail || 'No email'}</span>
+              </span>
+            </div>
             <button type="button" className="notif-clear" onClick={markAllRead} disabled={unread.length === 0}>
               Mark all read
             </button>

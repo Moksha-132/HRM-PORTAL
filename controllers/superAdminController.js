@@ -25,11 +25,19 @@ const parseTextField = (value) => {
     return text === '' ? null : text;
 };
 
+const deriveDisplayName = (user, employeeProfile) => {
+    const employeeName = parseTextField(employeeProfile?.employee_name);
+    const userName = parseTextField(user?.name);
+    const emailPrefix = parseTextField(user?.email)?.split('@')[0] || null;
+    return employeeName || userName || emailPrefix || 'User';
+};
+
 const ensureShadowEmployeeProfile = async (user) => {
     let employeeProfile = await Employee.findOne({ where: { email: user.email } });
     if (!employeeProfile) {
+        const fallbackName = deriveDisplayName(user, null);
         employeeProfile = await Employee.create({
-            employee_name: user.name || user.email,
+            employee_name: fallbackName,
             email: user.email,
             role: user.role,
             phone: user.phone || null,
@@ -39,11 +47,24 @@ const ensureShadowEmployeeProfile = async (user) => {
             joining_date: user.createdAt ? new Date(user.createdAt) : new Date(),
             profile_photo: user.profile_photo || null
         });
+        return employeeProfile;
     }
+
+    const syncPatch = {};
+    const fallbackName = deriveDisplayName(user, employeeProfile);
+    if (!parseTextField(employeeProfile.employee_name)) syncPatch.employee_name = fallbackName;
+    if (!parseTextField(employeeProfile.role) && parseTextField(user.role)) syncPatch.role = user.role;
+
+    if (Object.keys(syncPatch).length > 0) {
+        await employeeProfile.update(syncPatch);
+    }
+
     return employeeProfile;
 };
 
-const buildUnifiedProfile = (user, employeeProfile) => ({
+const buildUnifiedProfile = (user, employeeProfile) => {
+    const displayName = deriveDisplayName(user, employeeProfile);
+    return {
     id: user.id,
     employee_id: employeeProfile?.employee_id || null,
     role: user.role,
@@ -53,8 +74,8 @@ const buildUnifiedProfile = (user, employeeProfile) => ({
     isTrial: user.isTrial,
     trialStartDate: user.trialStartDate,
     trialEndDate: user.trialEndDate,
-    name: employeeProfile?.employee_name || user.name,
-    employee_name: employeeProfile?.employee_name || user.name,
+    name: displayName,
+    employee_name: displayName,
     email: user.email,
     phone: employeeProfile?.phone || user.phone || '',
     department: employeeProfile?.department || 'Management',
@@ -63,7 +84,8 @@ const buildUnifiedProfile = (user, employeeProfile) => ({
     work_mode: employeeProfile?.work_mode || '',
     location: employeeProfile?.location || '',
     profile_photo: employeeProfile?.profile_photo || user.profile_photo || ''
-});
+};
+};
 
 const sendTokenResponse = (user, statusCode, res) => {
     // Include role in payload to help middleware distinguish between tables if necessary
@@ -78,7 +100,7 @@ const sendTokenResponse = (user, statusCode, res) => {
         token,
         user: { 
             id: userId, 
-            name: user.name || user.employee_name, 
+            name: user.name || user.employee_name || (user.email ? user.email.split('@')[0] : 'User'), 
             email: user.email, 
             role: user.role,
             status: user.status,
@@ -319,8 +341,6 @@ exports.getMe = async (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        const previousEmail = user.email;
-
         const employeeProfile = await ensureShadowEmployeeProfile(user);
         const unifiedProfile = buildUnifiedProfile(user, employeeProfile);
 
@@ -339,9 +359,11 @@ exports.updateDetails = async (req, res) => {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        const nextEmail = parseTextField(req.body.email) || user.email;
-        const nextName = parseTextField(req.body.name) || user.name;
-        const nextPhone = parseTextField(req.body.phone);
+        const body = req.body || {};
+        const previousEmail = user.email;
+        const nextEmail = parseTextField(body.email) || user.email;
+        const nextName = parseTextField(body.name ?? body.employee_name) || parseTextField(user.name) || (nextEmail ? nextEmail.split('@')[0] : 'User');
+        const nextPhone = parseTextField(body.phone);
         const uploadedPhoto = req.file ? `/uploads/${req.file.filename}` : undefined;
 
         const userUpdate = {
@@ -370,12 +392,12 @@ exports.updateDetails = async (req, res) => {
             email: nextEmail
         };
 
-        const employeePhone = parseTextField(req.body.phone);
-        const department = parseTextField(req.body.department);
-        const designation = parseTextField(req.body.designation);
-        const joiningDate = parseTextField(req.body.joining_date);
-        const workMode = parseTextField(req.body.work_mode);
-        const location = parseTextField(req.body.location);
+        const employeePhone = parseTextField(body.phone);
+        const department = parseTextField(body.department);
+        const designation = parseTextField(body.designation);
+        const joiningDate = parseTextField(body.joining_date);
+        const workMode = parseTextField(body.work_mode);
+        const location = parseTextField(body.location);
 
         if (employeePhone !== undefined) employeeUpdate.phone = employeePhone;
         if (department !== undefined) employeeUpdate.department = department;
