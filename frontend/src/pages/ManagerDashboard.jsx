@@ -33,12 +33,12 @@ import EmployeeOffboardingView from '../components/employee/EmployeeOffboardingV
 import EmployeeExpensesView from '../components/employee/EmployeeExpensesView';
 import EmployeePayrollView from '../components/employee/EmployeePayrollView';
 import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
-import EmployeeProfileView from '../components/employee/EmployeeProfileView';
 import EmployeeLettersView from '../components/employee/EmployeeLettersView';
 import EmployeeRemainingLeavesView from '../components/employee/EmployeeRemainingLeavesView';
 import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeavesView';
 import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
+import ManagerProfileView from '../components/manager/ManagerProfileView';
 
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 
@@ -48,6 +48,11 @@ const ManagerDashboard = () => {
   const [portalMode, setPortalMode] = useState('manager'); // 'self' or 'manager'
   const [email, setEmail] = useState('manager@shnoor.com');
   const [userData, setUserData] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const handleProfileUpdated = (nextProfile) => {
+    setProfile(nextProfile);
+    if (nextProfile?.email) setEmail(nextProfile.email);
+  };
 
   const managementNavItems = useMemo(
     () => [
@@ -80,6 +85,7 @@ const ManagerDashboard = () => {
       },
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
+      { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
     ],
     []
   );
@@ -156,7 +162,11 @@ const ManagerDashboard = () => {
     const fetchUser = async () => {
       try {
         const res = await getMe();
-        if (res.success) setUserData(res.data);
+        if (res.success) {
+          setUserData(res.data);
+          setProfile(res.data);
+          if (res.data?.email) setEmail(res.data.email);
+        }
       } catch (err) {
         console.error('Failed to fetch manager profile:', err);
       }
@@ -262,6 +272,7 @@ const ManagerDashboard = () => {
     finance: ManagerFinanceView,
     holidays: ManagerHolidaysView,
     letters: ManagerLettersView,
+    profile: ManagerProfileView,
   };
 
   const selfComponents = {
@@ -279,7 +290,7 @@ const ManagerDashboard = () => {
     payroll: EmployeePayrollView,
     policies: EmployeePoliciesView,
     letters: EmployeeLettersView,
-    profile: EmployeeProfileView,
+    profile: ManagerProfileView,
   };
 
   const ViewComponent = portalMode === 'manager' ? managementComponents[activeView] : selfComponents[activeView];
@@ -289,6 +300,7 @@ const ManagerDashboard = () => {
       <DashboardLayout
         roleLabel="Manager"
         email={email}
+        profile={profile}
         navItems={navItems}
         activeId={activeView}
         onSelect={setActiveView}
@@ -296,9 +308,11 @@ const ManagerDashboard = () => {
         title={pageTitle}
         portalMode={portalMode}
         onPortalChange={handlePortalChange}
+        onProfileClick={() => setActiveView('profile')}
       >
         {activeView === 'dashboard' && <TrialBanner />}
-        {ViewComponent ? <ViewComponent /> : null}
+        {activeView === 'profile' ? <ManagerProfileView onProfileUpdated={handleProfileUpdated} /> : null}
+        {activeView !== 'profile' && ViewComponent ? <ViewComponent /> : null}
         {activeView === 'dashboard' && (
           portalMode === 'manager' ? <ManagerDashboardAddons /> : <EmployeeDashboardAddons />
         )}

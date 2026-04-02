@@ -5,6 +5,7 @@ import Topbar from './Topbar';
 const DashboardLayout = ({ 
   roleLabel, 
   email, 
+  profile,
   navItems, 
   activeId, 
   onSelect, 
@@ -12,7 +13,8 @@ const DashboardLayout = ({
   title, 
   children,
   portalMode,
-  onPortalChange
+  onPortalChange,
+  onProfileClick
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -48,6 +50,7 @@ const DashboardLayout = ({
       <Sidebar
         brand="shnoor"
         tag={roleLabel}
+        profile={profile}
         navItems={navItems}
         activeId={activeId}
         onSelect={handleSelect}
@@ -56,6 +59,7 @@ const DashboardLayout = ({
         isCollapsed={sidebarCollapsed}
         portalMode={portalMode}
         onPortalChange={onPortalChange}
+        onProfileClick={onProfileClick}
       />
       <div className={`main-wrap${sidebarCollapsed ? ' expanded' : ''}`}>
         <Topbar title={title} roleLabel={roleLabel} roleKey={roleKey} email={email} onToggle={handleToggle} />

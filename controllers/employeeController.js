@@ -486,18 +486,67 @@ exports.downloadPayslip = async (req, res) => {
 
 // --- PROFILE ---
 exports.getProfile = async (req, res) => {
-    res.status(200).json({ success: true, data: req.user });
+    const data = {
+        employee_id: req.user.employee_id,
+        role: req.user.role,
+        status: req.user.status,
+        name: req.user.employee_name,
+        email: req.user.email,
+        phone: req.user.phone || '',
+        department: req.user.department || '',
+        designation: req.user.designation || '',
+        joining_date: req.user.joining_date || null,
+        work_mode: req.user.work_mode || '',
+        location: req.user.location || '',
+        profile_photo: req.user.profile_photo || ''
+    };
+    res.status(200).json({ success: true, data });
 };
 
 exports.updateProfile = async (req, res) => {
     try {
-        const fieldsToUpdate = {
-            employee_name: req.body.employee_name,
-            phone: req.body.phone,
-            email: req.body.email
+        const parseTextField = (value) => {
+            if (value === undefined || value === null) return undefined;
+            const text = String(value).trim();
+            return text === '' ? null : text;
         };
+
+        const fieldsToUpdate = {};
+        const nextName = parseTextField(req.body.name ?? req.body.employee_name);
+        const nextPhone = parseTextField(req.body.phone);
+        const nextDepartment = parseTextField(req.body.department);
+        const nextDesignation = parseTextField(req.body.designation);
+        const nextJoiningDate = parseTextField(req.body.joining_date);
+        const nextWorkMode = parseTextField(req.body.work_mode);
+        const nextLocation = parseTextField(req.body.location);
+
+        if (nextName !== undefined) fieldsToUpdate.employee_name = nextName;
+        if (nextPhone !== undefined) fieldsToUpdate.phone = nextPhone;
+        if (nextDepartment !== undefined) fieldsToUpdate.department = nextDepartment;
+        if (nextDesignation !== undefined) fieldsToUpdate.designation = nextDesignation;
+        if (nextJoiningDate !== undefined) fieldsToUpdate.joining_date = nextJoiningDate;
+        if (nextWorkMode !== undefined) fieldsToUpdate.work_mode = nextWorkMode;
+        if (nextLocation !== undefined) fieldsToUpdate.location = nextLocation;
+        if (req.file) fieldsToUpdate.profile_photo = `/uploads/${req.file.filename}`;
+
         await req.user.update(fieldsToUpdate);
-        res.status(200).json({ success: true, data: req.user });
+
+        const data = {
+            employee_id: req.user.employee_id,
+            role: req.user.role,
+            status: req.user.status,
+            name: req.user.employee_name,
+            email: req.user.email,
+            phone: req.user.phone || '',
+            department: req.user.department || '',
+            designation: req.user.designation || '',
+            joining_date: req.user.joining_date || null,
+            work_mode: req.user.work_mode || '',
+            location: req.user.location || '',
+            profile_photo: req.user.profile_photo || ''
+        };
+
+        res.status(200).json({ success: true, data });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
 

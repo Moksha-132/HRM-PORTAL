@@ -12,11 +12,17 @@ import AdminSystemView from '../components/admin/AdminSystemView';
 import AdminChatSupportView from '../components/admin/AdminChatSupportView';
 import AdminManagerTrialView from '../components/admin/AdminManagerTrialView';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+import { getMe } from '../services/authService';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
   const [email, setEmail] = useState('admin@shnoor.com');
+  const [profile, setProfile] = useState(null);
+  const handleProfileUpdated = (nextProfile) => {
+    setProfile(nextProfile);
+    if (nextProfile?.email) setEmail(nextProfile.email);
+  };
 
   const navItems = useMemo(
     () => [
@@ -28,6 +34,7 @@ const AdminDashboard = () => {
       { id: 'superadmin', label: 'Super Admin Management', icon: 'fas fa-user-shield' },
       { id: 'trials', label: 'Manager Trials', icon: 'fas fa-hourglass-half' },
       { id: 'website', label: 'Website Settings', icon: 'fas fa-globe' },
+      { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
       { id: 'system', label: 'Settings', icon: 'fas fa-cog' },
       { id: 'chat', label: 'Chat Support', icon: 'fas fa-comments' },
     ],
@@ -65,6 +72,19 @@ const AdminDashboard = () => {
         localStorage.getItem('shnoor_admin_email') ||
         'admin@shnoor.com'
     );
+
+    const loadProfile = async () => {
+      try {
+        const res = await getMe();
+        if (res?.success) {
+          setProfile(res.data);
+          if (res.data?.email) setEmail(res.data.email);
+        }
+      } catch {
+        // ignore profile load failures
+      }
+    };
+    loadProfile();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -89,6 +109,7 @@ const AdminDashboard = () => {
     superadmin: AdminSuperAdminView,
     trials: AdminManagerTrialView,
     website: AdminWebsiteView,
+    profile: AdminSystemView,
     system: AdminSystemView,
     chat: AdminChatSupportView,
   }[activeView];
@@ -98,13 +119,16 @@ const AdminDashboard = () => {
       <DashboardLayout
         roleLabel="Admin"
         email={email}
+        profile={profile}
         navItems={navItems}
         activeId={activeView}
         onSelect={setActiveView}
         onLogout={handleLogout}
+        onProfileClick={() => setActiveView('profile')}
         title={pageTitle}
       >
-        {ViewComponent ? <ViewComponent /> : null}
+        {activeView === 'profile' || activeView === 'system' ? <AdminSystemView onProfileUpdated={handleProfileUpdated} /> : null}
+        {activeView !== 'profile' && activeView !== 'system' && ViewComponent ? <ViewComponent /> : null}
       </DashboardLayout>
     </div>
   );

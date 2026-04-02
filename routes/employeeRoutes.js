@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const controller = require('../controllers/employeeController');
+const upload = require('../middleware/uploadMiddleware');
 
 // All employee routes are protected
 router.use(protect);
@@ -49,7 +50,7 @@ router.get('/increment-promotions', controller.getMyIncrementPromotions);
 
 router.route('/profile')
     .get(controller.getProfile)
-    .put(controller.updateProfile);
+    .put(upload.single('profile_photo'), controller.updateProfile);
 
 router.put('/profile/password', controller.updatePassword);
 

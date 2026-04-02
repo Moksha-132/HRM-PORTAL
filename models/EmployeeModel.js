@@ -30,6 +30,10 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    profile_photo: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     department: {
         type: DataTypes.STRING,
         allowNull: true

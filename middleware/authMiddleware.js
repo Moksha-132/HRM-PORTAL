@@ -32,11 +32,24 @@ exports.protect = async (req, res, next) => {
                         employee_name: user.name,
                         email: user.email,
                         role: user.role, // e.g. 'Manager'
+                        phone: user.phone || null,
+                        profile_photo: user.profile_photo || null,
                         status: 'Active',
                         designation: user.role,
                         department: 'Management',
                         joining_date: new Date()
                     });
+                } else {
+                    // Keep key profile fields in sync between SuperAdmin and shadow employee profile.
+                    const syncPatch = {};
+                    if (user.name && empRecord.employee_name !== user.name) syncPatch.employee_name = user.name;
+                    if (user.phone !== undefined && empRecord.phone !== user.phone) syncPatch.phone = user.phone;
+                    if (user.profile_photo !== undefined && empRecord.profile_photo !== user.profile_photo) {
+                        syncPatch.profile_photo = user.profile_photo;
+                    }
+                    if (Object.keys(syncPatch).length > 0) {
+                        await empRecord.update(syncPatch);
+                    }
                 }
 
                 // Attach employee properties to the user object for the controllers
@@ -46,6 +59,9 @@ exports.protect = async (req, res, next) => {
                 user.designation = empRecord.designation;
                 user.joining_date = empRecord.joining_date;
                 user.manager_id = empRecord.manager_id;
+                user.work_mode = empRecord.work_mode;
+                user.location = empRecord.location;
+                user.profile_photo = empRecord.profile_photo || user.profile_photo || null;
             }
         }
 

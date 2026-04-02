@@ -29,6 +29,10 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    profile_photo: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     role: {
         type: DataTypes.ENUM('Super Admin', 'Admin', 'Company Admin', 'Manager', 'Employee'),
         defaultValue: 'Super Admin'

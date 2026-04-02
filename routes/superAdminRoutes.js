@@ -1,6 +1,7 @@
 const express = require('express');
 const { login, register, registerPublic, getUsers, deleteUser, getMe, updateDetails, updatePassword, forgotPassword, resetPassword, getTrialManagers, updateTrial } = require('../controllers/superAdminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/trials', protect, authorize('Super Admin', 'Admin'), getTrialManage
 router.put('/trials/:id', protect, authorize('Super Admin', 'Admin'), updateTrial);
 
 router.get('/me', protect, getMe);
-router.put('/updatedetails', protect, updateDetails);
+router.put('/updatedetails', protect, upload.single('profile_photo'), updateDetails);
 router.put('/updatepassword', protect, updatePassword);
 
 module.exports = router;

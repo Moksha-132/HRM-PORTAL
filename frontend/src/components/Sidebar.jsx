@@ -4,6 +4,7 @@ import { useSiteLogo } from '../hooks/useSiteLogo';
 const Sidebar = ({
   brand,
   tag,
+  profile,
   navItems,
   activeId,
   onSelect,
@@ -12,9 +13,19 @@ const Sidebar = ({
   isCollapsed,
   portalMode,
   onPortalChange,
+  onProfileClick,
 }) => {
   const logoUrl = useSiteLogo();
   const [expandedMenus, setExpandedMenus] = useState({});
+
+  const profileName = String(profile?.name || '').trim();
+  const profileEmail = String(profile?.email || '').trim();
+  const profilePhoto = String(profile?.profile_photo || '').trim();
+  const profileInitials = (profileName || profileEmail || 'User')
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'U';
 
   const navState = useMemo(() => {
     return navItems.map((item) => {
@@ -55,6 +66,32 @@ const Sidebar = ({
         <span className="sidebar-brand">{brand}</span>
         <span className="sidebar-tag">{tag}</span>
       </div>
+
+      {profile ? (
+        <button
+          type="button"
+          className="sidebar-profile-card"
+          onClick={() => {
+            if (onProfileClick) onProfileClick();
+          }}
+          title="Open Profile"
+        >
+          <span className="sidebar-profile-avatar">
+            {profilePhoto ? (
+              <img src={profilePhoto} alt="Profile" className="sidebar-profile-avatar-img" />
+            ) : (
+              profileInitials
+            )}
+          </span>
+          <span className="sidebar-profile-meta">
+            <span className="sidebar-profile-name">{profileName || 'User'}</span>
+            <span className="sidebar-profile-email">{profileEmail || 'No email'}</span>
+          </span>
+          <span className="sidebar-profile-chevron">
+            <i className="fas fa-chevron-right" />
+          </span>
+        </button>
+      ) : null}
 
       {portalMode && onPortalChange ? (
         <div className="sidebar-portal-toggle">

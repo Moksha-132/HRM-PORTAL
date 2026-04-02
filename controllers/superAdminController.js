@@ -19,6 +19,51 @@ const normalizeAdminRole = (inputRole) => {
     return map[role] || null;
 };
 
+const parseTextField = (value) => {
+    if (value === undefined || value === null) return undefined;
+    const text = String(value).trim();
+    return text === '' ? null : text;
+};
+
+const ensureShadowEmployeeProfile = async (user) => {
+    let employeeProfile = await Employee.findOne({ where: { email: user.email } });
+    if (!employeeProfile) {
+        employeeProfile = await Employee.create({
+            employee_name: user.name || user.email,
+            email: user.email,
+            role: user.role,
+            phone: user.phone || null,
+            status: 'Active',
+            designation: user.role,
+            department: 'Management',
+            joining_date: user.createdAt ? new Date(user.createdAt) : new Date(),
+            profile_photo: user.profile_photo || null
+        });
+    }
+    return employeeProfile;
+};
+
+const buildUnifiedProfile = (user, employeeProfile) => ({
+    id: user.id,
+    employee_id: employeeProfile?.employee_id || null,
+    role: user.role,
+    status: user.status,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    isTrial: user.isTrial,
+    trialStartDate: user.trialStartDate,
+    trialEndDate: user.trialEndDate,
+    name: employeeProfile?.employee_name || user.name,
+    email: user.email,
+    phone: employeeProfile?.phone || user.phone || '',
+    department: employeeProfile?.department || 'Management',
+    designation: employeeProfile?.designation || user.role || '',
+    joining_date: employeeProfile?.joining_date || user.createdAt || null,
+    work_mode: employeeProfile?.work_mode || '',
+    location: employeeProfile?.location || '',
+    profile_photo: employeeProfile?.profile_photo || user.profile_photo || ''
+});
+
 const sendTokenResponse = (user, statusCode, res) => {
     // Include role in payload to help middleware distinguish between tables if necessary
     // For Employee: use employee_id, for SuperAdmin: use id
@@ -38,7 +83,8 @@ const sendTokenResponse = (user, statusCode, res) => {
             status: user.status,
             isTrial: user.isTrial,
             trialStartDate: user.trialStartDate,
-            trialEndDate: user.trialEndDate
+            trialEndDate: user.trialEndDate,
+            profile_photo: user.profile_photo || ''
         }
     });
 };
@@ -268,7 +314,16 @@ exports.deleteUser = async (req, res) => {
 exports.getMe = async (req, res) => {
     try {
         const user = await SuperAdmin.findByPk(req.user.id);
-        res.status(200).json({ success: true, data: user });
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const previousEmail = user.email;
+
+        const employeeProfile = await ensureShadowEmployeeProfile(user);
+        const unifiedProfile = buildUnifiedProfile(user, employeeProfile);
+
+        res.status(200).json({ success: true, data: unifiedProfile });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -278,20 +333,61 @@ exports.getMe = async (req, res) => {
 // @route   PUT /api/v1/auth/updatedetails
 exports.updateDetails = async (req, res) => {
     try {
-        const fieldsToUpdate = {
-            name: req.body.name,
-            email: req.body.email,
-            phone: req.body.phone
-        };
-        // Option to include other basic details, but for now name and email.
-
         const user = await SuperAdmin.findByPk(req.user.id);
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
-        await user.update(fieldsToUpdate);
 
-        res.status(200).json({ success: true, data: user });
+        const nextEmail = parseTextField(req.body.email) || user.email;
+        const nextName = parseTextField(req.body.name) || user.name;
+        const nextPhone = parseTextField(req.body.phone);
+        const uploadedPhoto = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+        const userUpdate = {
+            name: nextName,
+            email: nextEmail
+        };
+
+        if (nextPhone !== undefined) userUpdate.phone = nextPhone;
+        if (uploadedPhoto !== undefined) userUpdate.profile_photo = uploadedPhoto;
+
+        await user.update(userUpdate);
+
+        let employeeProfile = await Employee.findOne({
+            where: {
+                email: {
+                    [Op.in]: [previousEmail, user.email]
+                }
+            }
+        });
+        if (!employeeProfile) {
+            employeeProfile = await ensureShadowEmployeeProfile(user);
+        }
+
+        const employeeUpdate = {
+            employee_name: nextName,
+            email: nextEmail
+        };
+
+        const employeePhone = parseTextField(req.body.phone);
+        const department = parseTextField(req.body.department);
+        const designation = parseTextField(req.body.designation);
+        const joiningDate = parseTextField(req.body.joining_date);
+        const workMode = parseTextField(req.body.work_mode);
+        const location = parseTextField(req.body.location);
+
+        if (employeePhone !== undefined) employeeUpdate.phone = employeePhone;
+        if (department !== undefined) employeeUpdate.department = department;
+        if (designation !== undefined) employeeUpdate.designation = designation;
+        if (joiningDate !== undefined) employeeUpdate.joining_date = joiningDate;
+        if (workMode !== undefined) employeeUpdate.work_mode = workMode;
+        if (location !== undefined) employeeUpdate.location = location;
+        if (uploadedPhoto !== undefined) employeeUpdate.profile_photo = uploadedPhoto;
+
+        await employeeProfile.update(employeeUpdate);
+
+        const unifiedProfile = buildUnifiedProfile(user, employeeProfile);
+        res.status(200).json({ success: true, data: unifiedProfile });
     } catch (err) {
         res.status(400).json({ success: false, error: err.message });
     }

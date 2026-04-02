@@ -22,11 +22,17 @@ import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeave
 import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+import { getProfile } from '../services/employeeService';
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
   const [email, setEmail] = useState('emp@shnoor.com');
+  const [profile, setProfile] = useState(null);
+  const handleProfileUpdated = (nextProfile) => {
+    setProfile(nextProfile);
+    if (nextProfile?.email) setEmail(nextProfile.email);
+  };
 
   const navItems = useMemo(
     () => [
@@ -100,6 +106,16 @@ const EmployeeDashboard = () => {
       return;
     }
     setEmail(sessionStorage.getItem('shnoor_email') || localStorage.getItem('shnoor_email') || 'emp@shnoor.com');
+
+    const loadProfile = async () => {
+      try {
+        const res = await getProfile();
+        if (res?.success) setProfile(res.data);
+      } catch {
+        // ignore sidebar profile load failures
+      }
+    };
+    loadProfile();
   }, [navigate]);
 
   const handleLogout = () => {
@@ -141,13 +157,16 @@ const EmployeeDashboard = () => {
       <DashboardLayout
         roleLabel="Employee"
         email={email}
+        profile={profile}
         navItems={navItems}
         activeId={activeView}
         onSelect={setActiveView}
         onLogout={handleLogout}
+        onProfileClick={() => setActiveView('profile')}
         title={pageTitle}
       >
-        {ViewComponent ? <ViewComponent /> : null}
+        {activeView === 'profile' ? <EmployeeProfileView onProfileUpdated={handleProfileUpdated} /> : null}
+        {activeView !== 'profile' && ViewComponent ? <ViewComponent /> : null}
         {activeView === 'dashboard' ? <EmployeeDashboardAddons /> : null}
       </DashboardLayout>
     </div>

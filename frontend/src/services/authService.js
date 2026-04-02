@@ -15,6 +15,11 @@ export const updateProfile = async (payload) => {
   return data;
 };
 
+export const updatePassword = async (payload) => {
+  const { data } = await api.put('/api/v1/auth/updatepassword', payload);
+  return data;
+};
+
 export const registerPublic = async (payload) => {
   const { data } = await api.post('/api/v1/auth/register/public', payload);
   return data;
