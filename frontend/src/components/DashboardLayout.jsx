@@ -62,7 +62,7 @@ const DashboardLayout = ({
         onProfileClick={onProfileClick}
       />
       <div className={`main-wrap${sidebarCollapsed ? ' expanded' : ''}`}>
-        <Topbar title={title} roleLabel={roleLabel} roleKey={roleKey} email={email} onToggle={handleToggle} />
+        <Topbar title={title} roleLabel={roleLabel} roleKey={roleKey} email={email} profile={profile} onToggle={handleToggle} />
         <main className="main-content">{children}</main>
       </div>
     </div>

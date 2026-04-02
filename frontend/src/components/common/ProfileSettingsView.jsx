@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const normalizeProfile = (raw) => ({
   name: raw?.name || raw?.employee_name || '',
@@ -35,6 +35,11 @@ const ProfileSettingsView = ({
   const [loading, setLoading] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const onProfileUpdatedRef = useRef(onProfileUpdated);
+
+  useEffect(() => {
+    onProfileUpdatedRef.current = onProfileUpdated;
+  }, [onProfileUpdated]);
 
   useEffect(() => {
     let active = true;
@@ -46,7 +51,7 @@ const ProfileSettingsView = ({
         const normalized = normalizeProfile(res.data || {});
         setProfile(normalized);
         setPhotoPreview(normalized.profile_photo || '');
-        if (onProfileUpdated) onProfileUpdated(normalized);
+        if (onProfileUpdatedRef.current) onProfileUpdatedRef.current(normalized);
       } catch {
         // keep silent in UI and let user continue editing local values
       } finally {
@@ -57,7 +62,7 @@ const ProfileSettingsView = ({
     return () => {
       active = false;
     };
-  }, [loadProfile, onProfileUpdated]);
+  }, [loadProfile]);
 
   useEffect(() => {
     if (!photoFile) {
@@ -91,7 +96,7 @@ const ProfileSettingsView = ({
       setProfile(normalized);
       setPhotoPreview(normalized.profile_photo || '');
       setPhotoFile(null);
-      if (onProfileUpdated) onProfileUpdated(normalized);
+      if (onProfileUpdatedRef.current) onProfileUpdatedRef.current(normalized);
       alert('Profile updated successfully.');
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to update profile.');

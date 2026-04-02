@@ -410,6 +410,27 @@
   gap: 10px;
 }
 
+.dashboard-mode .topbar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(168, 85, 247, 0.18));
+  color: #312e81;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dashboard-mode .topbar-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .dashboard-mode .admin-badge {
   font-size: 0.75rem;
   font-weight: 600;
