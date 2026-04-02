@@ -485,24 +485,59 @@ exports.downloadPayslip = async (req, res) => {
 };
 
 // --- PROFILE ---
-exports.getProfile = async (req, res) => {
-    const employeeName = req.user?.employee_name || req.user?.name || '';
-    const data = {
-        employee_id: req.user.employee_id,
-        role: req.user.role,
-        status: req.user.status,
-        name: employeeName,
-        employee_name: employeeName,
-        email: req.user.email,
-        phone: req.user.phone || '',
-        department: req.user.department || '',
-        designation: req.user.designation || '',
-        joining_date: req.user.joining_date || null,
-        work_mode: req.user.work_mode || '',
-        location: req.user.location || '',
-        profile_photo: req.user.profile_photo || ''
+const resolveEmployeeFromRequest = async (req) => {
+    const employeeId = req.user?.employee_id;
+    const email = req.user?.email;
+
+    if (employeeId) {
+        const byId = await Employee.findByPk(employeeId);
+        if (byId) return byId;
+    }
+
+    if (email) {
+        return Employee.findOne({ where: { email } });
+    }
+
+    return null;
+};
+
+const toProfileResponse = (employee) => {
+    const fallbackName = employee.employee_name || (employee.email ? employee.email.split('@')[0] : 'Employee');
+    return {
+        employee_id: employee.employee_id,
+        role: employee.role,
+        status: employee.status,
+        name: fallbackName,
+        employee_name: fallbackName,
+        email: employee.email,
+        phone: employee.phone || '',
+        department: employee.department || '',
+        designation: employee.designation || '',
+        joining_date: employee.joining_date || null,
+        work_mode: employee.work_mode || '',
+        location: employee.location || '',
+        profile_photo: employee.profile_photo || ''
     };
-    res.status(200).json({ success: true, data });
+};
+
+exports.getProfile = async (req, res) => {
+    try {
+        const employee = await resolveEmployeeFromRequest(req);
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee profile not found' });
+        }
+
+        // Repair broken legacy rows.
+        if (!employee.employee_name || !String(employee.employee_name).trim()) {
+            const fallbackName = employee.email ? employee.email.split('@')[0] : `Employee-${employee.employee_id}`;
+            await employee.update({ employee_name: fallbackName });
+        }
+
+        const data = toProfileResponse(employee);
+        res.status(200).json({ success: true, data });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 };
 
 exports.updateProfile = async (req, res) => {
@@ -513,14 +548,20 @@ exports.updateProfile = async (req, res) => {
             return text === '' ? null : text;
         };
 
+        const employee = await resolveEmployeeFromRequest(req);
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee profile not found' });
+        }
+
+        const body = req.body || {};
         const fieldsToUpdate = {};
-        const nextName = parseTextField(req.body.name ?? req.body.employee_name);
-        const nextPhone = parseTextField(req.body.phone);
-        const nextDepartment = parseTextField(req.body.department);
-        const nextDesignation = parseTextField(req.body.designation);
-        const nextJoiningDate = parseTextField(req.body.joining_date);
-        const nextWorkMode = parseTextField(req.body.work_mode);
-        const nextLocation = parseTextField(req.body.location);
+        const nextName = parseTextField(body.name ?? body.employee_name);
+        const nextPhone = parseTextField(body.phone);
+        const nextDepartment = parseTextField(body.department);
+        const nextDesignation = parseTextField(body.designation);
+        const nextJoiningDate = parseTextField(body.joining_date);
+        const nextWorkMode = parseTextField(body.work_mode);
+        const nextLocation = parseTextField(body.location);
 
         if (nextName !== undefined && nextName !== null) fieldsToUpdate.employee_name = nextName;
         if (nextPhone !== undefined) fieldsToUpdate.phone = nextPhone;
@@ -531,23 +572,14 @@ exports.updateProfile = async (req, res) => {
         if (nextLocation !== undefined) fieldsToUpdate.location = nextLocation;
         if (req.file) fieldsToUpdate.profile_photo = `/uploads/${req.file.filename}`;
 
-        await req.user.update(fieldsToUpdate);
+        await employee.update(fieldsToUpdate);
 
-        const data = {
-            employee_id: req.user.employee_id,
-            role: req.user.role,
-            status: req.user.status,
-            name: req.user.employee_name,
-            employee_name: req.user.employee_name,
-            email: req.user.email,
-            phone: req.user.phone || '',
-            department: req.user.department || '',
-            designation: req.user.designation || '',
-            joining_date: req.user.joining_date || null,
-            work_mode: req.user.work_mode || '',
-            location: req.user.location || '',
-            profile_photo: req.user.profile_photo || ''
-        };
+        if (!employee.employee_name || !String(employee.employee_name).trim()) {
+            const fallbackName = employee.email ? employee.email.split('@')[0] : `Employee-${employee.employee_id}`;
+            await employee.update({ employee_name: fallbackName });
+        }
+
+        const data = toProfileResponse(employee);
 
         res.status(200).json({ success: true, data });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
@@ -556,11 +588,16 @@ exports.updateProfile = async (req, res) => {
 exports.updatePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const isMatch = await req.user.matchPassword(currentPassword);
+        const employee = await resolveEmployeeFromRequest(req);
+        if (!employee) {
+            return res.status(404).json({ success: false, error: 'Employee profile not found' });
+        }
+
+        const isMatch = await employee.matchPassword(currentPassword);
         if (!isMatch) return res.status(400).json({ success: false, error: 'Current password incorrect' });
 
-        req.user.password = newPassword;
-        await req.user.save();
+        employee.password = newPassword;
+        await employee.save();
         res.status(200).json({ success: true, message: 'Password updated successfully' });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
 };
