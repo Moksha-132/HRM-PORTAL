@@ -107,6 +107,7 @@ const sendPayrollStatusNotification = async (payroll, status, senderEmail) => {
             type: 'payroll_status_update'
         });
     }
+};
 
 const OFFBOARDING_CATEGORIES = ['Warning', 'Resignation', 'Complaint'];
 const OFFBOARDING_STATUSES = ['Pending', 'In Progress', 'Completed'];
