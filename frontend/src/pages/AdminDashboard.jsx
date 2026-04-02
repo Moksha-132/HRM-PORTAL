@@ -11,6 +11,7 @@ import AdminWebsiteView from '../components/admin/AdminWebsiteView';
 import AdminSystemView from '../components/admin/AdminSystemView';
 import AdminChatSupportView from '../components/admin/AdminChatSupportView';
 import AdminManagerTrialView from '../components/admin/AdminManagerTrialView';
+import CompanyChatWorkspace from '../components/chat/CompanyChatWorkspace';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 import { getMe } from '../services/authService';
 
@@ -19,6 +20,7 @@ const AdminDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [email, setEmail] = useState('admin@shnoor.com');
   const [profile, setProfile] = useState(null);
+
   const handleProfileUpdated = (nextProfile) => {
     setProfile(nextProfile);
     if (nextProfile?.email) setEmail(nextProfile.email);
@@ -37,6 +39,7 @@ const AdminDashboard = () => {
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
       { id: 'system', label: 'Settings', icon: 'fas fa-cog' },
       { id: 'chat', label: 'Chat Support', icon: 'fas fa-comments' },
+      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-people-group' },
     ],
     []
   );
@@ -65,6 +68,7 @@ const AdminDashboard = () => {
       navigate('/login', { replace: true });
       return;
     }
+
     setEmail(
       sessionStorage.getItem('shnoor_email') ||
         sessionStorage.getItem('shnoor_admin_email') ||
@@ -84,6 +88,7 @@ const AdminDashboard = () => {
         // ignore profile load failures
       }
     };
+
     loadProfile();
   }, [navigate]);
 
@@ -112,6 +117,7 @@ const AdminDashboard = () => {
     profile: AdminSystemView,
     system: AdminSystemView,
     chat: AdminChatSupportView,
+    'company-chat': CompanyChatWorkspace,
   }[activeView];
 
   return (

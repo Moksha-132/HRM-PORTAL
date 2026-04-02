@@ -26,6 +26,9 @@ const Letter = require('./LetterModel');
 const PrePayment = require('./PrePaymentModel');
 const IncrementPromotion = require('./IncrementPromotionModel');
 const AppreciationComment = require('./AppreciationCommentModel');
+const CompanyChatGroup = require('./CompanyChatGroup');
+const CompanyChatGroupMember = require('./CompanyChatGroupMember');
+const CompanyChatMessage = require('./CompanyChatMessage');
 
 // Define Associations here if necessary
 // e.g.
@@ -70,9 +73,24 @@ Employee.hasMany(IncrementPromotion, { foreignKey: 'employee_id', onDelete: 'CAS
 Appreciation.hasMany(AppreciationComment, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
 AppreciationComment.belongsTo(Appreciation, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
 
+Employee.belongsTo(Company, { foreignKey: 'company_id' });
+Company.hasMany(Employee, { foreignKey: 'company_id' });
+
+SuperAdmin.belongsTo(Company, { foreignKey: 'company_id' });
+Company.hasMany(SuperAdmin, { foreignKey: 'company_id' });
+
+CompanyChatGroup.belongsTo(Company, { foreignKey: 'company_id', onDelete: 'CASCADE' });
+Company.hasMany(CompanyChatGroup, { foreignKey: 'company_id', onDelete: 'CASCADE' });
+
+CompanyChatGroup.hasMany(CompanyChatGroupMember, { foreignKey: 'group_id', onDelete: 'CASCADE' });
+CompanyChatGroupMember.belongsTo(CompanyChatGroup, { foreignKey: 'group_id', onDelete: 'CASCADE' });
+
+CompanyChatGroup.hasMany(CompanyChatMessage, { foreignKey: 'group_id', onDelete: 'CASCADE' });
+CompanyChatMessage.belongsTo(CompanyChatGroup, { foreignKey: 'group_id', onDelete: 'CASCADE' });
+
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
     Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, PrePayment, IncrementPromotion, AppreciationComment,
-    ChatMessage, Notification
+    ChatMessage, Notification, CompanyChatGroup, CompanyChatGroupMember, CompanyChatMessage
 };

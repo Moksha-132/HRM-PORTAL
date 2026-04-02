@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
 // Check file type
 function checkFileType(file, cb) {
     // Allowed ext
-    const filetypes = /jpeg|jpg|png|gif|webp|avif|svg|pdf|doc|docx|xls|xlsx|txt/;
+    const filetypes = /jpeg|jpg|png|gif|webp|avif|svg|pdf|doc|docx|xls|xlsx|txt|webm|mp3|wav|ogg|m4a/;
     // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     // Check mime
@@ -24,12 +24,18 @@ function checkFileType(file, cb) {
         file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
         file.mimetype === 'application/vnd.ms-excel' ||
         file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        file.mimetype === 'text/plain';
+        file.mimetype === 'text/plain' ||
+        file.mimetype === 'audio/webm' ||
+        file.mimetype === 'audio/mpeg' ||
+        file.mimetype === 'audio/wav' ||
+        file.mimetype === 'audio/ogg' ||
+        file.mimetype === 'audio/mp4' ||
+        file.mimetype === 'audio/x-m4a';
 
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb('Error: Images and Documents Only (PDF, DOC, DOCX, XLS, XLSX, TXT)!');
+        cb('Error: Images, Audio, and Documents Only (PDF, DOC, DOCX, XLS, XLSX, TXT, MP3, WAV, OGG, M4A, WEBM)!');
     }
 }
 

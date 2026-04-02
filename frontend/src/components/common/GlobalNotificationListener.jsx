@@ -101,7 +101,9 @@ const GlobalNotificationListener = () => {
       }, 8000);
     });
 
-    setPermission(getDesktopNotificationPermission());
+    socket.on('chat-message-deleted', (data) => {
+      window.dispatchEvent(new CustomEvent('chat-message-deleted', { detail: data }));
+    });
 
     return () => {
       socket.disconnect();

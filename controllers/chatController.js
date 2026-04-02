@@ -9,6 +9,8 @@ const path = require('path');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
 
+const normalizeIdentity = (value) => (value || '').toString().trim().toLowerCase();
+
 // Helper function to send global notifications
 const sendGlobalNotification = async (notificationData) => {
     try {
@@ -396,7 +398,8 @@ exports.handleChat = async (req, res) => {
             status,
             timestamp: new Date(),
             fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
-            fileType: req.file ? req.file.mimetype : null
+            fileType: req.file ? req.file.mimetype : null,
+            deleted: false
         });
 
         // Add Notification for Admin if user is not admin
@@ -449,7 +452,8 @@ exports.handleChat = async (req, res) => {
             response: responseText,
             id: record.id,
             timestamp: record.timestamp,
-            fileUrl: record.fileUrl
+            fileUrl: record.fileUrl,
+            deleted: record.deleted
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
@@ -635,6 +639,55 @@ exports.updateChatResponse = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: chat });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+};
+
+exports.deleteMessageForEveryone = async (req, res) => {
+    try {
+        const chat = await ChatMessage.findByPk(req.params.id);
+        if (!chat) return res.status(404).json({ success: false, error: 'Chat not found' });
+
+        const requestedDeleted = req.body?.deleted;
+        if (requestedDeleted !== true) {
+            return res.status(400).json({ success: false, error: 'deleted must be true' });
+        }
+
+        const authHeader = req.headers.authorization || '';
+        let requesterRole = '';
+        let requesterId = normalizeIdentity(req.body?.userId || req.body?.requesterId);
+
+        if (authHeader.startsWith('Bearer ')) {
+            try {
+                const token = authHeader.split(' ')[1];
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                requesterRole = normalizeIdentity(decoded.role);
+                requesterId = requesterId || normalizeIdentity(decoded.email || decoded.userId || decoded.id);
+            } catch {
+                return res.status(401).json({ success: false, error: 'Not authorized' });
+            }
+        }
+
+        const isPrivileged = ['admin', 'super admin'].includes(requesterRole);
+        if (!isPrivileged && requesterId !== normalizeIdentity(chat.userId)) {
+            return res.status(403).json({ success: false, error: 'Forbidden' });
+        }
+
+        await chat.update({ deleted: true });
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('chat-message-deleted', {
+                id: chat.id,
+                userId: chat.userId,
+                role: chat.role,
+                deleted: true,
+                timestamp: new Date()
+            });
+        }
+
+        return res.status(200).json({ success: true, data: chat });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

@@ -22,7 +22,13 @@ const AdminChatPanel = ({ token, onUpdated }) => {
     }
   };
 
-  React.useEffect(() => { fetchChats(); }, []);
+  React.useEffect(() => { fetchChats(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    const handleDeleted = () => fetchChats();
+    window.addEventListener('chat-message-deleted', handleDeleted);
+    return () => window.removeEventListener('chat-message-deleted', handleDeleted);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const makeSessionKey = React.useCallback((userId, role) => `${userId}__${(role || 'public').toLowerCase()}`, []);
 
@@ -33,21 +39,21 @@ const AdminChatPanel = ({ token, onUpdated }) => {
       const role = (c.role || 'public').toLowerCase();
       const key = makeSessionKey(c.userId, role);
       if (!groups[key]) {
-        groups[key] = {
-          key,
-          userId: c.userId,
-          role,
-          lastMsg: c.message,
-          lastAt: c.timestamp,
-          needsAction: false,
-          messages: []
-        };
+          groups[key] = {
+            key,
+            userId: c.userId,
+            role,
+            lastMsg: c.deleted ? 'This message was deleted' : c.message,
+            lastAt: c.timestamp,
+            needsAction: false,
+            messages: []
+          };
       }
       groups[key].messages.push(c);
       if (c.status === 'NeedsAdmin') groups[key].needsAction = true;
       if (c.timestamp && new Date(c.timestamp) > new Date(groups[key].lastAt || 0)) {
         groups[key].lastAt = c.timestamp;
-        groups[key].lastMsg = c.message;
+        groups[key].lastMsg = c.deleted ? 'This message was deleted' : c.message;
       }
     });
     // Sort groups by most recent message in the group
@@ -186,8 +192,8 @@ const AdminChatPanel = ({ token, onUpdated }) => {
                       <div style={{fontWeight:'600', fontSize:'11px', marginBottom:'4px'}}>
                         {isAdmin ? 'You (Admin)' : `${msg.userId} (${msg.role})`}
                       </div>
-                      <div>{msg.message}</div>
-                      {msg.fileUrl && (
+                      <div>{msg.deleted ? 'This message was deleted' : msg.message}</div>
+                      {msg.fileUrl && !msg.deleted && (
                         <div style={{marginTop:'8px'}}>
                           {msg.fileType?.startsWith('image/') ? (
                             <img src={msg.fileUrl} style={{maxHeight:'100px', borderRadius:'6px', cursor:'pointer'}} onClick={() => window.open(msg.fileUrl, '_blank')} />
@@ -200,7 +206,7 @@ const AdminChatPanel = ({ token, onUpdated }) => {
                     </div>
 
                     {/* The Response: only if it's a User record and has a response attached */}
-                    {!isAdmin && msg.response && (
+                    {!isAdmin && msg.response && !msg.deleted && (
                       <div className="cb-bubble user" style={{maxWidth:'85%', marginLeft:'auto', background:'var(--cb-primary)', color:'#fff', marginTop:'8px'}}>
                         <div style={{fontWeight:'600', fontSize:'11px', marginBottom:'4px'}}>Your Response (Admin/AI)</div>
                         {editingId === msg.id ? (

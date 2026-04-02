@@ -1,6 +1,9 @@
 import React from 'react';
 import MessageBubble from './MessageBubble.jsx';
-import AdminChatPanel from './AdminChatPanel.jsx';
+import FullEmojiPicker from '../shared/FullEmojiPicker.jsx';
+import AudioAttachment from '../shared/AudioAttachment.jsx';
+import useVoiceRecorder from '../../hooks/useVoiceRecorder.js';
+
 const ChatWindow = ({
   open,
   roleConfig,
@@ -12,14 +15,24 @@ const ChatWindow = ({
   activeTab,
   onTabChange,
   historyPanel,
-  onClear
+  onClear,
+  onDeleteForEveryone
 }) => {
   const [input, setInput] = React.useState('');
   const [file, setFile] = React.useState(null);
   const [showEmoji, setShowEmoji] = React.useState(false);
   const listRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
-  const emojiPickerRef = React.useRef(null);
+  const {
+    isRecording,
+    recordingError,
+    recordedFile,
+    recordedUrl,
+    setRecordingError,
+    startRecording,
+    stopRecording,
+    clearRecordedAudio,
+  } = useVoiceRecorder();
 
   React.useEffect(() => {
     if (listRef.current) {
@@ -27,18 +40,18 @@ const ChatWindow = ({
     }
   }, [messages, activeTab, open]);
 
-  // Handle Emoji Selection
   React.useEffect(() => {
-    const picker = emojiPickerRef.current;
-    if (picker) {
-      const handleEmoji = (e) => {
-        setInput(prev => prev + e.detail.unicode);
-        setShowEmoji(false);
-      };
-      picker.addEventListener('emoji-click', handleEmoji);
-      return () => picker.removeEventListener('emoji-click', handleEmoji);
-    }
-  }, [showEmoji]);
+    if (recordedFile) setFile(recordedFile);
+  }, [recordedFile]);
+
+  const toggleInputEmoji = (emoji) => {
+    setInput((current) => (
+      current.includes(emoji)
+        ? current.split(emoji).join('').replace(/\s{2,}/g, ' ').trim()
+        : `${current}${current ? ' ' : ''}${emoji}`.trim()
+    ));
+    setShowEmoji(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,12 +60,17 @@ const ChatWindow = ({
     onSend(text, file);
     setInput('');
     setFile(null);
+    clearRecordedAudio();
+    setRecordingError('');
     setShowEmoji(false);
   };
 
   const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected) setFile(selected);
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    clearRecordedAudio();
+    setRecordingError('');
+    setFile(selected);
   };
 
   return (
@@ -63,60 +81,97 @@ const ChatWindow = ({
           <div className="cb-header-title">{roleConfig.title}</div>
           <div className="cb-header-sub">{roleConfig.subtitle}</div>
         </div>
-        {onClear && (
+        {onClear ? (
           <div className="cb-header-actions">
             <button type="button" onClick={onClear}>Clear</button>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {historyPanel && (
+      {historyPanel ? (
         <div className="cb-tabs">
           <button className={`cb-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => onTabChange('chat')}>Chat</button>
           <button className={`cb-tab ${activeTab === 'history' ? 'active' : ''}`} onClick={() => onTabChange('history')}>History</button>
         </div>
-      )}
+      ) : null}
 
-      {activeTab === 'chat' && (
+      {activeTab === 'chat' ? (
         <>
           <div className="cb-messages" ref={listRef}>
             {messages.map((m, idx) => (
-              <MessageBubble 
-                key={idx} 
-                role={m.role} 
-                text={m.text} 
-                fileUrl={m.fileUrl} 
-                fileType={m.fileType} 
-                senderName={m.senderName} 
+              <MessageBubble
+                key={idx}
+                messageId={m.id}
+                role={m.role}
+                text={m.text}
+                fileUrl={m.fileUrl}
+                fileType={m.fileType}
+                senderName={m.senderName}
+                timestamp={m.timestamp}
+                deleted={m.deleted}
+                onDeleteForEveryone={onDeleteForEveryone}
               />
             ))}
-            {loading && <MessageBubble role="bot" text="Typing..." senderName="Assistant" />}
+            {loading ? <MessageBubble role="bot" text="Typing..." senderName="Assistant" timestamp={new Date().toISOString()} /> : null}
 
-            {suggestions && suggestions.length > 0 && (
+            {suggestions && suggestions.length > 0 ? (
               <div className="cb-chips">
                 {suggestions.map((s) => (
                   <button key={s} className="cb-chip" onClick={() => onSuggestionClick(s)}>{s}</button>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
 
-          {file && (
-            <div className="cb-file-preview" style={{ padding: '8px 12px', background: '#f1f5f9', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>📎 {file.name}</span>
-              <button style={{ border: 'none', background: 'none', color: '#64748b', cursor: 'pointer' }} onClick={() => setFile(null)}>✕</button>
+          {recordingError ? <div className="cb-voice-note error">{recordingError}</div> : null}
+          {isRecording ? (
+            <div className="cb-voice-note">
+              <span className="cb-voice-dot" />
+              <span>Recording...</span>
             </div>
-          )}
+          ) : null}
 
-          {showEmoji && (
-            <div className="cb-emoji-popover" style={{ position: 'absolute', bottom: '60px', left: '10px', zIndex: 10 }}>
-              <emoji-picker ref={emojiPickerRef}></emoji-picker>
+          {file ? (
+            <div className="cb-file-preview">
+              <div className="cb-file-preview-content">
+                <span>📎 {file.name}</span>
+                {file.type?.startsWith('audio/') && recordedUrl ? (
+                  <AudioAttachment
+                    src={recordedUrl}
+                    className="cb-audio-wrap compact"
+                    controlsClassName="cb-audio-player"
+                    metaClassName="cb-audio-duration"
+                  />
+                ) : null}
+              </div>
+              <button type="button" className="cb-file-preview-remove" onClick={() => { setFile(null); clearRecordedAudio(); }}>✕</button>
             </div>
-          )}
+          ) : null}
 
-          <form className="cb-input" onSubmit={handleSubmit} style={{ position: 'relative' }}>
-            <button type="button" className="cb-icon-btn" title="Emoji" onClick={() => setShowEmoji(!showEmoji)}>😊</button>
-            <button type="button" className="cb-icon-btn" title="Attach File" onClick={() => fileInputRef.current.click()}>📎</button>
+          {showEmoji ? (
+            <div className="cb-emoji-popover">
+              <FullEmojiPicker className="cb-full-emoji-picker" onEmojiSelect={toggleInputEmoji} />
+            </div>
+          ) : null}
+
+          <form className="cb-input" onSubmit={handleSubmit}>
+            <button type="button" className="cb-icon-btn" title="Emoji" onClick={() => setShowEmoji((current) => !current)}>
+              😊
+            </button>
+            <button type="button" className="cb-icon-btn" title="Attach File" onClick={() => fileInputRef.current?.click()}>
+              📎
+            </button>
+            <button
+              type="button"
+              className={`cb-icon-btn cb-mic-btn ${isRecording ? 'recording' : ''}`}
+              title={isRecording ? 'Stop Recording' : 'Record Voice'}
+              onClick={() => {
+                if (isRecording) stopRecording();
+                else startRecording();
+              }}
+            >
+              <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'}`} aria-hidden="true" />
+            </button>
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
             <input
               type="text"
@@ -127,9 +182,9 @@ const ChatWindow = ({
             <button type="submit">Send</button>
           </form>
         </>
-      )}
+      ) : null}
 
-      {historyPanel && activeTab === 'history' && historyPanel}
+      {historyPanel && activeTab === 'history' ? historyPanel : null}
     </div>
   );
 };

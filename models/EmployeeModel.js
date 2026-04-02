@@ -77,6 +77,14 @@ const Employee = sequelize.define('Employee', {
     location: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    avatar: {
+        type: DataTypes.TEXT('long'),
+        allowNull: true
+    },
+    company_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
 }, {
     tableName: 'employees',

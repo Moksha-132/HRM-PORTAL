@@ -66,7 +66,7 @@ const ChatbotApp = () => {
   };
 
   const seedGreeting = () => {
-    setMessages([{ role: 'bot', text: theme.greeting }]);
+    setMessages([{ role: 'bot', text: theme.greeting, timestamp: new Date().toISOString() }]);
   };
 
   const fetchHistory = async () => {
@@ -86,12 +86,25 @@ const ChatbotApp = () => {
       }
       const built = [];
       data.data.forEach((item) => {
+        if (item.deleted) {
+          built.push({
+            id: item.id,
+            role: item.sender_type === 'Admin' ? 'bot' : 'user',
+            text: 'This message was deleted',
+            fileUrl: null,
+            fileType: null,
+            senderName: item.sender_type === 'Admin' ? 'Admin' : 'You',
+            timestamp: item.timestamp,
+            deleted: true,
+          });
+          return;
+        }
         if (item.sender_type === 'Admin') {
-          built.push({ role: 'bot', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType, senderName: 'Admin' });
+          built.push({ id: item.id, role: 'bot', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType, senderName: 'Admin', timestamp: item.timestamp, deleted: false });
         } else {
-          built.push({ role: 'user', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType });
+          built.push({ id: item.id, role: 'user', text: item.message, fileUrl: item.fileUrl, fileType: item.fileType, timestamp: item.timestamp, senderName: 'You', deleted: false });
           if (item.response) {
-            built.push({ role: 'bot', text: item.response, senderName: 'Assistant' });
+            built.push({ id: `${item.id}-response`, role: 'bot', text: item.response, senderName: 'Assistant', timestamp: item.timestamp, deleted: false });
           }
         }
       });
@@ -106,7 +119,14 @@ const ChatbotApp = () => {
     fetchHistory();
     const poll = setInterval(fetchHistory, 10000);
     return () => clearInterval(poll);
-  }, [role, isAdmin]);
+  }, [role, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    if (isAdmin) return undefined;
+    const handleDeleted = () => fetchHistory();
+    window.addEventListener('chat-message-deleted', handleDeleted);
+    return () => window.removeEventListener('chat-message-deleted', handleDeleted);
+  }, [isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     if (isAdmin) return;
@@ -114,14 +134,16 @@ const ChatbotApp = () => {
     fetchHistory();
     const t = setInterval(fetchHistory, 15000);
     return () => clearInterval(t);
-  }, [open, role, isAdmin]);
+  }, [open, role, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = async (text, file = null) => {
     const userMessage = { 
       role: 'user', 
       text, 
       fileUrl: file ? URL.createObjectURL(file) : null,
-      fileType: file ? file.type : null
+      fileType: file ? file.type : null,
+      timestamp: new Date().toISOString(),
+      deleted: false
     };
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
@@ -147,15 +169,18 @@ const ChatbotApp = () => {
       if (!res.ok) throw new Error(data.error || 'Chat failed');
 
       setMessages(prev => [...prev, { 
+        id: data.id,
         role: 'bot', 
         text: data.response,
         fileUrl: data.fileUrl,
         fileType: data.fileType,
-        senderName: 'Assistant'
+        senderName: 'Assistant',
+        timestamp: new Date().toISOString(),
+        deleted: false
       }]);
       fetchHistory();
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'bot', text: `Error: ${e.message}` }]);
+      setMessages(prev => [...prev, { role: 'bot', text: `Error: ${e.message}`, timestamp: new Date().toISOString() }]);
     } finally {
       setLoading(false);
     }
@@ -163,6 +188,23 @@ const ChatbotApp = () => {
 
   const handleSuggestion = (text) => {
     sendMessage(text);
+  };
+
+  const deleteMessageForEveryone = async (messageId) => {
+    if (!messageId) return;
+    const token = getStored('shnoor_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const userId = getUserId();
+
+    const res = await fetch(`/api/messages/${encodeURIComponent(messageId)}/delete`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ deleted: true, userId, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete message');
+    await fetchHistory();
   };
 
   const suggestions = role === 'public' && messages.length === 1 ? theme.suggestions : [];
@@ -188,6 +230,7 @@ const ChatbotApp = () => {
         onTabChange={setActiveTab}
         historyPanel={historyPanel}
         onClear={handleClear}
+        onDeleteForEveryone={deleteMessageForEveryone}
       />
     </div>
   );

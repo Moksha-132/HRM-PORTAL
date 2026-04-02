@@ -11,8 +11,8 @@ const UserHistoryPanel = ({ items, onRefresh }) => {
       )}
       {items && items.map((chat) => (
         <div key={chat.id} className="cb-history-item">
-          <div className="cb-history-q"><strong>Q:</strong> {chat.message}</div>
-          <div className="cb-history-a"><strong>A:</strong> {chat.response}</div>
+          <div className="cb-history-q"><strong>Q:</strong> {chat.deleted ? 'This message was deleted' : chat.message}</div>
+          <div className="cb-history-a"><strong>A:</strong> {chat.deleted ? 'This message was deleted' : chat.response}</div>
           <div className="cb-history-time">{new Date(chat.timestamp).toLocaleString()}</div>
         </div>
       ))}

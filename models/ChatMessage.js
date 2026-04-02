@@ -45,6 +45,11 @@ const ChatMessage = sequelize.define('ChatMessage', {
     fileType: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    deleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     tableName: 'chat_messages',

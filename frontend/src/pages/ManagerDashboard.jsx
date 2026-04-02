@@ -21,6 +21,8 @@ import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
 import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
+import ManagerProfileView from '../components/manager/ManagerProfileView';
+import CompanyChatWorkspace from '../components/chat/CompanyChatWorkspace';
 
 // Employee Components (for Self Portal)
 import EmployeeOverviewView from '../components/employee/EmployeeOverviewView';
@@ -38,17 +40,83 @@ import EmployeeRemainingLeavesView from '../components/employee/EmployeeRemainin
 import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeavesView';
 import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
-import ManagerProfileView from '../components/manager/ManagerProfileView';
-
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+
+const TrialBanner = ({ userData }) => {
+  const isManager = userData?.role === 'Manager';
+  if (!userData || !isManager) return null;
+
+  const trialEnd = userData.trialEndDate
+    ? new Date(userData.trialEndDate)
+    : new Date(new Date(userData.createdAt).getTime() + 15 * 24 * 60 * 60 * 1000);
+
+  const now = new Date();
+  const diff = trialEnd - now;
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const remaining = days > 0 ? days : 0;
+
+  let statusMessage = '';
+  let bannerColor = '';
+  let iconClass = '';
+
+  if (remaining <= 0) {
+    statusMessage = 'Your trial period has expired. Please contact admin.';
+    bannerColor = '#fee2e2';
+    iconClass = 'fa-hourglass-end';
+  } else if (remaining <= 3) {
+    statusMessage = `Your trial is expiring soon. ${remaining} days left.`;
+    bannerColor = '#ffedd5';
+    iconClass = 'fa-hourglass-half';
+  } else {
+    statusMessage = `Your trial period is active. ${remaining} days remaining.`;
+    bannerColor = '#f0fdf4';
+    iconClass = 'fa-hourglass-start';
+  }
+
+  return (
+    <div style={{
+      background: bannerColor,
+      border: `1px solid ${remaining <= 3 ? '#fdba74' : '#86efac'}`,
+      borderLeftWidth: '6px',
+      color: remaining <= 3 ? '#9a3412' : '#166534',
+      padding: '16px 24px',
+      borderRadius: '12px',
+      marginBottom: '24px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      fontWeight: 600,
+      fontSize: '0.95rem',
+    }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <i className={`fas ${iconClass}`} style={{ fontSize: '1.2rem' }} />
+        <span>{statusMessage}</span>
+      </div>
+      <div
+        style={{
+          background: 'rgba(255, 255, 255, 0.5)',
+          padding: '4px 12px',
+          borderRadius: '20px',
+          fontSize: '0.85rem',
+          border: '1px solid currentColor',
+        }}
+      >
+        <b>{remaining} Days Left</b>
+      </div>
+    </div>
+  );
+};
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
-  const [portalMode, setPortalMode] = useState('manager'); // 'self' or 'manager'
+  const [portalMode, setPortalMode] = useState('manager');
   const [email, setEmail] = useState('manager@shnoor.com');
   const [userData, setUserData] = useState(null);
   const [profile, setProfile] = useState(null);
+
   const handleProfileUpdated = (nextProfile) => {
     setProfile(nextProfile);
     if (nextProfile?.email) setEmail(nextProfile.email);
@@ -85,7 +153,9 @@ const ManagerDashboard = () => {
       },
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
+      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
+      { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
     ],
     []
   );
@@ -99,10 +169,10 @@ const ManagerDashboard = () => {
         label: 'Leaves',
         icon: 'fas fa-calendar-alt',
         children: [
-        { id: 'leaves', label: 'Leaves' },
-        { id: 'remaining_leaves', label: 'Remaining Leaves' },
-        { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
-        { id: 'paid_leaves', label: 'Paid Leaves' },
+          { id: 'leaves', label: 'Leaves' },
+          { id: 'remaining_leaves', label: 'Remaining Leaves' },
+          { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
+          { id: 'paid_leaves', label: 'Paid Leaves' },
         ],
       },
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
@@ -113,6 +183,7 @@ const ManagerDashboard = () => {
       { id: 'payroll', label: 'Payroll', icon: 'fas fa-money-check-alt' },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
+      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
     ],
     []
@@ -136,9 +207,7 @@ const ManagerDashboard = () => {
     return null;
   };
 
-  const pageTitle = useMemo(() => {
-    return resolveLabel(navItems, activeView) || 'Dashboard';
-  }, [activeView, navItems]);
+  const pageTitle = useMemo(() => resolveLabel(navItems, activeView) || 'Dashboard', [activeView, navItems]);
 
   useEffect(() => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
@@ -155,7 +224,6 @@ const ManagerDashboard = () => {
       navigate('/employee', { replace: true });
       return;
     }
-    setEmail(sessionStorage.getItem('shnoor_email') || localStorage.getItem('shnoor_email') || 'manager@shnoor.com');
   }, [navigate]);
 
   useEffect(() => {
@@ -171,72 +239,9 @@ const ManagerDashboard = () => {
         console.error('Failed to fetch manager profile:', err);
       }
     };
+
     fetchUser();
   }, []);
-
-  const TrialBanner = () => {
-    const isManager = userData?.role === 'Manager';
-    if (!userData || !isManager) return null;
-    
-    const trialEnd = userData.trialEndDate 
-        ? new Date(userData.trialEndDate) 
-        : new Date(new Date(userData.createdAt).getTime() + 15 * 24 * 60 * 60 * 1000);
-    
-    const now = new Date();
-    const diff = trialEnd - now;
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    const remaining = days > 0 ? days : 0;
-    
-    let statusMessage = "";
-    let bannerColor = "";
-    let iconClass = "";
-
-    if (remaining <= 0) {
-      statusMessage = "Your trial period has expired. Please contact admin.";
-      bannerColor = "#fee2e2"; // soft red
-      iconClass = "fa-hourglass-end";
-    } else if (remaining <= 3) {
-      statusMessage = `Your trial is expiring soon. ${remaining} days left.`;
-      bannerColor = "#ffedd5"; // soft orange/yellow
-      iconClass = "fa-hourglass-half";
-    } else {
-      statusMessage = `Your trial period is active. ${remaining} days remaining.`;
-      bannerColor = "#f0fdf4"; // soft green
-      iconClass = "fa-hourglass-start";
-    }
-    
-    return (
-      <div style={{
-        background: bannerColor,
-        border: `1px solid ${remaining <= 3 ? '#fdba74' : '#86efac'}`,
-        borderLeftWidth: '6px',
-        color: remaining <= 3 ? '#9a3412' : '#166534',
-        padding: '16px 24px',
-        borderRadius: '12px',
-        marginBottom: '24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        fontWeight: 600,
-        fontSize: '0.95rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <i className={`fas ${iconClass}`} style={{ fontSize: '1.2rem' }}></i>
-          <span>{statusMessage}</span>
-        </div>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.5)', 
-          padding: '4px 12px', 
-          borderRadius: '20px', 
-          fontSize: '0.85rem',
-          border: '1px solid currentColor'
-        }}>
-          <b>{remaining} Days Left</b>
-        </div>
-      </div>
-    );
-  };
 
   const handleLogout = () => {
     sessionStorage.removeItem('shnoor_token');
@@ -273,6 +278,7 @@ const ManagerDashboard = () => {
     holidays: ManagerHolidaysView,
     letters: ManagerLettersView,
     profile: ManagerProfileView,
+    'company-chat': CompanyChatWorkspace,
   };
 
   const selfComponents = {
@@ -291,6 +297,7 @@ const ManagerDashboard = () => {
     policies: EmployeePoliciesView,
     letters: EmployeeLettersView,
     profile: ManagerProfileView,
+    'company-chat': CompanyChatWorkspace,
   };
 
   const ViewComponent = portalMode === 'manager' ? managementComponents[activeView] : selfComponents[activeView];
@@ -310,7 +317,7 @@ const ManagerDashboard = () => {
         onPortalChange={handlePortalChange}
         onProfileClick={() => setActiveView('profile')}
       >
-        {activeView === 'dashboard' && <TrialBanner />}
+        {activeView === 'dashboard' && <TrialBanner userData={userData} />}
         {activeView === 'profile' ? <ManagerProfileView onProfileUpdated={handleProfileUpdated} /> : null}
         {activeView !== 'profile' && ViewComponent ? <ViewComponent /> : null}
         {activeView === 'dashboard' && (

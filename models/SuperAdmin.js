@@ -33,6 +33,14 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    avatar: {
+        type: DataTypes.TEXT('long'),
+        allowNull: true
+    },
+    company_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     role: {
         type: DataTypes.ENUM('Super Admin', 'Admin', 'System Admin', 'Company Admin', 'Manager', 'Employee'),
         defaultValue: 'Super Admin'
@@ -42,9 +50,8 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
         allowNull: false,
         validate: {
             notNull: { msg: 'Please add a password' },
-            len: [6, 100] // password length at least 6
+            len: [6, 100]
         }
-        // To exclude from queries by default, in Sequelize we often exclude it in the controller or use a scope
     },
     resetPasswordToken: {
         type: DataTypes.STRING,
@@ -71,7 +78,7 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
         defaultValue: 'Active'
     }
 }, {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true,
     hooks: {
         beforeCreate: async (admin) => {
             if (admin.password) {
@@ -88,7 +95,6 @@ const SuperAdmin = sequelize.define('SuperAdmin', {
     }
 });
 
-// Match user entered password to hashed password in database
 SuperAdmin.prototype.matchPassword = async function(enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };

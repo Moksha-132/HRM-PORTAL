@@ -7,9 +7,7 @@ import EmployeeLeavesView from '../components/employee/EmployeeLeavesView';
 import EmployeeAssetsView from '../components/employee/EmployeeAssetsView';
 import EmployeeCalendarView from '../components/employee/EmployeeCalendarView';
 import EmployeeAppreciationsView from '../components/employee/EmployeeAppreciationsView';
-import EmployeeOffboardingWarningsView from '../components/employee/EmployeeOffboardingWarningsView';
-import EmployeeOffboardingResignationView from '../components/employee/EmployeeOffboardingResignationView';
-import EmployeeOffboardingComplaintsView from '../components/employee/EmployeeOffboardingComplaintsView';
+import EmployeeOffboardingView from '../components/employee/EmployeeOffboardingView';
 import EmployeeExpensesView from '../components/employee/EmployeeExpensesView';
 import EmployeePayrollView from '../components/employee/EmployeePayrollView';
 import EmployeePrePaymentsView from '../components/employee/EmployeePrePaymentsView';
@@ -21,6 +19,7 @@ import EmployeeRemainingLeavesView from '../components/employee/EmployeeRemainin
 import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeavesView';
 import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
+import CompanyChatWorkspace from '../components/chat/CompanyChatWorkspace';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
 import { getProfile } from '../services/employeeService';
 
@@ -29,6 +28,7 @@ const EmployeeDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const [email, setEmail] = useState('emp@shnoor.com');
   const [profile, setProfile] = useState(null);
+
   const handleProfileUpdated = (nextProfile) => {
     setProfile(nextProfile);
     if (nextProfile?.email) setEmail(nextProfile.email);
@@ -38,12 +38,17 @@ const EmployeeDashboard = () => {
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
       { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
-      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', children: [
-        { id: 'leaves', label: 'Leaves' },
-        { id: 'remaining_leaves', label: 'Remaining Leaves' },
-        { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
-        { id: 'paid_leaves', label: 'Paid Leaves' },
-      ]},
+      {
+        id: 'leaves_parent',
+        label: 'Leaves',
+        icon: 'fas fa-calendar-alt',
+        children: [
+          { id: 'leaves', label: 'Leaves' },
+          { id: 'remaining_leaves', label: 'Remaining Leaves' },
+          { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
+          { id: 'paid_leaves', label: 'Paid Leaves' },
+        ],
+      },
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
       { id: 'calendar', label: 'Holiday Calendar', icon: 'fas fa-calendar-day' },
       { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
@@ -70,6 +75,7 @@ const EmployeeDashboard = () => {
       },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
+      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
     ],
     []
@@ -86,9 +92,7 @@ const EmployeeDashboard = () => {
     return null;
   };
 
-  const pageTitle = useMemo(() => {
-    return resolveLabel(navItems, activeView) || 'Dashboard';
-  }, [activeView, navItems]);
+  const pageTitle = useMemo(() => resolveLabel(navItems, activeView) || 'Dashboard', [activeView, navItems]);
 
   useEffect(() => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
@@ -105,16 +109,21 @@ const EmployeeDashboard = () => {
       navigate('/manager', { replace: true });
       return;
     }
+
     setEmail(sessionStorage.getItem('shnoor_email') || localStorage.getItem('shnoor_email') || 'emp@shnoor.com');
 
     const loadProfile = async () => {
       try {
         const res = await getProfile();
-        if (res?.success) setProfile(res.data);
+        if (res?.success) {
+          setProfile(res.data);
+          if (res.data?.email) setEmail(res.data.email);
+        }
       } catch {
         // ignore sidebar profile load failures
       }
     };
+
     loadProfile();
   }, [navigate]);
 
@@ -140,9 +149,7 @@ const EmployeeDashboard = () => {
     assets: EmployeeAssetsView,
     calendar: EmployeeCalendarView,
     appreciations: EmployeeAppreciationsView,
-    'offboarding-warnings': EmployeeOffboardingWarningsView,
-    'offboarding-resignation': EmployeeOffboardingResignationView,
-    'offboarding-complaints': EmployeeOffboardingComplaintsView,
+    offboarding: EmployeeOffboardingView,
     expenses: EmployeeExpensesView,
     payroll: EmployeePayrollView,
     'pre-payments': EmployeePrePaymentsView,
@@ -150,6 +157,7 @@ const EmployeeDashboard = () => {
     policies: EmployeePoliciesView,
     letters: EmployeeLettersView,
     profile: EmployeeProfileView,
+    'company-chat': CompanyChatWorkspace,
   }[activeView];
 
   return (
