@@ -107,6 +107,18 @@ const sendPayrollStatusNotification = async (payroll, status, senderEmail) => {
             type: 'payroll_status_update'
         });
     }
+
+const OFFBOARDING_CATEGORIES = ['Warning', 'Resignation', 'Complaint'];
+const OFFBOARDING_STATUSES = ['Pending', 'In Progress', 'Completed'];
+
+const normalizeOffboardingCategory = (category, fallback = 'Resignation') => {
+    const match = OFFBOARDING_CATEGORIES.find(c => c.toLowerCase() === String(category || '').toLowerCase());
+    return match || fallback;
+};
+
+const normalizeOffboardingStatus = (status, fallback = 'Pending') => {
+    const match = OFFBOARDING_STATUSES.find(s => s.toLowerCase() === String(status || '').toLowerCase());
+    return match || fallback;
 };
 
 // DASHBOARD
@@ -807,7 +819,7 @@ exports.deletePolicy = async (req, res) => {
 // OFFBOARDINGS
 exports.getOffboardings = async (req, res) => {
     try {
-        const obs = await Offboarding.findAll({ include: [Employee] });
+        const obs = await Offboarding.findAll({ include: [Employee], order: [['created_at', 'DESC']] });
         res.status(200).json({ success: true, data: obs });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
@@ -817,7 +829,35 @@ exports.createOffboarding = async (req, res) => {
         const emp = await Employee.findByPk(req.body.employee_id);
         if (!emp) return res.status(400).json({ success: false, error: "Employee not found" });
 
-        const o = await Offboarding.create(req.body);
+        const category = normalizeOffboardingCategory(req.body.category, 'Resignation');
+        if (category === 'Complaint') {
+            return res.status(400).json({ success: false, error: "Complaints can only be raised by employees." });
+        }
+
+        const reason = String(req.body.reason || '').trim();
+        if (!reason) {
+            return res.status(400).json({ success: false, error: "Reason is required." });
+        }
+
+        const payload = {
+            employee_id: emp.employee_id,
+            category,
+            raised_by: 'Manager',
+            reason
+        };
+
+        if (category === 'Resignation') {
+            if (!req.body.last_working_date) {
+                return res.status(400).json({ success: false, error: "Last working date is required for resignation." });
+            }
+            payload.last_working_date = req.body.last_working_date;
+            payload.status = normalizeOffboardingStatus(req.body.status, 'Pending');
+        } else {
+            payload.last_working_date = null;
+            payload.status = normalizeOffboardingStatus(req.body.status, 'Completed');
+        }
+
+        const o = await Offboarding.create(payload);
         const ro = await Offboarding.findByPk(o.offboarding_id, { include: [Employee] });
         res.status(201).json({ success: true, data: ro });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }
@@ -836,9 +876,36 @@ exports.updateOffboarding = async (req, res) => {
     try {
         const o = await Offboarding.findByPk(req.params.id);
         if(!o) return res.status(404).json({ success: false, error: "Not found" });
-        
+
         const oldStatus = o.status;
-        await o.update(req.body);
+
+        const data = {};
+        if (req.body.reason !== undefined) {
+            const reason = String(req.body.reason || '').trim();
+            if (!reason) return res.status(400).json({ success: false, error: "Reason cannot be empty." });
+            data.reason = reason;
+        }
+
+        if (req.body.status !== undefined) {
+            const normalizedStatus = normalizeOffboardingStatus(req.body.status, null);
+            if (!normalizedStatus) {
+                return res.status(400).json({ success: false, error: "Invalid status value." });
+            }
+            data.status = normalizedStatus;
+        }
+
+        if ((o.category || 'Resignation') === 'Resignation') {
+            if (req.body.last_working_date !== undefined) {
+                if (!req.body.last_working_date) {
+                    return res.status(400).json({ success: false, error: "Last working date is required for resignation." });
+                }
+                data.last_working_date = req.body.last_working_date;
+            }
+        } else if (req.body.last_working_date !== undefined) {
+            data.last_working_date = null;
+        }
+
+        await o.update(data);
         const ro = await Offboarding.findByPk(o.offboarding_id, { include: [Employee] });
 
         // NOTIFY STATUS CHANGE

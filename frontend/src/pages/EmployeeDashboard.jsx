@@ -7,7 +7,9 @@ import EmployeeLeavesView from '../components/employee/EmployeeLeavesView';
 import EmployeeAssetsView from '../components/employee/EmployeeAssetsView';
 import EmployeeCalendarView from '../components/employee/EmployeeCalendarView';
 import EmployeeAppreciationsView from '../components/employee/EmployeeAppreciationsView';
-import EmployeeOffboardingView from '../components/employee/EmployeeOffboardingView';
+import EmployeeOffboardingWarningsView from '../components/employee/EmployeeOffboardingWarningsView';
+import EmployeeOffboardingResignationView from '../components/employee/EmployeeOffboardingResignationView';
+import EmployeeOffboardingComplaintsView from '../components/employee/EmployeeOffboardingComplaintsView';
 import EmployeeExpensesView from '../components/employee/EmployeeExpensesView';
 import EmployeePayrollView from '../components/employee/EmployeePayrollView';
 import EmployeePrePaymentsView from '../components/employee/EmployeePrePaymentsView';
@@ -38,8 +40,17 @@ const EmployeeDashboard = () => {
       ]},
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
       { id: 'calendar', label: 'Holiday Calendar', icon: 'fas fa-calendar-day' },
-      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
-      { id: 'offboarding', label: 'Offboarding', icon: 'fas fa-user-minus' },
+      { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
+      {
+        id: 'offboarding',
+        label: 'Offboarding',
+        icon: 'fas fa-user-minus',
+        children: [
+          { id: 'offboarding-warnings', label: 'Warnings', icon: 'fas fa-triangle-exclamation' },
+          { id: 'offboarding-resignation', label: 'Resignation', icon: 'fas fa-right-from-bracket' },
+          { id: 'offboarding-complaints', label: 'Complaints', icon: 'fas fa-comment-dots' },
+        ],
+      },
       { id: 'expenses', label: 'Expenses', icon: 'fas fa-receipt' },
       {
         id: 'payroll-menu',
@@ -58,15 +69,19 @@ const EmployeeDashboard = () => {
     []
   );
 
-  const pageTitle = useMemo(() => {
-    for (const item of navItems) {
-      if (item.id === activeView) return item.label;
+  const resolveLabel = (items, id) => {
+    for (const item of items) {
+      if (item.id === id) return item.label;
       if (Array.isArray(item.children)) {
-        const child = item.children.find((c) => c.id === activeView);
+        const child = item.children.find((x) => x.id === id);
         if (child) return child.label;
       }
     }
-    return 'Dashboard';
+    return null;
+  };
+
+  const pageTitle = useMemo(() => {
+    return resolveLabel(navItems, activeView) || 'Dashboard';
   }, [activeView, navItems]);
 
   useEffect(() => {
@@ -109,7 +124,9 @@ const EmployeeDashboard = () => {
     assets: EmployeeAssetsView,
     calendar: EmployeeCalendarView,
     appreciations: EmployeeAppreciationsView,
-    offboarding: EmployeeOffboardingView,
+    'offboarding-warnings': EmployeeOffboardingWarningsView,
+    'offboarding-resignation': EmployeeOffboardingResignationView,
+    'offboarding-complaints': EmployeeOffboardingComplaintsView,
     expenses: EmployeeExpensesView,
     payroll: EmployeePayrollView,
     'pre-payments': EmployeePrePaymentsView,

@@ -75,6 +75,8 @@ export const submitResignation = async (payload) => {
   return data;
 };
 
+export const submitOffboarding = submitResignation;
+
 export const getExpenses = async () => {
   const { data } = await api.get('/api/v1/employee/expenses');
   return data;

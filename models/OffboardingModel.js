@@ -15,9 +15,19 @@ const Offboarding = sequelize.define('Offboarding', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    category: {
+        type: DataTypes.ENUM('Warning', 'Resignation', 'Complaint'),
+        allowNull: false,
+        defaultValue: 'Resignation'
+    },
+    raised_by: {
+        type: DataTypes.ENUM('Manager', 'Employee'),
+        allowNull: false,
+        defaultValue: 'Employee'
+    },
     last_working_date: {
         type: DataTypes.DATEONLY,
-        allowNull: false
+        allowNull: true
     },
     status: {
         type: DataTypes.ENUM('Pending', 'In Progress', 'Completed'),

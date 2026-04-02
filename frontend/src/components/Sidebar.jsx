@@ -1,24 +1,28 @@
 import React, { useMemo, useState } from 'react';
 import { useSiteLogo } from '../hooks/useSiteLogo';
 
-const Sidebar = ({ 
-  brand, 
-  tag, 
-  navItems, 
-  activeId, 
-  onSelect, 
-  onLogout, 
-  isOpen, 
+const Sidebar = ({
+  brand,
+  tag,
+  navItems,
+  activeId,
+  onSelect,
+  onLogout,
+  isOpen,
   isCollapsed,
   portalMode,
-  onPortalChange
+  onPortalChange,
 }) => {
   const logoUrl = useSiteLogo();
   const [expandedMenus, setExpandedMenus] = useState({});
 
   const navState = useMemo(() => {
     return navItems.map((item) => {
-      const childItems = item.children || item.subItems || [];
+      const childItems = Array.isArray(item.children)
+        ? item.children
+        : Array.isArray(item.subItems)
+          ? item.subItems
+          : [];
       const hasSubItems = childItems.length > 0;
       const hasActiveChild = childItems.some((sub) => sub.id === activeId);
       const isExpanded = hasSubItems && (hasActiveChild || expandedMenus[item.id] === true);
@@ -52,8 +56,7 @@ const Sidebar = ({
         <span className="sidebar-tag">{tag}</span>
       </div>
 
-      {/* Portal Toggle for Managers */}
-      {portalMode && onPortalChange && (
+      {portalMode && onPortalChange ? (
         <div className="sidebar-portal-toggle">
           <button
             type="button"
@@ -70,51 +73,54 @@ const Sidebar = ({
             <i className="fas fa-user-tie" /> <span>Manager</span>
           </button>
         </div>
-      )}
+      ) : null}
 
       <nav className="sidebar-nav">
-        {navState.map((item) => {
-          return (
-            <div key={item.id} className="sidebar-item-group">
-              <button
-                type="button"
-                className={`sidebar-link${item.isActive ? ' active' : ''}${item.hasSubItems ? ' sidebar-parent' : ''}${item.isExpanded ? ' open' : ''}`}
-                aria-expanded={item.hasSubItems ? item.isExpanded : undefined}
-                aria-controls={item.hasSubItems ? `${item.id}-submenu` : undefined}
-                onClick={() => (item.hasSubItems ? toggleMenu(item) : onSelect(item.id))}
-              >
-                <span className="nav-icon">
-                  <i className={item.icon} />
-                </span>
-                {item.label}
-                {item.hasSubItems && (
-                  <span className={`submenu-caret fas fa-chevron-down${item.isExpanded ? ' open' : ''}`} />
-                )}
-              </button>
-              {item.hasSubItems && item.isExpanded && (
-                <div id={`${item.id}-submenu`} className={`sidebar-submenu${item.isExpanded ? ' open' : ''}`}>
-                  {item.childItems.map((sub) => (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      className={`sidebar-sublink${activeId === sub.id ? ' active' : ''}`}
-                      onClick={() => {
-                        setExpandedMenus((prev) => ({ ...prev, [item.id]: true }));
-                        onSelect(sub.id);
-                      }}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {navState.map((item) => (
+          <div key={item.id} className="sidebar-item-group">
+            <button
+              type="button"
+              className={`sidebar-link${item.isActive ? ' active' : ''}${item.hasSubItems ? ' sidebar-parent' : ''}${item.isExpanded ? ' open' : ''}`}
+              aria-expanded={item.hasSubItems ? item.isExpanded : undefined}
+              aria-controls={item.hasSubItems ? `${item.id}-submenu` : undefined}
+              onClick={() => (item.hasSubItems ? toggleMenu(item) : onSelect(item.id))}
+            >
+              <span className="nav-icon">
+                <i className={item.icon} />
+              </span>
+              {item.label}
+              {item.hasSubItems ? (
+                <span className={`submenu-caret fas fa-chevron-down${item.isExpanded ? ' open' : ''}`} />
+              ) : null}
+            </button>
+
+            {item.hasSubItems && item.isExpanded ? (
+              <div id={`${item.id}-submenu`} className={`sidebar-submenu${item.isExpanded ? ' open' : ''}`}>
+                {item.childItems.map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    className={`sidebar-sublink${activeId === sub.id ? ' active' : ''}`}
+                    onClick={() => {
+                      setExpandedMenus((prev) => ({ ...prev, [item.id]: true }));
+                      onSelect(sub.id);
+                    }}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ))}
       </nav>
+
       <div className="sidebar-bottom">
         <button type="button" className="sidebar-link sidebar-logout" onClick={onLogout}>
-          <span className="nav-icon">↩</span> Logout
+          <span className="nav-icon">
+            <i className="fas fa-sign-out-alt" />
+          </span>
+          Logout
         </button>
       </div>
     </aside>

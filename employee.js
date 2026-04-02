@@ -77,6 +77,55 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewId === 'view-letters') fetchLetters();
     }
 
+    let offboardingRecords = [];
+    let activeOffboardingCategory = 'Resignation';
+    const OFFBOARDING_CATEGORIES = ['Warning', 'Resignation', 'Complaint'];
+
+    function getOffboardingCategory(item) {
+        const category = String(item?.category || '').trim();
+        return OFFBOARDING_CATEGORIES.includes(category) ? category : 'Resignation';
+    }
+
+    function setupOffboardingFormUI() {
+        const categorySelect = document.getElementById('off-category');
+        const dateWrap = document.getElementById('off-date-wrap');
+        const dateInput = document.getElementById('off-date');
+        const submitBtn = document.getElementById('off-submit-btn');
+        if (!categorySelect || !dateWrap || !submitBtn) return;
+
+        const isResignation = categorySelect.value === 'Resignation';
+        dateWrap.style.display = isResignation ? 'block' : 'none';
+        if (dateInput) {
+            dateInput.required = isResignation;
+            if (!isResignation) dateInput.value = '';
+        }
+        submitBtn.textContent = isResignation ? 'Initiate Resignation' : 'Raise Complaint';
+    }
+
+    function renderOffboardingList() {
+        const list = document.getElementById('off-list');
+        if (!list) return;
+        const filtered = offboardingRecords.filter(item => getOffboardingCategory(item) === activeOffboardingCategory);
+        if (!filtered.length) {
+            list.innerHTML = '<tr><td colspan="5" style="text-align:center;">No records in this category</td></tr>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(o => {
+            const category = getOffboardingCategory(o);
+            const statusClass = o.status === 'Completed' ? 'bg-green' : 'bg-yellow';
+            return `
+                <tr>
+                    <td><span class="badge bg-yellow">${category}</span></td>
+                    <td>${o.reason || '-'}</td>
+                    <td>${o.last_working_date || '-'}</td>
+                    <td>${o.raised_by || '-'}</td>
+                    <td><span class="badge ${statusClass}">${o.status || 'Pending'}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
     // Navigation logic
     const sections = {
         'nav-dashboard': 'view-dashboard',
@@ -281,24 +330,27 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchOffboardings() {
         try {
             const res = await apiCall('offboarding');
-            document.getElementById('off-list').innerHTML = res.data.map(o => `
-                <tr>
-                    <td>${o.last_working_date}</td>
-                    <td><span class="badge ${o.status === 'Completed' ? 'bg-green' : 'bg-yellow'}">${o.status}</span></td>
-                </tr>
-            `).join('') || '<tr><td colspan="2" style="text-align:center;">No requests</td></tr>';
+            offboardingRecords = Array.isArray(res.data) ? res.data : [];
+            renderOffboardingList();
         } catch (e) { }
     }
 
     document.getElementById('form-off')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
-            await apiCall('offboarding', 'POST', {
-                reason: document.getElementById('off-reason').value,
-                last_working_date: document.getElementById('off-date').value
-            });
-            alert('Resignation request submitted');
+            const category = document.getElementById('off-category').value;
+            const payload = {
+                category,
+                reason: document.getElementById('off-reason').value
+            };
+            if (category === 'Resignation') {
+                payload.last_working_date = document.getElementById('off-date').value;
+            }
+
+            await apiCall('offboarding', 'POST', payload);
+            alert(category === 'Complaint' ? 'Complaint submitted to manager' : 'Resignation request submitted');
             document.getElementById('form-off').reset();
+            setupOffboardingFormUI();
             fetchOffboardings();
         } catch (e) { alert(e.message); }
     });
@@ -839,6 +891,18 @@ document.addEventListener('DOMContentLoaded', () => {
             window.fetchNotifications();
         });
     }
+
+    document.querySelectorAll('.emp-off-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeOffboardingCategory = btn.dataset.category || 'Resignation';
+            document.querySelectorAll('.emp-off-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderOffboardingList();
+        });
+    });
+
+    document.getElementById('off-category')?.addEventListener('change', setupOffboardingFormUI);
+    setupOffboardingFormUI();
 
     // Initial Load
     fetchDashboard();

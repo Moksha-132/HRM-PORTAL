@@ -210,6 +210,32 @@
   padding: 8px 12px;
 }
 
+.dashboard-mode .sidebar-subnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard-mode .sidebar-subtoggle .sidebar-chevron {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.dashboard-mode .sidebar-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 12px;
+  border-left: 1px dashed var(--border);
+  padding-left: 8px;
+}
+
+.dashboard-mode .sidebar-child {
+  font-size: 0.82rem;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
 .dashboard-mode .nav-icon {
   font-size: 1rem;
   width: 20px;

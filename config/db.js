@@ -1,7 +1,5 @@
 const { Sequelize } = require('sequelize');
-const dotenv = require('dotenv');
-
-dotenv.config();
+require('./loadEnv');
 
 const postgresUri = process.env.POSTGRES_URI || process.env.DATABASE_URL;
 

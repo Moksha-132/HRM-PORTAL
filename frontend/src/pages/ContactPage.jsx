@@ -51,7 +51,7 @@ const ContactPage = () => {
       // Successfully submitted
       setSubmitStatus({ loading: false, success: true, error: '' });
       setFormState({ name: '', email: '', subject: '', message: '' });
-    } catch (err) {
+    } catch {
       setSubmitStatus({ loading: false, success: false, error: 'Failed to send message. Please try again later.' });
     }
   };

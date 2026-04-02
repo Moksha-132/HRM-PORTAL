@@ -232,7 +232,30 @@ exports.getPolicies = async (req, res) => {
 // --- OFFBOARDING ---
 exports.submitResignation = async (req, res) => {
     try {
-        const data = { ...req.body, employee_id: req.user.employee_id, status: 'Pending' };
+        const categoryRaw = String(req.body.category || 'Resignation').toLowerCase();
+        const category = categoryRaw === 'complaint' ? 'Complaint' : (categoryRaw === 'resignation' ? 'Resignation' : null);
+        if (!category) {
+            return res.status(400).json({ success: false, error: "Invalid category. Allowed: Resignation, Complaint." });
+        }
+
+        const reason = String(req.body.reason || '').trim();
+        if (!reason) {
+            return res.status(400).json({ success: false, error: "Reason is required." });
+        }
+
+        const data = {
+            employee_id: req.user.employee_id,
+            category,
+            raised_by: 'Employee',
+            reason,
+            status: 'Pending',
+            last_working_date: category === 'Resignation' ? (req.body.last_working_date || null) : null
+        };
+
+        if (category === 'Resignation' && !data.last_working_date) {
+            return res.status(400).json({ success: false, error: "Last working date is required for resignation." });
+        }
+
         const off = await Offboarding.create(data);
         res.status(201).json({ success: true, data: off });
     } catch (err) { res.status(400).json({ success: false, error: err.message }); }

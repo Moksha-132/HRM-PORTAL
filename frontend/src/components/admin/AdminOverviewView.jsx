@@ -30,7 +30,7 @@ const AdminOverviewView = () => {
             admins: adminRes.success ? (adminRes.data || []) : []
           });
         }
-      } catch (err) {
+      } catch {
         if (active) setError('Failed to load dashboard statistics.');
       } finally {
         if (active) setLoading(false);

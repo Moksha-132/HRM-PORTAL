@@ -2,11 +2,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import EditModal from '../EditModal';
 import { createOffboarding, deleteOffboarding, getEmployees, getOffboardings, updateOffboarding } from '../../services/managerService';
 
+const OFFBOARDING_CATEGORIES = ['Warning', 'Resignation', 'Complaint'];
+
+const getCategory = (item) => {
+  const category = String(item?.category || '').trim();
+  return OFFBOARDING_CATEGORIES.includes(category) ? category : 'Resignation';
+};
+
 const ManagerOffboardingsView = () => {
   const [offboardings, setOffboardings] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ employee_id: '', reason: '', last_working_date: '' });
+  const [activeCategory, setActiveCategory] = useState('Resignation');
+  const [form, setForm] = useState({ category: 'Resignation', employee_id: '', reason: '', last_working_date: '' });
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalFields, setModalFields] = useState([]);
@@ -30,17 +38,29 @@ const ManagerOffboardingsView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await createOffboarding(form);
-    setForm({ employee_id: '', reason: '', last_working_date: '' });
+    const payload = {
+      employee_id: form.employee_id,
+      category: form.category,
+      reason: form.reason,
+    };
+    if (form.category === 'Resignation') {
+      payload.last_working_date = form.last_working_date;
+    }
+
+    await createOffboarding(payload);
+    setForm((prev) => ({ ...prev, employee_id: '', reason: '', last_working_date: '' }));
     load();
   };
 
   const openEdit = (item) => {
-    setModalFields([
+    const fields = [
       { label: 'Reason', key: 'reason', value: item.reason, type: 'textarea' },
-      { label: 'Last Date', key: 'last_working_date', value: item.last_working_date, type: 'date' },
       { label: 'Status', key: 'status', value: item.status, type: 'select', options: ['Pending', 'In Progress', 'Completed'] },
-    ]);
+    ];
+    if (getCategory(item) === 'Resignation') {
+      fields.splice(1, 0, { label: 'Last Date', key: 'last_working_date', value: item.last_working_date, type: 'date' });
+    }
+    setModalFields(fields);
     saveRef.current = async (values) => {
       setSaving(true);
       try {
@@ -53,6 +73,9 @@ const ManagerOffboardingsView = () => {
     setModalOpen(true);
   };
 
+  const filteredOffboardings = offboardings.filter((item) => getCategory(item) === activeCategory);
+  const isResignation = form.category === 'Resignation';
+
   return (
     <div className="view">
       <div className="page-header">
@@ -61,10 +84,21 @@ const ManagerOffboardingsView = () => {
       <div className="grid grid-2" style={{ padding: 0 }}>
         <div className="panel">
           <div className="panel-head">
-            <div className="panel-title">Initiate Resignation</div>
+            <div className="panel-title">Create Offboarding Record</div>
           </div>
           <div className="panel-body">
             <form onSubmit={handleSubmit}>
+              <label className="form-label">Category</label>
+              <select
+                className="input"
+                value={form.category}
+                onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value, last_working_date: '' }))}
+                required
+              >
+                <option value="Resignation">Resignation</option>
+                <option value="Warning">Warning</option>
+              </select>
+
               <label className="form-label">Employee</label>
               <select className="input" value={form.employee_id} onChange={(e) => setForm((prev) => ({ ...prev, employee_id: e.target.value }))} required>
                 <option value="">Select Member</option>
@@ -74,25 +108,50 @@ const ManagerOffboardingsView = () => {
                   </option>
                 ))}
               </select>
-              <label className="form-label">Reason for Departure</label>
+
+              <label className="form-label">Details</label>
               <textarea className="input" value={form.reason} onChange={(e) => setForm((prev) => ({ ...prev, reason: e.target.value }))} required />
-              <label className="form-label">Last Working Date</label>
-              <input className="input" type="date" value={form.last_working_date} onChange={(e) => setForm((prev) => ({ ...prev, last_working_date: e.target.value }))} required />
+
+              {isResignation ? (
+                <>
+                  <label className="form-label">Last Working Date</label>
+                  <input className="input" type="date" value={form.last_working_date} onChange={(e) => setForm((prev) => ({ ...prev, last_working_date: e.target.value }))} required />
+                </>
+              ) : null}
+
               <button type="submit" className="btn btn-solid" style={{ width: '100%' }}>
-                Confirm Offboarding
+                {isResignation ? 'Confirm Resignation' : 'Issue Warning'}
               </button>
             </form>
           </div>
         </div>
         <div className="panel">
+          <div className="panel-head" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+            <div className="panel-title">Offboarding Sublist</div>
+          </div>
+          <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {OFFBOARDING_CATEGORIES.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className={`btn ${activeCategory === category ? 'btn-solid' : 'btn-outline'}`}
+                onClick={() => setActiveCategory(category)}
+                style={{ padding: '6px 12px' }}
+              >
+                {category === 'Warning' ? 'Warnings' : (category === 'Complaint' ? 'Complaints' : 'Resignation')}
+              </button>
+            ))}
+          </div>
           <div className="table-wrap">
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
+                  <th>Category</th>
                   <th>Emp ID</th>
                   <th>Employee Name</th>
-                  <th>Reason</th>
+                  <th>Details</th>
                   <th>Last Date</th>
+                  <th>Raised By</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -100,23 +159,25 @@ const ManagerOffboardingsView = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center' }}>
+                    <td colSpan={8} style={{ textAlign: 'center' }}>
                       Loading offboardings...
                     </td>
                   </tr>
-                ) : offboardings.length === 0 ? (
+                ) : filteredOffboardings.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center' }}>
-                      No offboarding records.
+                    <td colSpan={8} style={{ textAlign: 'center' }}>
+                      No records in this category.
                     </td>
                   </tr>
                 ) : (
-                  offboardings.map((item) => (
+                  filteredOffboardings.map((item) => (
                     <tr key={item.offboarding_id}>
+                      <td>{getCategory(item)}</td>
                       <td>{item.employee_id}</td>
                       <td>{item.Employee ? item.Employee.employee_name : 'N/A'}</td>
                       <td>{item.reason || 'N/A'}</td>
-                      <td>{item.last_working_date}</td>
+                      <td>{item.last_working_date || '-'}</td>
+                      <td>{item.raised_by || '-'}</td>
                       <td>
                         <span className={`badge ${item.status === 'Completed' ? 'bg-green' : 'bg-yellow'}`}>{item.status}</span>
                       </td>

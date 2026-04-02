@@ -1,4 +1,4 @@
-const dotenv = require('dotenv');
+require('./config/loadEnv');
 // Note: We don't import mongoose anymore. We import sequelize models directly
 const SuperAdmin = require('./models/SuperAdmin');
 const Company = require('./models/Company');
@@ -6,9 +6,6 @@ const Employee = require('./models/EmployeeModel');
 const { HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing } = require('./models/Settings');
 const { sequelize } = require('./config/db');
 const { Department } = require('./models');
-
-// Load env vars
-dotenv.config();
 
 const importData = async () => {
     try {

@@ -433,27 +433,43 @@
         <div class="page-header"><h1 class="page-h1">Offboarding Management</h1></div>
         <div class="grid grid-2" style="padding:0;">
           <div class="panel">
-            <div class="panel-head"><div class="panel-title">Initiate Resignation</div></div>
+            <div class="panel-head"><div class="panel-title">Create Offboarding Record</div></div>
             <div class="panel-body">
               <form id="form-off">
+                <label class="form-label">Category</label>
+                <select id="off-category" class="input" required>
+                  <option value="Resignation">Resignation</option>
+                  <option value="Warning">Warning</option>
+                </select>
+
                 <label class="form-label">Employee</label>
                 <select id="off-emp" class="input" required>
                   <option value="">Select Member</option>
                 </select>
                 
-                <label class="form-label">Reason for Departure</label>
-                <textarea id="off-reason" class="input" placeholder="e.g. Resignation/Contract End" required></textarea>
+                <label class="form-label">Details</label>
+                <textarea id="off-reason" class="input" placeholder="Enter details..." required></textarea>
                 
-                <label class="form-label">Last Working Date</label>
-                <input type="date" id="off-date" class="input" required>
-                <button type="submit" class="btn btn-solid" style="width:100%;">Confirm Offboarding</button>
+                <div id="off-date-wrap">
+                  <label class="form-label">Last Working Date</label>
+                  <input type="date" id="off-date" class="input">
+                </div>
+                <button type="submit" class="btn btn-solid" id="off-submit-btn" style="width:100%;">Confirm Resignation</button>
               </form>
             </div>
           </div>
           <div class="panel">
+            <div class="panel-head" style="border-bottom:none; padding-bottom:0;">
+              <div class="panel-title">Offboarding Sublist</div>
+            </div>
+            <div style="padding:0 16px 12px;">
+              <button type="button" class="btn btn-outline off-filter-btn" data-category="Warning">Warnings</button>
+              <button type="button" class="btn btn-outline off-filter-btn active" data-category="Resignation">Resignation</button>
+              <button type="button" class="btn btn-outline off-filter-btn" data-category="Complaint">Complaints</button>
+            </div>
             <div class="table-wrap">
               <table style="width:100%; border-collapse:collapse;">
-                <thead><tr><th>Emp ID</th><th>Employee Name</th><th>Reason</th><th>Last Date</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Category</th><th>Emp ID</th><th>Employee Name</th><th>Details</th><th>Last Date</th><th>Raised By</th><th>Status</th><th>Actions</th></tr></thead>
                 <tbody id="off-list"></tbody>
               </table>
             </div>

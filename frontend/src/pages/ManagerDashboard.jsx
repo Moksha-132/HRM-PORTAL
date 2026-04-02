@@ -14,7 +14,10 @@ import ManagerPrePaymentsView from '../components/manager/ManagerPrePaymentsView
 import ManagerIncrementPromotionView from '../components/manager/ManagerIncrementPromotionView';
 import ManagerAppreciationsView from '../components/manager/ManagerAppreciationsView';
 import ManagerPoliciesView from '../components/manager/ManagerPoliciesView';
-import ManagerOffboardingsView from '../components/manager/ManagerOffboardingsView';
+import ManagerOffboardingWarningsView from '../components/manager/ManagerOffboardingWarningsView';
+import ManagerOffboardingResignationView from '../components/manager/ManagerOffboardingResignationView';
+import ManagerOffboardingComplaintsView from '../components/manager/ManagerOffboardingComplaintsView';
+import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
 import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
@@ -65,7 +68,17 @@ const ManagerDashboard = () => {
       },
       { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
-      { id: 'offboardings', label: 'Offboardings', icon: 'fas fa-user-minus' },
+      {
+        id: 'offboardings',
+        label: 'Offboarding',
+        icon: 'fas fa-user-minus',
+        children: [
+          { id: 'offboarding-warnings', label: 'Warnings', icon: 'fas fa-triangle-exclamation' },
+          { id: 'offboarding-resignation', label: 'Resignation', icon: 'fas fa-right-from-bracket' },
+          { id: 'offboarding-complaints', label: 'Complaints', icon: 'fas fa-comment-dots' },
+        ],
+      },
+      { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
     ],
     []
@@ -75,12 +88,17 @@ const ManagerDashboard = () => {
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
       { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
-      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', subItems: [
+      {
+        id: 'leaves_parent',
+        label: 'Leaves',
+        icon: 'fas fa-calendar-alt',
+        children: [
         { id: 'leaves', label: 'Leaves' },
         { id: 'remaining_leaves', label: 'Remaining Leaves' },
         { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
         { id: 'paid_leaves', label: 'Paid Leaves' },
-      ]},
+        ],
+      },
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
       { id: 'calendar', label: 'Holiday Calendar', icon: 'fas fa-calendar-day' },
       { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
@@ -96,18 +114,24 @@ const ManagerDashboard = () => {
 
   const navItems = portalMode === 'manager' ? managementNavItems : selfNavItems;
 
-  const pageTitle = useMemo(() => {
-    const findLabel = (items) => {
-      for (const item of items) {
-        if (item.id === activeView) return item.label;
-        if (item.subItems) {
-          const subMatch = findLabel(item.subItems);
-          if (subMatch) return subMatch;
-        }
+  const resolveLabel = (items, id) => {
+    for (const item of items) {
+      if (item.id === id) return item.label;
+      const subItems = Array.isArray(item.children)
+        ? item.children
+        : Array.isArray(item.subItems)
+          ? item.subItems
+          : [];
+      if (subItems.length) {
+        const child = subItems.find((x) => x.id === id);
+        if (child) return child.label;
       }
-      return null;
-    };
-    return findLabel(navItems) || 'Dashboard';
+    }
+    return null;
+  };
+
+  const pageTitle = useMemo(() => {
+    return resolveLabel(navItems, activeView) || 'Dashboard';
   }, [activeView, navItems]);
 
   useEffect(() => {
@@ -232,7 +256,10 @@ const ManagerDashboard = () => {
     payroll: ManagerPayrollView,
     appreciations: ManagerAppreciationsView,
     policies: ManagerPoliciesView,
-    offboardings: ManagerOffboardingsView,
+    'offboarding-warnings': ManagerOffboardingWarningsView,
+    'offboarding-resignation': ManagerOffboardingResignationView,
+    'offboarding-complaints': ManagerOffboardingComplaintsView,
+    finance: ManagerFinanceView,
     holidays: ManagerHolidaysView,
     letters: ManagerLettersView,
   };

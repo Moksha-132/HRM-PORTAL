@@ -5,7 +5,6 @@ import { createEmployee, deleteEmployee, getEmployees, updateEmployee } from '..
 const departments = ['IT / Software Development', 'Human Resources', 'Finance', 'Marketing', 'Sales', 'Operations', 'Management'];
 const designations = ['Software Engineer', 'Senior Software Engineer', 'HR Manager', 'Finance Analyst', 'Marketing Executive', 'Sales Representative', 'Intern-Software Engineer', 'Project Manager', 'Director'];
 const workModes = ['Work from Home', 'Hybrid', 'Work from Office'];
-const locations = ['Odessa, MO (United States)', 'Pune, India', 'Remote', 'London, UK', 'Dubai, UAE'];
 
 const ManagerEmployeesView = () => {
   const [employees, setEmployees] = useState([]);

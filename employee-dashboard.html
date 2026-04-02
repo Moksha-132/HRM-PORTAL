@@ -283,22 +283,36 @@
         <div class="page-header"><h1 class="page-h1">Offboarding Process</h1></div>
         <div class="grid grid-2" style="padding:0;">
           <div class="panel">
-            <div class="panel-head"><div class="panel-title">Submit Resignation</div></div>
+            <div class="panel-head"><div class="panel-title">Raise Request</div></div>
             <div class="panel-body">
               <form id="form-off">
-                <label class="form-label">Reason for Leaving</label>
+                <label class="form-label">Category</label>
+                <select id="off-category" class="input" required>
+                  <option value="Resignation">Resignation</option>
+                  <option value="Complaint">Complaint</option>
+                </select>
+
+                <label class="form-label">Details</label>
                 <textarea id="off-reason" class="input" placeholder="Please provide details..." style="min-height:120px;" required></textarea>
-                <label class="form-label">Proposed Last Working Date</label>
-                <input type="date" id="off-date" class="input" required>
-                <button type="submit" class="btn btn-solid" style="width:100%;">Initiate Exit</button>
+
+                <div id="off-date-wrap">
+                  <label class="form-label">Proposed Last Working Date</label>
+                  <input type="date" id="off-date" class="input">
+                </div>
+                <button type="submit" class="btn btn-solid" id="off-submit-btn" style="width:100%;">Initiate Resignation</button>
               </form>
             </div>
           </div>
           <div class="panel">
-            <div class="panel-head"><div class="panel-title">Request Status</div></div>
+            <div class="panel-head"><div class="panel-title">Offboarding Sublist</div></div>
+            <div style="padding:0 16px 12px;">
+              <button type="button" class="btn btn-outline emp-off-filter-btn" data-category="Warning">Warnings</button>
+              <button type="button" class="btn btn-outline emp-off-filter-btn active" data-category="Resignation">Resignation</button>
+              <button type="button" class="btn btn-outline emp-off-filter-btn" data-category="Complaint">Complaints</button>
+            </div>
             <div class="table-wrap" style="padding:0;">
               <table style="width:100%; border-collapse:collapse;">
-                <thead><tr><th>Exit Date</th><th>Progress</th></tr></thead>
+                <thead><tr><th>Category</th><th>Details</th><th>Last Date</th><th>Raised By</th><th>Status</th></tr></thead>
                 <tbody id="off-list"></tbody>
               </table>
             </div>

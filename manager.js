@@ -205,6 +205,63 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewId === 'view-letters') window.fetchLetters();
     }
 
+    let offboardingRecords = [];
+    let activeOffboardingCategory = 'Resignation';
+    const OFFBOARDING_CATEGORIES = ['Warning', 'Resignation', 'Complaint'];
+
+    function getOffboardingCategory(item) {
+        const category = String(item?.category || '').trim();
+        return OFFBOARDING_CATEGORIES.includes(category) ? category : 'Resignation';
+    }
+
+    function setupOffboardingFormUI() {
+        const categorySelect = document.getElementById('off-category');
+        const dateWrap = document.getElementById('off-date-wrap');
+        const dateInput = document.getElementById('off-date');
+        const submitBtn = document.getElementById('off-submit-btn');
+        if (!categorySelect || !dateWrap || !submitBtn) return;
+
+        const isResignation = categorySelect.value === 'Resignation';
+        dateWrap.style.display = isResignation ? 'block' : 'none';
+        if (dateInput) {
+            dateInput.required = isResignation;
+            if (!isResignation) dateInput.value = '';
+        }
+        submitBtn.textContent = isResignation ? 'Confirm Resignation' : 'Issue Warning';
+    }
+
+    function renderOffboardingList() {
+        const list = document.getElementById('off-list');
+        if (!list) return;
+
+        const filtered = offboardingRecords.filter(item => getOffboardingCategory(item) === activeOffboardingCategory);
+        if (!filtered.length) {
+            list.innerHTML = '<tr><td colspan="8" style="text-align:center;">No records in this category</td></tr>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(o => {
+            const category = getOffboardingCategory(o);
+            const statusClass = o.status === 'Completed' ? 'bg-green' : 'bg-yellow';
+            return `
+            <tr>
+                <td><span class="badge bg-yellow">${category}</span></td>
+                <td>${o.employee_id}</td>
+                <td><strong>${o.Employee ? o.Employee.employee_name : 'N/A'}</strong></td>
+                <td>${o.reason || 'N/A'}</td>
+                <td>${o.last_working_date || '-'}</td>
+                <td>${o.raised_by || '-'}</td>
+                <td><span class="badge ${statusClass}">${o.status || 'Pending'}</span></td>
+                <td>
+                    <button onclick="updateOffboarding(${o.offboarding_id}, 'Completed')" class="action-btn" title="Complete" style="color:green"><i class="fas fa-check-double"></i></button>
+                    <button onclick="editOffboarding(${o.offboarding_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteRecord('offboardings', ${o.offboarding_id}, 'fetchOffboardings')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+
     // --- MODULES ---
 
     window.fetchDashboard = async () => {
@@ -485,20 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.fetchOffboardings = async () => {
         window.refreshTable('off-list');
         const res = await apiCall('offboardings');
-        document.getElementById('off-list').innerHTML = res.data.map(o => `
-            <tr>
-                <td>${o.employee_id}</td>
-                <td><strong>${o.Employee ? o.Employee.employee_name : 'N/A'}</strong></td>
-                <td>${o.reason || 'N/A'}</td>
-                <td>${o.last_working_date}</td>
-                <td><span class="badge ${o.status === 'Completed' ? 'bg-green' : 'bg-yellow'}">${o.status}</span></td>
-                <td>
-                    <button onclick="updateOffboarding(${o.offboarding_id}, 'Completed')" class="action-btn" title="Complete" style="color:green"><i class="fas fa-check-double"></i></button>
-                    <button onclick="editOffboarding(${o.offboarding_id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteRecord('offboardings', ${o.offboarding_id}, 'fetchOffboardings')" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
+        offboardingRecords = Array.isArray(res.data) ? res.data : [];
+        renderOffboardingList();
     };
 
     window.updateOffboarding = async (id, status) => {
@@ -510,11 +555,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await apiCall('offboardings');
         const item = res.data.find(x => x.offboarding_id == id);
         if (!item) return;
-        openEditModal('Offboarding', id, [
+        const fields = [
             { label: 'Reason', key: 'reason', value: item.reason, type: 'textarea' },
-            { label: 'Last Date', key: 'last_working_date', value: item.last_working_date, type: 'date' },
             { label: 'Status', key: 'status', value: item.status, type: 'select', options: ['Pending', 'In Progress', 'Completed'] }
-        ], async (data) => {
+        ];
+
+        if (getOffboardingCategory(item) === 'Resignation') {
+            fields.splice(1, 0, { label: 'Last Date', key: 'last_working_date', value: item.last_working_date, type: 'date' });
+        }
+
+        openEditModal('Offboarding', id, fields, async (data) => {
             await apiCall(`offboardings/${id}`, 'PUT', data);
             window.fetchOffboardings();
         });
@@ -650,12 +700,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-off')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        await apiCall('offboardings', 'POST', {
+        const category = document.getElementById('off-category').value;
+        const payload = {
             employee_id: document.getElementById('off-emp').value,
-            reason: document.getElementById('off-reason').value,
-            last_working_date: document.getElementById('off-date').value
-        });
+            category,
+            reason: document.getElementById('off-reason').value
+        };
+        if (category === 'Resignation') {
+            payload.last_working_date = document.getElementById('off-date').value;
+        }
+
+        await apiCall('offboardings', 'POST', payload);
         document.getElementById('form-off').reset();
+        setupOffboardingFormUI();
         window.fetchOffboardings();
     });
 
@@ -1252,6 +1309,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) { console.error(err); }
     });
+
+    document.querySelectorAll('.off-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeOffboardingCategory = btn.dataset.category || 'Resignation';
+            document.querySelectorAll('.off-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderOffboardingList();
+        });
+    });
+
+    document.getElementById('off-category')?.addEventListener('change', setupOffboardingFormUI);
+    setupOffboardingFormUI();
 
     // Initial Load
     window.fetchDashboard();
