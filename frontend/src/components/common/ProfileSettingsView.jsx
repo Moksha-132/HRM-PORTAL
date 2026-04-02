@@ -12,6 +12,13 @@ const normalizeProfile = (raw) => ({
   profile_photo: raw?.profile_photo || '',
 });
 
+const extractProfilePayload = (payload) => {
+  if (!payload || typeof payload !== 'object') return {};
+  if (payload.data && typeof payload.data === 'object') return payload.data;
+  if (payload.user && typeof payload.user === 'object') return payload.user;
+  return payload;
+};
+
 const initialsFromName = (name) => {
   const text = String(name || '').trim();
   if (!text) return 'U';
@@ -48,7 +55,7 @@ const ProfileSettingsView = ({
       try {
         const res = await loadProfile();
         if (!active || !res?.success) return;
-        const normalized = normalizeProfile(res.data || {});
+        const normalized = normalizeProfile(extractProfilePayload(res));
         setProfile(normalized);
         setPhotoPreview(normalized.profile_photo || '');
         if (onProfileUpdatedRef.current) onProfileUpdatedRef.current(normalized);
@@ -82,6 +89,7 @@ const ProfileSettingsView = ({
     try {
       const formData = new FormData();
       formData.append('name', profile.name || '');
+      formData.append('employee_name', profile.name || '');
       formData.append('phone', profile.phone || '');
       formData.append('department', profile.department || '');
       formData.append('designation', profile.designation || '');
@@ -92,7 +100,7 @@ const ProfileSettingsView = ({
       if (photoFile) formData.append('profile_photo', photoFile);
 
       const res = await saveProfile(formData);
-      const normalized = normalizeProfile(res?.data || profile);
+      const normalized = normalizeProfile(extractProfilePayload(res) || profile);
       setProfile(normalized);
       setPhotoPreview(normalized.profile_photo || '');
       setPhotoFile(null);

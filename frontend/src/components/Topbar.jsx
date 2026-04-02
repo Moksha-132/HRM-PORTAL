@@ -20,11 +20,11 @@ const Topbar = ({ title, roleLabel, roleKey, profile, onToggle }) => {
   return (
     <header className="topbar">
       <button className="sidebar-toggle" type="button" onClick={onToggle} aria-label="Toggle sidebar">
-        ☰
+        &#9776;
       </button>
       <div className="topbar-title">{title}</div>
       <div className="topbar-right">
-        <NotificationBell role={roleKey} />
+        <NotificationBell role={roleKey} profile={profile} />
         <div className="topbar-avatar" title={profileName || profileEmail || 'Profile'}>
           {profilePhoto ? (
             <img src={profilePhoto} alt="Profile" className="topbar-avatar-img" />
