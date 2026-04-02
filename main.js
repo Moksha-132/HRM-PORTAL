@@ -350,6 +350,7 @@ loginForm?.addEventListener('submit', async (e) => {
       sessionStorage.setItem('shnoor_admin', 'true');
       sessionStorage.setItem('shnoor_token', data.token);
       sessionStorage.setItem('shnoor_admin_email', data.user.email);
+      sessionStorage.setItem('shnoor_role', data.user.role);
       
       // Handle post-login redirect
       handlePostLoginRedirect(data.user.role);

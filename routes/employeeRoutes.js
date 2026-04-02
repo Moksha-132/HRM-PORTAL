@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const controller = require('../controllers/employeeController');
 
 // All employee routes are protected
 router.use(protect);
+router.use(authorize('Employee'));
 
 router.get('/dashboard', controller.getDashboardStats);
 
@@ -41,6 +42,10 @@ router.route('/expenses/:id')
 router.get('/payroll', controller.getMyPayroll);
 router.get('/payslips', controller.getMyPayslips);
 router.get('/payslips/:id/download', controller.downloadPayslip);
+router.route('/prepayments')
+    .get(controller.getMyPrePayments)
+    .post(controller.submitPrePayment);
+router.get('/increment-promotions', controller.getMyIncrementPromotions);
 
 router.route('/profile')
     .get(controller.getProfile)

@@ -10,12 +10,12 @@ import ManagerAttendanceView from '../components/manager/ManagerAttendanceView';
 import ManagerLeavesView from '../components/manager/ManagerLeavesView';
 import ManagerAssetsView from '../components/manager/ManagerAssetsView';
 import ManagerPayrollView from '../components/manager/ManagerPayrollView';
+import ManagerPrePaymentsView from '../components/manager/ManagerPrePaymentsView';
+import ManagerIncrementPromotionView from '../components/manager/ManagerIncrementPromotionView';
 import ManagerAppreciationsView from '../components/manager/ManagerAppreciationsView';
 import ManagerPoliciesView from '../components/manager/ManagerPoliciesView';
 import ManagerOffboardingsView from '../components/manager/ManagerOffboardingsView';
-import ManagerFinanceView from '../components/manager/ManagerFinanceView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
-import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
 
 // Employee Components (for Self Portal)
@@ -52,13 +52,20 @@ const ManagerDashboard = () => {
       { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
       { id: 'leaves', label: 'Leaves', icon: 'fas fa-calendar-alt' },
       { id: 'assets', label: 'Assets', icon: 'fas fa-laptop' },
-      { id: 'payroll', label: 'Payroll', icon: 'fas fa-money-check-alt' },
-      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
+      {
+        id: 'payroll-menu',
+        label: 'Payroll',
+        icon: 'fas fa-money-check-alt',
+        children: [
+          { id: 'pre-payments', label: 'Pre Payments' },
+          { id: 'increment-promotion', label: 'Increment / Promotion' },
+          { id: 'payroll', label: 'Payroll' },
+        ],
+      },
+      { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'offboardings', label: 'Offboardings', icon: 'fas fa-user-minus' },
-      { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
-      { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
     ],
     []
   );
@@ -219,11 +226,12 @@ const ManagerDashboard = () => {
     attendance: ManagerAttendanceView,
     leaves: ManagerLeavesView,
     assets: ManagerAssetsView,
+    'pre-payments': ManagerPrePaymentsView,
+    'increment-promotion': ManagerIncrementPromotionView,
     payroll: ManagerPayrollView,
     appreciations: ManagerAppreciationsView,
     policies: ManagerPoliciesView,
     offboardings: ManagerOffboardingsView,
-    finance: ManagerFinanceView,
     holidays: ManagerHolidaysView,
     letters: ManagerLettersView,
   };

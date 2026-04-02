@@ -78,9 +78,19 @@
       <a href="#" class="sidebar-link" id="nav-expenses">
         <span class="nav-icon"><i class="fas fa-receipt"></i></span> Expenses
       </a>
-      <a href="#" class="sidebar-link" id="nav-payroll">
-        <span class="nav-icon"><i class="fas fa-money-check-alt"></i></span> Payroll
-      </a>
+      <div class="payroll-group" id="payroll-group">
+        <a href="#" class="sidebar-link has-children" id="nav-payroll-parent" data-title="Payroll">
+          <span class="sidebar-link-main">
+            <span class="nav-icon"><i class="fas fa-money-check-alt"></i></span> Payroll
+          </span>
+          <span class="sidebar-chevron"><i class="fas fa-chevron-down"></i></span>
+        </a>
+        <div class="sidebar-submenu" id="payroll-submenu">
+          <a href="#" class="sidebar-link sidebar-sublink" id="nav-payroll-prepayments" data-manager-only="true" data-title="Pre Payments">Pre Payments</a>
+          <a href="#" class="sidebar-link sidebar-sublink" id="nav-payroll-increment" data-manager-only="true" data-title="Increment/Promotion">Increment/Promotion</a>
+          <a href="#" class="sidebar-link sidebar-sublink" id="nav-payroll" data-title="Payroll">Payroll</a>
+        </div>
+      </div>
       <a href="#" class="sidebar-link" id="nav-policies">
         <span class="nav-icon"><i class="fas fa-file-contract"></i></span> Policies
       </a>

@@ -100,6 +100,26 @@ export const getPayslips = async () => {
   return data;
 };
 
+export const getMyPayroll = async () => {
+  const { data } = await api.get('/api/v1/employee/payroll');
+  return data;
+};
+
+export const getMyPrePayments = async () => {
+  const { data } = await api.get('/api/v1/employee/prepayments');
+  return data;
+};
+
+export const createMyPrePayment = async (payload) => {
+  const { data } = await api.post('/api/v1/employee/prepayments', payload);
+  return data;
+};
+
+export const getMyIncrementPromotions = async () => {
+  const { data } = await api.get('/api/v1/employee/increment-promotions');
+  return data;
+};
+
 export const getPolicies = async () => {
   const { data } = await api.get('/api/v1/employee/policies');
   return data;

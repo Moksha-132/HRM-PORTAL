@@ -15,6 +15,48 @@ import GlobalNotificationListener from './components/common/GlobalNotificationLi
 
 import ChatbotApp from './components/chatbot/ChatbotApp.jsx';
 
+const getStoredRole = () =>
+  sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+
+const getStoredToken = () =>
+  sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token') || '';
+
+const getDashboardPath = (role) => {
+  if (role === 'Manager') return '/manager';
+  if (role === 'Employee') return '/employee';
+  if (role === 'Admin' || role === 'Super Admin') return '/admin';
+  return '/login';
+};
+
+function HomeRoute() {
+  const token = getStoredToken();
+  const role = getStoredRole();
+
+  return token ? <Navigate to={getDashboardPath(role)} replace /> : <LandingPage />;
+}
+
+function PublicRoute({ children }) {
+  const token = getStoredToken();
+  const role = getStoredRole();
+
+  return token ? <Navigate to={getDashboardPath(role)} replace /> : children;
+}
+
+function ProtectedRoute({ allowedRoles, children }) {
+  const token = getStoredToken();
+  const role = getStoredRole();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(role)) {
+    return <Navigate to={getDashboardPath(role)} replace />;
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -26,9 +68,30 @@ function App() {
         <Route path="/register/admin" element={<AdminRegistration />} />
         <Route path="/register/manager" element={<ManagerRegistration />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/manager" element={<ManagerDashboard />} />
-        <Route path="/employee" element={<EmployeeDashboard />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['Admin', 'Super Admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute allowedRoles={['Manager']}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee"
+          element={
+            <ProtectedRoute allowedRoles={['Employee']}>
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

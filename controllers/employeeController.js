@@ -1,4 +1,4 @@
-const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin, Notification, AppreciationComment } = require('../models');
+const { Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, SuperAdmin, Notification, PrePayment, IncrementPromotion, AppreciationComment } = require('../models');
 const { Op } = require('sequelize');
 
 // Dashboard Statistics
@@ -340,12 +340,11 @@ exports.deleteExpense = async (req, res) => {
 // --- PAYROLL / PAYSLIPS ---
 exports.getMyPayroll = async (req, res) => {
     try {
-        // Display only payroll records that have an associated Payslip (meaning they are "published")
-        const slips = await Payslip.findAll({
+        const payrolls = await Payroll.findAll({
             where: { employee_id: req.user.employee_id },
-            order: [['payment_date', 'DESC']]
+            order: [['payment_date', 'DESC'], ['payroll_id', 'DESC']]
         });
-        res.status(200).json({ success: true, data: slips });
+        res.status(200).json({ success: true, data: payrolls });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 
@@ -353,6 +352,48 @@ exports.getMyPayslips = async (req, res) => {
     try {
         const slips = await Payslip.findAll({ where: { employee_id: req.user.employee_id }, order: [['payment_date', 'DESC']] });
         res.status(200).json({ success: true, data: slips });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+// --- PRE PAYMENTS ---
+exports.submitPrePayment = async (req, res) => {
+    try {
+        const { amount, date, payment_type, remarks } = req.body || {};
+        if (!amount || !date) {
+            return res.status(400).json({ success: false, error: "Amount and date are required" });
+        }
+
+        const data = {
+            employee_id: req.user.employee_id,
+            amount,
+            date,
+            payment_type: payment_type || 'Advance',
+            remarks: remarks || null,
+            status: 'Pending'
+        };
+        const record = await PrePayment.create(data);
+        res.status(201).json({ success: true, data: record });
+    } catch (err) { res.status(400).json({ success: false, error: err.message }); }
+};
+
+exports.getMyPrePayments = async (req, res) => {
+    try {
+        const list = await PrePayment.findAll({
+            where: { employee_id: req.user.employee_id },
+            order: [['created_at', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: list });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
+
+// --- INCREMENT / PROMOTION ---
+exports.getMyIncrementPromotions = async (req, res) => {
+    try {
+        const list = await IncrementPromotion.findAll({
+            where: { employee_id: req.user.employee_id },
+            order: [['created_at', 'DESC']]
+        });
+        res.status(200).json({ success: true, data: list });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 

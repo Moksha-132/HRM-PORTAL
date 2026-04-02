@@ -23,6 +23,8 @@ const Offboarding = require('./OffboardingModel');
 const Payslip = require('./PayslipModel');
 const Holiday = require('./HolidayModel');
 const Letter = require('./LetterModel');
+const PrePayment = require('./PrePaymentModel');
+const IncrementPromotion = require('./IncrementPromotionModel');
 const AppreciationComment = require('./AppreciationCommentModel');
 
 // Define Associations here if necessary
@@ -60,12 +62,17 @@ Employee.hasMany(Payslip, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Letter.belongsTo(SuperAdmin, { as: 'Sender', foreignKey: 'manager_id', onDelete: 'CASCADE' });
 Letter.belongsTo(Employee, { as: 'Recipient', foreignKey: 'employee_id', onDelete: 'CASCADE' });
 
+PrePayment.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(PrePayment, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+
+IncrementPromotion.belongsTo(Employee, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
+Employee.hasMany(IncrementPromotion, { foreignKey: 'employee_id', onDelete: 'CASCADE' });
 Appreciation.hasMany(AppreciationComment, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
 AppreciationComment.belongsTo(Appreciation, { foreignKey: 'appreciation_id', onDelete: 'CASCADE' });
 
 
 module.exports = {
     SuperAdmin, Company, EmailQuery, OfflineRequest, HeaderSetting, WebsiteSetting, AboutSetting, ContactSetting, Feature, Pricing, Subscription, Transaction,
-    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, AppreciationComment,
+    Department, Employee, Attendance, Leave, Asset, Payroll, Expense, Appreciation, CompanyPolicy, Offboarding, Payslip, Holiday, Letter, PrePayment, IncrementPromotion, AppreciationComment,
     ChatMessage, Notification
 };

@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import {
+  getDesktopNotificationPermission,
+  requestDesktopNotificationPermission,
+  showDesktopNotification,
+} from '../../utils/browserNotifications';
 
 const GlobalNotificationListener = () => {
   const [toasts, setToasts] = useState([]);
   const [authVersion, setAuthVersion] = useState(0);
+  const [permission, setPermission] = useState(() => getDesktopNotificationPermission());
 
   useEffect(() => {
     const onAuthChanged = () => setAuthVersion((v) => v + 1);
     window.addEventListener('auth-changed', onAuthChanged);
     window.addEventListener('storage', onAuthChanged);
+    const syncPermission = () => setPermission(getDesktopNotificationPermission());
+    window.addEventListener('focus', syncPermission);
     return () => {
       window.removeEventListener('auth-changed', onAuthChanged);
       window.removeEventListener('storage', onAuthChanged);
+      window.removeEventListener('focus', syncPermission);
     };
   }, []);
 
@@ -19,31 +28,30 @@ const GlobalNotificationListener = () => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
     if (!token) return;
 
-    // Use absolute URL or proxy
     const socket = io('/', {
       transports: ['websocket', 'polling'],
       auth: { token }
     });
 
-    const userEmail = sessionStorage.getItem('shnoor_admin_email') || 
-             sessionStorage.getItem('shnoor_email') || 
-             localStorage.getItem('shnoor_admin_email') ||
-             localStorage.getItem('shnoor_email') ||
-                     'anonymous@user.com';
-    
-    // Simple role inference
+    const userEmail =
+      sessionStorage.getItem('shnoor_admin_email') ||
+      sessionStorage.getItem('shnoor_email') ||
+      localStorage.getItem('shnoor_admin_email') ||
+      localStorage.getItem('shnoor_email') ||
+      'anonymous@user.com';
+
     const inferRole = (email) => {
-      const lower = email.toLowerCase();
+      const lower = String(email || '').toLowerCase();
       if (lower.includes('admin')) return 'admin';
       if (lower.includes('manager')) return 'manager';
       return 'employee';
     };
 
     socket.on('connect', () => {
-      console.log('🔌✅ [React] Connected to Socket.IO');
-      console.log('🔌✅ [React] Socket ID:', socket.id);
-      console.log('🔌✅ [React] User Email:', userEmail);
-      console.log('🔌✅ [React] Registering for global notifications...');
+      console.log('[React] Connected to Socket.IO');
+      console.log('[React] Socket ID:', socket.id);
+      console.log('[React] User Email:', userEmail);
+      socket.emit('join_room', userEmail.toLowerCase());
       socket.emit('register-global-notifications', {
         email: userEmail,
         role: inferRole(userEmail),
@@ -52,32 +60,28 @@ const GlobalNotificationListener = () => {
     });
 
     socket.on('registration-confirmed', (data) => {
-      console.log('🔌✅ [React] Registration confirmed:', data);
+      console.log('[React] Registration confirmed:', data);
     });
 
     socket.on('connect_error', (error) => {
-      console.error('🔌❌ [React] Connection error:', error);
+      console.error('[React] Connection error:', error);
     });
 
     socket.on('disconnect', () => {
-      console.log('🔌❌ [React] Disconnected from Socket.IO');
+      console.log('[React] Disconnected from Socket.IO');
     });
 
     socket.on('error', (error) => {
-      console.error('🔌❌ [React] Socket error:', error);
+      console.error('[React] Socket error:', error);
     });
 
     socket.on('global-notification', (data) => {
-      console.log('🔔📨 [React] Received global notification:', data);
-      
-      // Filter by recipient if specified
       if (data.recipientEmails && data.recipientEmails.length > 0) {
         const userEmailLower = userEmail.toLowerCase();
-        const isRecipient = data.recipientEmails.some(e => e.toLowerCase() === userEmailLower);
+        const isRecipient = data.recipientEmails.some((email) => email.toLowerCase() === userEmailLower);
         if (!isRecipient) return;
       }
 
-      console.log('🔔📨 [React] Showing notification to user');
       const id = Date.now();
       const message = data.preview || data.fullMessage || data.message;
       
@@ -92,16 +96,12 @@ const GlobalNotificationListener = () => {
         });
       }
 
-      // Auto-remove after 8 seconds
       setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
       }, 8000);
     });
 
-    // Request permission on mount
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
+    setPermission(getDesktopNotificationPermission());
 
     return () => {
       socket.disconnect();
@@ -115,21 +115,59 @@ const GlobalNotificationListener = () => {
   };
 
   return (
-    <div 
-      className="global-toast-container" 
-      style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        pointerEvents: 'none'
-      }}
-    >
-      {toasts.map(toast => (
-        <div 
+    <>
+      {permission === 'default' ? (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 10000,
+            background: '#111827',
+            color: '#ffffff',
+            borderRadius: '14px',
+            padding: '14px 16px',
+            width: 'min(360px, calc(100vw - 32px))',
+            boxShadow: '0 12px 30px rgba(0,0,0,0.22)',
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>Enable desktop notifications</div>
+          <div style={{ fontSize: '0.9rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.82)', marginBottom: 12 }}>
+            Click below once to allow real-time payroll alerts on your desktop.
+          </div>
+          <button
+            type="button"
+            onClick={enableDesktopNotifications}
+            style={{
+              background: '#4f46e5',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            Enable Notifications
+          </button>
+        </div>
+      ) : null}
+
+      <div
+        className="global-toast-container"
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          pointerEvents: 'none'
+        }}
+      >
+      {toasts.map((toast) => (
+        <div
           key={toast.id}
           className="global-toast"
           style={{
@@ -164,8 +202,8 @@ const GlobalNotificationListener = () => {
               {toast.message}
             </div>
           </div>
-          <button 
-            onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+          <button
+            onClick={() => setToasts((prev) => prev.filter((toastItem) => toastItem.id !== toast.id))}
             style={{
               background: 'none',
               border: 'none',
@@ -186,7 +224,8 @@ const GlobalNotificationListener = () => {
           to { transform: translateX(0); opacity: 1; }
         }
       `}</style>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -10,6 +10,8 @@ import EmployeeAppreciationsView from '../components/employee/EmployeeAppreciati
 import EmployeeOffboardingView from '../components/employee/EmployeeOffboardingView';
 import EmployeeExpensesView from '../components/employee/EmployeeExpensesView';
 import EmployeePayrollView from '../components/employee/EmployeePayrollView';
+import EmployeePrePaymentsView from '../components/employee/EmployeePrePaymentsView';
+import EmployeeIncrementPromotionView from '../components/employee/EmployeeIncrementPromotionView';
 import EmployeePoliciesView from '../components/employee/EmployeePoliciesView';
 import EmployeeProfileView from '../components/employee/EmployeeProfileView';
 import EmployeeLettersView from '../components/employee/EmployeeLettersView';
@@ -28,7 +30,7 @@ const EmployeeDashboard = () => {
     () => [
       { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-th-large' },
       { id: 'attendance', label: 'Attendance', icon: 'fas fa-clock' },
-      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', subItems: [
+      { id: 'leaves_parent', label: 'Leaves', icon: 'fas fa-calendar-alt', children: [
         { id: 'leaves', label: 'Leaves' },
         { id: 'remaining_leaves', label: 'Remaining Leaves' },
         { id: 'unpaid_leaves', label: 'Unpaid Leaves' },
@@ -39,7 +41,16 @@ const EmployeeDashboard = () => {
       { id: 'appreciations', label: 'Thanks', icon: 'fas fa-thumbs-up' },
       { id: 'offboarding', label: 'Offboarding', icon: 'fas fa-user-minus' },
       { id: 'expenses', label: 'Expenses', icon: 'fas fa-receipt' },
-      { id: 'payroll', label: 'Payroll', icon: 'fas fa-money-check-alt' },
+      {
+        id: 'payroll-menu',
+        label: 'Payroll',
+        icon: 'fas fa-money-check-alt',
+        children: [
+          { id: 'pre-payments', label: 'Pre Payments' },
+          { id: 'increment-promotion', label: 'Increment / Promotion' },
+          { id: 'payroll', label: 'Payroll' },
+        ],
+      },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
@@ -48,17 +59,14 @@ const EmployeeDashboard = () => {
   );
 
   const pageTitle = useMemo(() => {
-    const findLabel = (items) => {
-      for (const item of items) {
-        if (item.id === activeView) return item.label;
-        if (item.subItems) {
-          const subMatch = findLabel(item.subItems);
-          if (subMatch) return subMatch;
-        }
+    for (const item of navItems) {
+      if (item.id === activeView) return item.label;
+      if (Array.isArray(item.children)) {
+        const child = item.children.find((c) => c.id === activeView);
+        if (child) return child.label;
       }
-      return null;
-    };
-    return findLabel(navItems) || 'Dashboard';
+    }
+    return 'Dashboard';
   }, [activeView, navItems]);
 
   useEffect(() => {
@@ -104,6 +112,8 @@ const EmployeeDashboard = () => {
     offboarding: EmployeeOffboardingView,
     expenses: EmployeeExpensesView,
     payroll: EmployeePayrollView,
+    'pre-payments': EmployeePrePaymentsView,
+    'increment-promotion': EmployeeIncrementPromotionView,
     policies: EmployeePoliciesView,
     letters: EmployeeLettersView,
     profile: EmployeeProfileView,

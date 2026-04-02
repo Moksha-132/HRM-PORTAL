@@ -1,11 +1,12 @@
 import { io } from "socket.io-client";
 
-// Use the environment variable for the backend URL, fallback to window.location.origin
-const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin.replace(':5173', ':5000');
+const isDev = import.meta.env.DEV;
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || (isDev ? '/' : window.location.origin);
 
 const socket = io(SOCKET_URL, {
     autoConnect: false,
-    transports: ['websocket'],
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 1000

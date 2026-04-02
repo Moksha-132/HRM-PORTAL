@@ -3,10 +3,9 @@ const { Notification, WebsiteSetting } = require('../models');
 class GlobalNotificationService {
     constructor(io) {
         this.io = io;
-        this.connectedUsers = new Map(); // socketId -> userData
+        this.connectedUsers = new Map();
     }
 
-    // Register user for global notifications
     registerUser(socketId, userData) {
         this.connectedUsers.set(socketId, {
             email: userData.email,
@@ -17,7 +16,6 @@ class GlobalNotificationService {
         console.log(`User ${userData.email} registered for global notifications`);
     }
 
-    // Unregister user
     unregisterUser(socketId) {
         const userData = this.connectedUsers.get(socketId);
         if (userData) {
@@ -26,21 +24,19 @@ class GlobalNotificationService {
         }
     }
 
-    // Build partial preview for security (30-50% of content)
     buildPartialPreview(message, percentage = 0.4) {
         const text = String(message || '');
         if (!text) return '';
-        
+
         const minLength = 20;
         const maxLength = 100;
         let targetLength = Math.max(minLength, Math.floor(text.length * percentage));
         targetLength = Math.min(targetLength, maxLength);
-        
+
         const preview = text.slice(0, targetLength);
-        return targetLength < text.length ? preview + '…' : preview;
+        return targetLength < text.length ? `${preview}...` : preview;
     }
 
-    // Send global desktop notification
     async sendGlobalNotification(notificationData) {
         try {
             console.log('📨 GlobalNotificationService.sendGlobalNotification called with:', notificationData);
@@ -59,13 +55,18 @@ class GlobalNotificationService {
 
             // Store in database for all relevant users
             const notifications = [];
-            
-            // If specific recipients provided, notify only them
-            if (recipientEmails && recipientEmails.length > 0) {
-                for (const email of recipientEmails) {
+
+            if (normalizedRecipientEmails.length > 0) {
+                for (const email of normalizedRecipientEmails) {
+                    const resolvedRole =
+                        recipientRolesByEmail?.[email] ||
+                        recipientRolesByEmail?.[String(email || '').trim()] ||
+                        recipientRole ||
+                        this.inferRoleFromEmail(email);
+
                     const notification = await Notification.create({
-                        userId: email.toLowerCase(),
-                        role: this.inferRoleFromEmail(email),
+                        userId: email,
+                        role: resolvedRole,
                         message,
                         type: type || 'global_message',
                         senderRole,
@@ -75,11 +76,10 @@ class GlobalNotificationService {
                     notifications.push(notification);
                 }
             } else {
-                // Send to ALL users across all roles
                 const allRoles = ['admin', 'employee', 'manager'];
                 for (const role of allRoles) {
                     const notification = await Notification.create({
-                        userId: 'global', // Special identifier for global messages
+                        userId: 'global',
                         role,
                         message,
                         type: type || 'global_message',
@@ -91,79 +91,68 @@ class GlobalNotificationService {
                 }
             }
 
-            // Emit real-time notification to all connected users
-            const partialPreview = this.buildPartialPreview(message);
-            console.log('📡 Emitting Socket.IO notification to room "global-notifications"');
-            console.log('📡 Connected clients in io:', this.io.sockets.sockets.size);
-            console.log('📡 Preview:', partialPreview);
-            
             const notificationPayload = {
                 id: notifications[0]?.id,
                 senderRole,
                 senderEmail,
-                recipientEmails: recipientEmails || [], // Include recipient emails
-                preview: partialPreview,
-                fullMessage: message, // Only sent after login
-                message: message,
+                recipientEmails: normalizedRecipientEmails,
+                preview: this.buildPartialPreview(message),
+                fullMessage: message,
+                message,
                 type: type || 'global_message',
                 logo, // ✅ INCLUDE LOGO
                 timestamp: new Date(),
-                redirectUrl: this.buildRedirectUrl(senderRole, type, recipientEmails)
+                redirectUrl: this.buildRedirectUrl(senderRole, type, normalizedRecipientEmails)
             };
-            
-            console.log('📡 Notification payload:', JSON.stringify(notificationPayload, null, 2));
-            
-            // Emit to all clients in global-notifications room
-            const emitResult = this.io.to('global-notifications').emit('global-notification', notificationPayload);
-            console.log('📡 Emit completed for room "global-notifications"');
-            console.log('📡 Sockets in global-notifications room:', this.io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
 
-            console.log(`🔔 Global notification sent from ${senderRole} to ${notifications.length} users:`, message.substring(0, 50) + '...');
+            this.io.to('global-notifications').emit('global-notification', notificationPayload);
+            console.log('[GlobalNotificationService] emitted to global-notifications room');
+            console.log('[GlobalNotificationService] sockets in global-notifications room:', this.io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
+
+            for (const email of normalizedRecipientEmails) {
+                this.io.to(email).emit('global-notification', notificationPayload);
+                console.log(`[GlobalNotificationService] emitted to recipient room ${email}`);
+            }
+
             return { success: true, notificationsSent: notifications.length };
-
         } catch (error) {
-            console.error('❌ Error sending global notification:', error);
+            console.error('[GlobalNotificationService] Error sending global notification:', error);
             return { success: false, error: error.message };
         }
     }
 
-    // Infer role from email pattern (customize based on your email conventions)
     inferRoleFromEmail(email) {
         if (!email) return 'employee';
-        
+
         const lowerEmail = email.toLowerCase();
         if (lowerEmail.includes('admin') || lowerEmail.includes('administrator')) {
             return 'admin';
-        } else if (lowerEmail.includes('manager') || lowerEmail.includes('mgr')) {
-            return 'manager';
-        } else {
-            return 'employee';
         }
+        if (lowerEmail.includes('manager') || lowerEmail.includes('mgr')) {
+            return 'manager';
+        }
+        return 'employee';
     }
 
-    // Build redirect URL for notification click
     buildRedirectUrl(senderRole, type, recipientEmails) {
         // Server-side URL building
         const baseUrl = 'http://localhost:5001';
         const loginUrl = `${baseUrl}/index.html#login`;
-        
-        // Add role-specific redirect info
+
         const redirectInfo = {
             from: senderRole,
             type: type || 'global_message',
             timestamp: Date.now(),
-            recipientEmails: recipientEmails || [] // Include recipient emails
+            recipientEmails: recipientEmails || []
         };
-        
+
         return `${loginUrl}?redirect=${encodeURIComponent(JSON.stringify(redirectInfo))}`;
     }
 
-    // Get connected users count
     getConnectedUsersCount() {
         return this.connectedUsers.size;
     }
 
-    // Get all connected users
     getConnectedUsers() {
         return Array.from(this.connectedUsers.entries()).map(([socketId, data]) => ({
             socketId,

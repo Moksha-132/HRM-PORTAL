@@ -185,6 +185,56 @@ export const deleteExpense = async (id) => {
   return data;
 };
 
+export const getPrePayments = async () => {
+  const { data } = await api.get('/api/v1/manager/prepayments');
+  return data;
+};
+
+export const createPrePayment = async (payload) => {
+  const { data } = await api.post('/api/v1/manager/prepayments', payload);
+  return data;
+};
+
+export const updatePrePayment = async (id, payload) => {
+  const { data } = await api.put(`/api/v1/manager/prepayments/${id}`, payload);
+  return data;
+};
+
+export const updatePrePaymentStatus = async (id, status) => {
+  const { data } = await api.put(`/api/v1/manager/prepayments/${id}/status`, { status });
+  return data;
+};
+
+export const deletePrePayment = async (id) => {
+  const { data } = await api.delete(`/api/v1/manager/prepayments/${id}`);
+  return data;
+};
+
+export const getIncrementPromotions = async () => {
+  const { data } = await api.get('/api/v1/manager/increment-promotions');
+  return data;
+};
+
+export const createIncrementPromotion = async (payload) => {
+  const { data } = await api.post('/api/v1/manager/increment-promotions', payload);
+  return data;
+};
+
+export const updateIncrementPromotion = async (id, payload) => {
+  const { data } = await api.put(`/api/v1/manager/increment-promotions/${id}`, payload);
+  return data;
+};
+
+export const updateIncrementPromotionStatus = async (id, status) => {
+  const { data } = await api.put(`/api/v1/manager/increment-promotions/${id}/status`, { status });
+  return data;
+};
+
+export const deleteIncrementPromotion = async (id) => {
+  const { data } = await api.delete(`/api/v1/manager/increment-promotions/${id}`);
+  return data;
+};
+
 export const getHolidays = async () => {
   const { data } = await api.get('/api/v1/manager/holidays');
   return data;
