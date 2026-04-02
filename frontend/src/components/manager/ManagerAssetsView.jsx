@@ -58,7 +58,7 @@ const ManagerAssetsView = () => {
         key: 'assigned_employee',
         value: asset.assigned_employee,
         type: 'select',
-        options: employees.map((emp) => ({ val: emp.employee_id, lab: emp.employee_name })),
+        options: employees.filter(Boolean).map((emp) => ({ val: emp.employee_id, lab: emp.employee_name || `Employee #${emp.employee_id}` })),
       },
       { label: 'Status', key: 'status', value: asset.status, type: 'select', options: ['Available', 'Assigned', 'Returned', 'Damaged'] },
     ]);
@@ -95,9 +95,9 @@ const ManagerAssetsView = () => {
               <label className="form-label">Assign To Employee</label>
               <select className="input" value={form.assigned_employee} onChange={(e) => setForm((prev) => ({ ...prev, assigned_employee: e.target.value }))}>
                 <option value="">Available (Unassigned)</option>
-                {employees.map((emp) => (
+                {employees.filter(Boolean).map((emp) => (
                   <option key={emp.employee_id} value={emp.employee_id}>
-                    {emp.employee_name} (ID: {emp.employee_id})
+                    {(emp.employee_name || 'Employee')} (ID: {emp.employee_id})
                   </option>
                 ))}
               </select>

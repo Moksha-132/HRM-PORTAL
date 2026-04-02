@@ -486,11 +486,13 @@ exports.downloadPayslip = async (req, res) => {
 
 // --- PROFILE ---
 exports.getProfile = async (req, res) => {
+    const employeeName = req.user?.employee_name || req.user?.name || '';
     const data = {
         employee_id: req.user.employee_id,
         role: req.user.role,
         status: req.user.status,
-        name: req.user.employee_name,
+        name: employeeName,
+        employee_name: employeeName,
         email: req.user.email,
         phone: req.user.phone || '',
         department: req.user.department || '',
@@ -520,7 +522,7 @@ exports.updateProfile = async (req, res) => {
         const nextWorkMode = parseTextField(req.body.work_mode);
         const nextLocation = parseTextField(req.body.location);
 
-        if (nextName !== undefined) fieldsToUpdate.employee_name = nextName;
+        if (nextName !== undefined && nextName !== null) fieldsToUpdate.employee_name = nextName;
         if (nextPhone !== undefined) fieldsToUpdate.phone = nextPhone;
         if (nextDepartment !== undefined) fieldsToUpdate.department = nextDepartment;
         if (nextDesignation !== undefined) fieldsToUpdate.designation = nextDesignation;
@@ -536,6 +538,7 @@ exports.updateProfile = async (req, res) => {
             role: req.user.role,
             status: req.user.status,
             name: req.user.employee_name,
+            employee_name: req.user.employee_name,
             email: req.user.email,
             phone: req.user.phone || '',
             department: req.user.department || '',

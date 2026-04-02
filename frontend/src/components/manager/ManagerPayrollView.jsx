@@ -197,9 +197,9 @@ const ManagerPayrollView = () => {
                 required
               >
                 <option value="">Select Employee</option>
-                {employees.map((emp) => (
+                {employees.filter(Boolean).map((emp) => (
                   <option key={emp.employee_id} value={emp.employee_id}>
-                    {emp.employee_name} (ID: {emp.employee_id})
+                    {(emp.employee_name || 'Employee')} (ID: {emp.employee_id})
                   </option>
                 ))}
               </select>

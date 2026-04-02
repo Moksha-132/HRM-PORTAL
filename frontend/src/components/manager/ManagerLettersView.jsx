@@ -138,9 +138,9 @@ const ManagerLettersView = () => {
               <select className="input" value={form.employee_id} onChange={(e) => setForm((p) => ({ ...p, employee_id: e.target.value }))} required>
                 <option value="">Select Employee</option>
                 <option value="all">All Employees</option>
-                {selectableEmployees.map((e) => (
+                {selectableEmployees.filter(Boolean).map((e) => (
                   <option key={e.employee_id} value={e.employee_id}>
-                    {e.employee_name}
+                    {e.employee_name || `Employee #${e.employee_id}`}
                   </option>
                 ))}
               </select>

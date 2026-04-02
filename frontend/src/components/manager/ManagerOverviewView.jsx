@@ -82,7 +82,7 @@ const ManagerOverviewView = () => {
   const presentEmpIds = new Set(todaysAttendanceRecords.map(a => a.employee_id));
   const presentTodayCount = data.dashboard?.todaysAttendance || presentEmpIds.size;
   
-  const employeeStatusList = data.employees.map(emp => {
+  const employeeStatusList = data.employees.filter(Boolean).map(emp => {
     return {
        ...emp,
        isPresent: presentEmpIds.has(emp.employee_id)
@@ -162,7 +162,7 @@ const ManagerOverviewView = () => {
               <tbody>
                  {employeeStatusList.length > 0 ? employeeStatusList.map(emp => (
                     <tr key={emp.employee_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                       <td style={{ padding: '12px 16px', fontWeight: 500 }}>{emp.employee_name}</td>
+                       <td style={{ padding: '12px 16px', fontWeight: 500 }}>{emp.employee_name || `Employee #${emp.employee_id}`}</td>
                        <td style={{ padding: '12px 16px', color: '#64748b' }}>{emp.department || 'N/A'}</td>
                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                           <span style={{ 

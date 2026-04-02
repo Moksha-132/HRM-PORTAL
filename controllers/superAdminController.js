@@ -54,6 +54,7 @@ const buildUnifiedProfile = (user, employeeProfile) => ({
     trialStartDate: user.trialStartDate,
     trialEndDate: user.trialEndDate,
     name: employeeProfile?.employee_name || user.name,
+    employee_name: employeeProfile?.employee_name || user.name,
     email: user.email,
     phone: employeeProfile?.phone || user.phone || '',
     department: employeeProfile?.department || 'Management',

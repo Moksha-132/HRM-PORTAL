@@ -257,7 +257,7 @@ const ManagerAppreciationsView = () => {
                     value={form.employee_id} onChange={(e) => setForm({...form, employee_id: e.target.value})}
                   >
                     <option value="">{employees && employees.length > 0 ? 'Choose a person...' : 'No team members found'}</option>
-                    {employees && employees.length > 0 && employees.map(emp => (
+                    {employees && employees.length > 0 && employees.filter(Boolean).map(emp => (
                       <option key={emp.employee_id} value={emp.employee_id}>
                         {emp.employee_name} {emp.designation ? `(${emp.designation})` : ''}
                       </option>

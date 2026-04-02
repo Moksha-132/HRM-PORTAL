@@ -173,7 +173,7 @@ const ManagerEmployeesView = () => {
                     </td>
                   </tr>
                 ) : (
-                  employees.map((emp) => (
+                  employees.filter(Boolean).map((emp) => (
                     <tr key={emp.employee_id}>
                       <td style={{ padding: '12px 8px' }}>
                         <div style={{ fontWeight: 600 }}>{emp.employee_name}</div>

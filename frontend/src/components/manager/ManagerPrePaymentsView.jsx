@@ -88,9 +88,9 @@ const ManagerPrePaymentsView = () => {
               <label className="form-label">Employee</label>
               <select className="input" value={form.employee_id} onChange={(e) => setForm((p) => ({ ...p, employee_id: e.target.value }))} required>
                 <option value="">Select Employee</option>
-                {employees.map((emp) => (
+                {employees.filter(Boolean).map((emp) => (
                   <option key={emp.employee_id} value={emp.employee_id}>
-                    {emp.employee_name}
+                    {emp.employee_name || `Employee #${emp.employee_id}`}
                   </option>
                 ))}
               </select>

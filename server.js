@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 
 const { connectDB, sequelize } = require('./config/db');
 const GlobalNotificationService = require('./services/globalNotificationService');
+const { Employee, SuperAdmin } = require('./models');
 
 // Connect to database
 connectDB();
@@ -16,8 +17,34 @@ require('./models');
 
 // Sync models
 sequelize.sync({ alter: true })
-    .then(() => {
+    .then(async () => {
+        // Self-heal legacy/bad rows with missing display names.
+        const employees = await Employee.findAll({
+            where: sequelize.where(
+                sequelize.fn('trim', sequelize.fn('coalesce', sequelize.col('employee_name'), '')),
+                ''
+            )
+        });
+        for (const employee of employees) {
+            const fallbackName = employee.email ? employee.email.split('@')[0] : `Employee-${employee.employee_id}`;
+            await employee.update({ employee_name: fallbackName });
+        }
+
+        const admins = await SuperAdmin.findAll({
+            where: sequelize.where(
+                sequelize.fn('trim', sequelize.fn('coalesce', sequelize.col('name'), '')),
+                ''
+            )
+        });
+        for (const admin of admins) {
+            const fallbackName = admin.email ? admin.email.split('@')[0] : `User-${admin.id}`;
+            await admin.update({ name: fallbackName });
+        }
+
         console.log('Database synced successfully');
+        if (employees.length || admins.length) {
+            console.log(`Profile data repair applied: employees=${employees.length}, admins=${admins.length}`);
+        }
     })
     .catch((err) => {
         console.error('Failed to sync database:', err);

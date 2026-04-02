@@ -380,7 +380,7 @@ const EmployeeAppreciationsView = () => {
                     value={form.recipient_id} onChange={(e) => setForm({...form, recipient_id: e.target.value})}
                   >
                     <option value="">Choose a person...</option>
-                    {employees.map(emp => (
+                    {employees.filter(Boolean).map(emp => (
                       <option key={emp.employee_id} value={emp.employee_id}>{emp.employee_name}</option>
                     ))}
                   </select>

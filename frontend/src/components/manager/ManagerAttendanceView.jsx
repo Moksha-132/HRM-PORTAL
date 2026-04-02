@@ -82,9 +82,9 @@ const ManagerAttendanceView = () => {
               <label className="form-label">Select Employee</label>
               <select className="input" style={{ marginBottom: 0 }} value={form.employee_id} onChange={(e) => setForm((prev) => ({ ...prev, employee_id: e.target.value }))} required>
                 <option value="">Choose...</option>
-                {employees.map((emp) => (
+                {employees.filter(Boolean).map((emp) => (
                   <option key={emp.employee_id} value={emp.employee_id}>
-                    {emp.employee_name} (ID: {emp.employee_id})
+                    {(emp.employee_name || 'Employee')} (ID: {emp.employee_id})
                   </option>
                 ))}
               </select>
