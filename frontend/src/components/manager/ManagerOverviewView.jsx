@@ -116,12 +116,12 @@ const ManagerOverviewView = () => {
       {loading && <div style={{ marginBottom: 20 }}>Loading dashboard data...</div>}
 
       {/* 1. Manager Information */}
-      <div className="panel mb" style={{ marginBottom: 24, padding: 24, background: 'linear-gradient(135deg, #f8fafc, #ffffff)', borderLeft: '4px solid #4f46e5' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: 16 }}>Manager Profile</h2>
+         <div className="panel mb" style={{ marginBottom: 24, padding: 24, background: 'color-mix(in srgb, var(--card-bg) 88%, var(--bg) 12%)', borderLeft: '4px solid var(--primary)' }}>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--text)' }}>Manager Profile</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-           <div><small style={{ color: '#64748b' }}>Name</small><div style={{ fontWeight: 600, textTransform: 'capitalize' }}>{managerName}</div></div>
-           <div><small style={{ color: '#64748b' }}>Email</small><div style={{ fontWeight: 600 }}>{managerEmail}</div></div>
-           <div><small style={{ color: '#64748b' }}>Role Context</small><div style={{ fontWeight: 600 }}>Team Manager / Supervisor</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Name</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)', textTransform: 'capitalize' }}>{managerName}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Email</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{managerEmail}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Role Context</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>Team Manager / Supervisor</div></div>
         </div>
       </div>
 
@@ -130,19 +130,19 @@ const ManagerOverviewView = () => {
         <div className="panel" style={{ margin: 0 }}>
              <div className="panel-head"><div className="panel-title">Workforce & Attendance Overview</div></div>
              <div className="panel-body">
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Total Employees:</span> <strong>{totalEmployeesCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Active Roster:</span> <strong style={{color: '#10b981'}}>{activeEmployeesCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Present Today:</span> <strong style={{color: '#3b82f6'}}>{presentTodayCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Total Employees:</span> <strong style={{color: 'var(--primary-dark)'}}>{totalEmployeesCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Active Roster:</span> <strong style={{color: 'var(--primary-dark)'}}>{activeEmployeesCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Present Today:</span> <strong style={{color: 'var(--primary-dark)'}}>{presentTodayCount}</strong></div>
              </div>
         </div>
         
         <div className="panel" style={{ margin: 0 }}>
              <div className="panel-head"><div className="panel-title">Leave Statistics</div></div>
              <div className="panel-body">
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Employees on Leave Today:</span> <strong style={{color: '#f59e0b'}}>{employeesOnLeaveCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Total Leave Requests:</span> <strong>{totalLeavesCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Approved Historical:</span> <strong style={{color: '#10b981'}}>{approvedLeavesCount}</strong></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', padding: '8px 0' }}><span>Rejected Historical:</span> <strong style={{color: '#ef4444'}}>{rejectedLeavesCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Employees on Leave Today:</span> <strong style={{color: 'var(--primary-dark)'}}>{employeesOnLeaveCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Total Leave Requests:</span> <strong style={{color: 'var(--primary-dark)'}}>{totalLeavesCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Approved Historical:</span> <strong style={{color: 'var(--primary-dark)'}}>{approvedLeavesCount}</strong></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '8px 0' }}><span style={{ color: 'var(--text)' }}>Rejected Historical:</span> <strong style={{color: '#dc2626'}}>{rejectedLeavesCount}</strong></div>
              </div>
         </div>
       </div>
@@ -189,9 +189,9 @@ const ManagerOverviewView = () => {
             <div className="panel-head"><div className="panel-title">Team Appreciations</div></div>
             <div className="panel-body" style={{ maxHeight: '250px', overflowY: 'auto' }}>
                {data.appreciations.length > 0 ? data.appreciations.slice(0, 10).map(a => (
-                  <div key={a.appreciation_id} style={{ padding: '12px', background: '#eff6ff', borderLeft: '3px solid #3b82f6', marginBottom: 12, borderRadius: '0 8px 8px 0' }}>
-                     <div style={{ fontWeight: 600, color: '#1e3a8a', marginBottom: 4 }}>{a.Employee?.employee_name || 'Team Member'}</div>
-                     <div style={{ fontSize: '0.85rem', color: '#475569' }}>{a.title} - {new Date(a.date).toLocaleDateString()}</div>
+                     <div key={a.appreciation_id} style={{ padding: '12px', background: 'color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%)', borderLeft: '3px solid var(--primary)', marginBottom: 12, borderRadius: '0 8px 8px 0' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--primary-dark)', marginBottom: 4 }}>{a.Employee?.employee_name || 'Team Member'}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>{a.title} - {new Date(a.date).toLocaleDateString()}</div>
                   </div>
                )) : <div style={{ color: '#64748b' }}>No appreciations recorded recently.</div>}
             </div>
@@ -213,10 +213,10 @@ const ManagerOverviewView = () => {
                      <div key={p.payroll_id} style={{ padding: '12px', border: '1px solid #e2e8f0', marginBottom: 12, borderRadius: 8 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                            <div style={{ fontWeight: 600, color: '#0f172a' }}>{p.Employee?.employee_name || 'Employee'}</div>
-                           <div style={{ fontWeight: 700, color: '#15803d', fontSize: '1.1rem' }}>${amount}</div>
+                              <div style={{ fontWeight: 700, color: 'var(--primary-dark)', fontSize: '1.1rem' }}>${amount}</div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                           <span style={{ color: '#475569' }}>Paid on: {paymentDateStr}</span>
+                              <span style={{ color: 'var(--text-light)' }}>Paid on: {paymentDateStr}</span>
                            <span style={{ 
                               background: statusBg, 
                               color: statusColor, 
@@ -247,10 +247,11 @@ const ManagerOverviewView = () => {
                      <div key={a.asset_id} style={{ padding: '12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                            <div style={{ fontWeight: 600 }}>{a.asset_name}</div>
-                           <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Type: {a.asset_type}</div>
+                              <div style={{ fontWeight: 600, color: 'var(--text)' }}>{a.asset_name}</div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>Type: {a.asset_type}</div>
                         </div>
                         <div style={{ textAlign: 'right', fontSize: '0.9rem' }}>
-                           <div style={{ color: '#4f46e5', fontWeight: 500, marginBottom: '4px' }}>{a.Employee?.employee_name || 'Unassigned'}</div>
+                              <div style={{ color: 'var(--primary-dark)', fontWeight: 500, marginBottom: '4px' }}>{a.Employee?.employee_name || 'Unassigned'}</div>
                            <span style={{ 
                               background: badgeColor + '20', 
                               color: badgeColor, 
@@ -297,13 +298,16 @@ const ManagerOverviewView = () => {
                   <tbody>
                      {validHolidays.map(h => (
                         <tr key={h.holiday_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                           <td style={{ padding: '12px', fontWeight: 500, color: '#0f172a' }}>{h.holiday_name || h.name || 'Holiday'}</td>
-                           <td style={{ padding: '12px', textAlign: 'right', color: '#3b82f6', fontWeight: 600 }}>
+                           <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text)' }}>
+                              <div>{h.holiday_name || h.name || h.title || 'Holiday'}</div>
+                              {h.description ? <div style={{ marginTop: 4, color: 'var(--text-light)', fontSize: '0.82rem' }}>{h.description}</div> : null}
+                           </td>
+                              <td style={{ padding: '12px', textAlign: 'right', color: 'var(--primary-dark)', fontWeight: 600 }}>
                               {new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                            </td>
                         </tr>
                      ))}
-                     {validHolidays.length === 0 && <tr><td colSpan="2" style={{textAlign: 'center', padding: '16px', color: '#64748b'}}>No upcoming holidays left this year.</td></tr>}
+                     {validHolidays.length === 0 && <tr><td colSpan="2" style={{textAlign: 'center', padding: '16px', color: 'var(--text-light)'}}>No upcoming holidays left this year.</td></tr>}
                   </tbody>
                </table>
             </div>

@@ -59,13 +59,13 @@ const ManagerLeavesView = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th>Leave ID</th>
-                <th>Emp ID</th>
-                <th>Type</th>
-                <th>Duration</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ color: 'var(--text-light)' }}>Leave ID</th>
+                <th style={{ color: 'var(--text-light)' }}>Emp ID</th>
+                <th style={{ color: 'var(--text-light)' }}>Type</th>
+                <th style={{ color: 'var(--text-light)' }}>Duration</th>
+                <th style={{ color: 'var(--text-light)' }}>Reason</th>
+                <th style={{ color: 'var(--text-light)' }}>Status</th>
+                <th style={{ color: 'var(--text-light)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -84,25 +84,25 @@ const ManagerLeavesView = () => {
               ) : (
                 leaves.map((leave) => (
                   <tr key={leave.leave_id}>
-                    <td>#{leave.leave_id}</td>
+                    <td style={{ color: 'var(--text)' }}>#{leave.leave_id}</td>
                     <td>
-                      {leave.employee_id} <small>({leave.Employee ? leave.Employee.employee_name : 'N/A'})</small>
+                      <span style={{ color: 'var(--text)' }}>{leave.employee_id}</span> <small style={{ color: 'var(--text-light)' }}>({leave.Employee ? leave.Employee.employee_name : 'N/A'})</small>
                     </td>
-                    <td>{leave.leave_type}</td>
+                    <td style={{ color: 'var(--text)' }}>{leave.leave_type}</td>
                     <td>
                       {leave.start_date} to {leave.end_date}
                     </td>
-                    <td>{leave.reason || 'N/A'}</td>
+                    <td style={{ color: 'var(--text)' }}>{leave.reason || 'N/A'}</td>
                     <td>
-                      <span className={`badge ${leave.status === 'Approved' ? 'bg-green' : leave.status === 'Rejected' ? 'bg-red' : 'bg-yellow'}`}>{leave.status}</span>
+                      <span className={`badge ${leave.status === 'Approved' ? 'bg-green' : leave.status === 'Rejected' ? 'bg-red' : 'bg-yellow'}`} style={{ color: '#fff' }}>{leave.status}</span>
                     </td>
                     <td>
                       {leave.status === 'Pending' && (
                         <>
-                          <button type="button" className="action-btn" style={{ color: '#10b981' }} onClick={() => updateStatus(leave.leave_id, 'Approved')} title="Approve">
+                          <button type="button" className="action-btn" style={{ color: 'var(--primary-dark)', background: 'color-mix(in srgb, var(--primary) 12%, transparent)', borderRadius: 8 }} onClick={() => updateStatus(leave.leave_id, 'Approved')} title="Approve">
                             <i className="fas fa-check-circle" />
                           </button>
-                          <button type="button" className="action-btn" style={{ color: '#ef4444' }} onClick={() => updateStatus(leave.leave_id, 'Rejected')} title="Reject">
+                          <button type="button" className="action-btn" style={{ color: '#dc2626', background: 'rgba(220,38,38,0.10)', borderRadius: 8 }} onClick={() => updateStatus(leave.leave_id, 'Rejected')} title="Reject">
                             <i className="fas fa-times-circle" />
                           </button>
                         </>

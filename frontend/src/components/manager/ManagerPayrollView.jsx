@@ -205,7 +205,7 @@ const ManagerPayrollView = () => {
               </select>
 
               {selectedInsight ? (
-                <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: '#f8fafc', color: '#334155' }}>
+                <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: 'color-mix(in srgb, var(--card-bg) 88%, var(--bg) 12%)', color: 'var(--text)' }}>
                   <div>Approved pre-payment deductions: <strong>{formatCurrency(selectedInsight.approvedAdvanceTotal)}</strong></div>
                   <div>Approved extra allowances: <strong>{formatCurrency(selectedInsight.approvedAllowanceTotal)}</strong></div>
                   <div>
@@ -233,9 +233,9 @@ const ManagerPayrollView = () => {
         <div className="panel">
           <div className="panel-head">
             <div className="panel-title">Payroll Records</div>
-            <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ background: 'color-mix(in srgb, var(--primary) 14%, var(--card-bg) 86%)', color: 'var(--text)', borderColor: 'var(--border)' }}>
               {STATUS_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option} style={{ background: 'var(--card-bg)', color: 'var(--text)' }}>{option}</option>
               ))}
             </select>
           </div>
@@ -270,13 +270,13 @@ const ManagerPayrollView = () => {
                       <td>{payroll.payment_date || 'N/A'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          <button type="button" className="btn btn-outline" style={{ fontSize: 10, padding: '4px 8px' }} onClick={() => handleStatusChange(payroll, 'Approved')} disabled={saving || payroll.status === 'Approved'}>
+                          <button type="button" className="btn" style={{ fontSize: 10, padding: '4px 8px', background: 'var(--primary)', color: '#fff', border: '1px solid var(--primary-dark)' }} onClick={() => handleStatusChange(payroll, 'Approved')} disabled={saving || payroll.status === 'Approved'}>
                             Approve
                           </button>
-                          <button type="button" className="btn btn-outline" style={{ fontSize: 10, padding: '4px 8px' }} onClick={() => handleStatusChange(payroll, 'Rejected')} disabled={saving || payroll.status === 'Rejected'}>
+                          <button type="button" className="btn" style={{ fontSize: 10, padding: '4px 8px', background: '#dc2626', color: '#fff', border: '1px solid #b91c1c' }} onClick={() => handleStatusChange(payroll, 'Rejected')} disabled={saving || payroll.status === 'Rejected'}>
                             Reject
                           </button>
-                          <button type="button" className="btn btn-outline" style={{ fontSize: 10, padding: '4px 8px' }} onClick={async () => {
+                          <button type="button" className="btn" style={{ fontSize: 10, padding: '4px 8px', background: 'color-mix(in srgb, var(--primary) 16%, var(--card-bg) 84%)', color: 'var(--text)', border: '1px solid var(--border)' }} onClick={async () => {
                             const res = await generatePayslip(payroll.payroll_id);
                             if (res?.message) setMessage(res.message);
                             await load();

@@ -16,6 +16,7 @@ import ManagerAppreciationsView from '../components/manager/ManagerAppreciations
 import ManagerPoliciesView from '../components/manager/ManagerPoliciesView';
 import ManagerOffboardingsView from '../components/manager/ManagerOffboardingsView';
 import ManagerHolidaysView from '../components/manager/ManagerHolidaysView';
+import ManagerLettersView from '../components/manager/ManagerLettersView';
 import ManagerDashboardAddons from '../components/manager/ManagerDashboardAddons';
 
 // Employee Components (for Self Portal)
@@ -37,6 +38,7 @@ import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesVie
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
 
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+import { normalizeRole } from '../utils/role';
 
 const ManagerDashboard = () => {
   const navigate = useNavigate();
@@ -62,7 +64,7 @@ const ManagerDashboard = () => {
           { id: 'payroll', label: 'Payroll' },
         ],
       },
-      { id: 'appreciations', label: 'Appreciations', icon: 'fas fa-award' },
+      { id: 'appreciations', label: 'Thanks', icon: 'fas fa-award' },
       { id: 'policies', label: 'Policies', icon: 'fas fa-file-contract' },
       { id: 'offboardings', label: 'Offboardings', icon: 'fas fa-user-minus' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
@@ -111,7 +113,7 @@ const ManagerDashboard = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
-    const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+    const role = normalizeRole(sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role'));
     if (!token) {
       navigate('/login', { replace: true });
       return;
@@ -145,7 +147,7 @@ const ManagerDashboard = () => {
     
     const trialEnd = userData.trialEndDate 
         ? new Date(userData.trialEndDate) 
-        : new Date(new Date(userData.createdAt).getTime() + 15 * 24 * 60 * 60 * 1000);
+      : new Date(new Date(userData.createdAt).getTime() + 20 * 24 * 60 * 60 * 1000);
     
     const now = new Date();
     const diff = trialEnd - now;

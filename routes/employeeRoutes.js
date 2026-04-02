@@ -5,7 +5,7 @@ const controller = require('../controllers/employeeController');
 
 // All employee routes are protected
 router.use(protect);
-router.use(authorize('Employee'));
+router.use(authorize('Employee', 'Manager'));
 
 router.get('/dashboard', controller.getDashboardStats);
 

@@ -26,8 +26,8 @@ const toUserName = (chat) => {
 
 const AdminChatSupportView = () => {
   const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
-  const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
-  const isAdmin = role === 'Admin' || role === 'Super Admin';
+  const role = normalizeRole(sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role'));
+  const isAdmin = role === 'admin' || role === 'super admin';
   const [allChats, setAllChats] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -236,7 +236,7 @@ const AdminChatSupportView = () => {
               padding: '6px 16px',
               borderRadius: 999,
               border: `1px solid ${activeRole === t.id ? 'var(--primary, #4f6ef7)' : 'var(--border, #e2e8f0)'}`,
-              background: activeRole === t.id ? 'var(--primary, #4f6ef7)' : '#fff',
+              background: activeRole === t.id ? 'var(--primary, #4f6ef7)' : 'var(--card-bg, #f6f8fb)',
               color: activeRole === t.id ? '#fff' : 'var(--text, #0f172a)',
               cursor: 'pointer',
               fontSize: 13,
@@ -254,8 +254,8 @@ const AdminChatSupportView = () => {
             padding: '6px 12px',
             borderRadius: 10,
             border: '1px solid var(--border, #e2e8f0)',
-            background: '#fff',
-            color: '#334155',
+            background: 'var(--card-bg, #f6f8fb)',
+            color: 'var(--text, #334155)',
             cursor: 'pointer',
             fontSize: 13,
             fontWeight: 600,
@@ -341,7 +341,7 @@ const AdminChatSupportView = () => {
             </button>
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16, background: '#f8fafc' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16, background: 'color-mix(in srgb, var(--card-bg, #f6f8fb) 92%, var(--bg, #f8fafc) 8%)' }}>
             {!selectedSession ? (
               <p style={{ textAlign: 'center', color: '#64748b', marginTop: 60 }}>
                 Select a user from the left panel to view their chat history
@@ -358,8 +358,8 @@ const AdminChatSupportView = () => {
                       style={{
                         maxWidth: '85%',
                         marginLeft: isAdmin ? 'auto' : 0,
-                        background: isAdmin ? 'var(--cb-primary)' : '#e2e8f0',
-                        color: isAdmin ? '#fff' : '#0f172a',
+                        background: isAdmin ? 'var(--cb-primary)' : 'color-mix(in srgb, var(--card-bg, #f6f8fb) 84%, var(--bg, #f8fafc) 16%)',
+                        color: isAdmin ? '#fff' : 'var(--text, #0f172a)',
                       }}
                     >
                       <div style={{ fontWeight: 700, fontSize: 11, marginBottom: 4 }}>
@@ -380,7 +380,7 @@ const AdminChatSupportView = () => {
                               href={msg.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{ color: isAdmin ? '#fff' : '#2563eb', fontSize: 11, textDecoration: 'underline' }}
+                              style={{ color: isAdmin ? '#fff' : 'var(--primary, #2563eb)', fontSize: 11, textDecoration: 'underline' }}
                             >
                               View Attachment
                             </a>
@@ -413,7 +413,7 @@ const AdminChatSupportView = () => {
                               <button
                                 type="button"
                                 onClick={() => saveEditedResponse(msg.id)}
-                                style={{ background: '#fff', color: 'var(--cb-primary)', border: 'none', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                                style={{ background: 'var(--card-bg, #fff)', color: 'var(--cb-primary)', border: 'none', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
                               >
                                 Save
                               </button>
@@ -453,7 +453,7 @@ const AdminChatSupportView = () => {
           </div>
 
           {selectedSession && (
-            <div style={{ padding: 14, background: '#fff', borderTop: '1px solid var(--border, #e2e8f0)' }}>
+            <div style={{ padding: 14, background: 'var(--card-bg, #fff)', borderTop: '1px solid var(--border, #e2e8f0)' }}>
               {replyFile && (
                 <div style={{ fontSize: 12, marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#334155' }}>
                   <span>Attachment: {replyFile.name}</span>

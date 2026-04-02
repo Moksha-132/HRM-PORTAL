@@ -124,13 +124,13 @@ const EmployeeOverviewView = () => {
       {loading && <div style={{ marginBottom: 20 }}>Loading dashboard data...</div>}
 
       {/* 1. Employee Information */}
-      <div className="panel mb" style={{ marginBottom: 24, padding: 24, background: 'linear-gradient(135deg, #f8fafc, #ffffff)', borderLeft: '4px solid #4f46e5' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: 16 }}>Employee Details</h2>
+         <div className="panel mb" style={{ marginBottom: 24, padding: 24, background: 'color-mix(in srgb, var(--card-bg) 88%, var(--bg) 12%)', borderLeft: '4px solid var(--primary)' }}>
+            <h2 style={{ fontSize: '1.2rem', marginBottom: 16, color: 'var(--text)' }}>Employee Details</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-           <div><small style={{ color: '#64748b' }}>Name</small><div style={{ fontWeight: 600 }}>{empProfile.name || 'N/A'}</div></div>
-           <div><small style={{ color: '#64748b' }}>Department</small><div style={{ fontWeight: 600 }}>{empProfile.department || 'N/A'}</div></div>
-           <div><small style={{ color: '#64748b' }}>Designation</small><div style={{ fontWeight: 600 }}>{empProfile.designation || 'N/A'}</div></div>
-           <div><small style={{ color: '#64748b' }}>Joined Date</small><div style={{ fontWeight: 600 }}>{empProfile.joining_date || 'N/A'}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Name</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{empProfile.name || 'N/A'}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Department</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{empProfile.department || 'N/A'}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Designation</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{empProfile.designation || 'N/A'}</div></div>
+                <div><small style={{ color: 'var(--text-light)' }}>Joined Date</small><div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>{empProfile.joining_date || 'N/A'}</div></div>
         </div>
       </div>
 

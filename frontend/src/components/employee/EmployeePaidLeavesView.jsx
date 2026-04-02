@@ -62,10 +62,10 @@ const EmployeePaidLeavesView = () => {
           <table className="leave-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ background: '#f8fafc' }}>
               <tr>
-                <th style={{ padding: '16px', textAlign: 'left' }}>Month</th>
-                <th style={{ padding: '16px' }}>Annual Leave</th>
-                <th style={{ padding: '16px' }}>Sick Leave</th>
-                <th style={{ padding: '16px' }}>Casual Leave</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#1f2937', fontWeight: '700' }}>Month</th>
+                <th style={{ padding: '16px', color: '#1f2937', fontWeight: '700' }}>Annual Leave</th>
+                <th style={{ padding: '16px', color: '#1f2937', fontWeight: '700' }}>Sick Leave</th>
+                <th style={{ padding: '16px', color: '#1f2937', fontWeight: '700' }}>Casual Leave</th>
               </tr>
             </thead>
             <tbody>

@@ -4,6 +4,7 @@ import MainLayout from '../components/MainLayout';
 import { login as loginRequest } from '../services/authService';
 import api from '../services/api';
 import { acceptPolicies, clearAcceptedPolicies, hasAcceptedPolicies } from '../utils/policyAcceptance';
+import { normalizeRole } from '../utils/role';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -35,15 +36,16 @@ const LoginPage = () => {
     try {
       const data = await loginRequest({ email: loginEmail.trim(), password: loginPassword });
       if (data.success) {
+        const normalizedRole = normalizeRole(data.user.role);
         sessionStorage.setItem('shnoor_token', data.token);
-        sessionStorage.setItem('shnoor_role', data.user.role);
+        sessionStorage.setItem('shnoor_role', normalizedRole);
         sessionStorage.setItem('shnoor_email', data.user.email);
 
         localStorage.setItem('shnoor_token', data.token);
-        localStorage.setItem('shnoor_role', data.user.role);
+        localStorage.setItem('shnoor_role', normalizedRole);
         localStorage.setItem('shnoor_email', data.user.email);
         localStorage.setItem('hrm_last_email', data.user.email);
-        localStorage.setItem('hrm_last_role', data.user.role);
+        localStorage.setItem('hrm_last_role', normalizedRole);
         localStorage.setItem('hrm_remember_me', rememberMe ? 'true' : 'false');
         if (rememberMe) {
           localStorage.setItem('hrm_remember_email', data.user.email);
@@ -51,7 +53,7 @@ const LoginPage = () => {
           localStorage.removeItem('hrm_remember_email');
         }
 
-        if (data.user.role === 'Admin' || data.user.role === 'Super Admin') {
+        if (normalizedRole === 'Admin' || normalizedRole === 'Super Admin') {
           sessionStorage.setItem('shnoor_admin_email', data.user.email);
           localStorage.setItem('shnoor_admin_email', data.user.email);
         } else {
@@ -70,9 +72,9 @@ const LoginPage = () => {
           // ignore
         }
 
-        if (data.user.role === 'Manager') {
+        if (normalizedRole === 'Manager') {
           navigate('/manager');
-        } else if (data.user.role === 'Employee') {
+        } else if (normalizedRole === 'Employee') {
           navigate('/employee');
         } else {
           navigate('/admin');

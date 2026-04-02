@@ -103,13 +103,13 @@ const EmployeeDashboardAddons = () => {
         <div className="panel" style={{ margin: 0 }}>
           <div className="panel-head"><div className="panel-title">Attendance Add-on Summary</div></div>
           <div className="panel-body">
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
-              <span>Late Attendance Count</span>
-              <strong>{lateAttendanceCount}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text)' }}>Late Attendance Count</span>
+              <strong style={{ color: 'var(--primary-dark)' }}>{lateAttendanceCount}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-              <span>Half Days Count</span>
-              <strong>{halfDaysCount}</strong>
+              <span style={{ color: 'var(--text)' }}>Half Days Count</span>
+              <strong style={{ color: 'var(--primary-dark)' }}>{halfDaysCount}</strong>
             </div>
           </div>
         </div>
@@ -117,17 +117,17 @@ const EmployeeDashboardAddons = () => {
         <div className="panel" style={{ margin: 0 }}>
           <div className="panel-head"><div className="panel-title">Working Hours Details</div></div>
           <div className="panel-body">
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
-              <span>Total Office Time</span>
-              <strong>{formatHours(totalOfficeTime)}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text)' }}>Total Office Time</span>
+              <strong style={{ color: 'var(--primary-dark)' }}>{formatHours(totalOfficeTime)}</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee' }}>
-              <span>Total Worked Time</span>
-              <strong>{formatHours(totalWorkedTime)}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text)' }}>Total Worked Time</span>
+              <strong style={{ color: 'var(--primary-dark)' }}>{formatHours(totalWorkedTime)}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-              <span>Late Time</span>
-              <strong>{formatHours(lateTime)}</strong>
+              <span style={{ color: 'var(--text)' }}>Late Time</span>
+              <strong style={{ color: 'var(--primary-dark)' }}>{formatHours(lateTime)}</strong>
             </div>
           </div>
         </div>
@@ -149,19 +149,20 @@ const EmployeeDashboardAddons = () => {
           <div className="panel-body">
             {upcomingHolidays.length > 0 ? upcomingHolidays.map((item, index) => (
               <div key={`${item.holiday_id || item.date}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: index < upcomingHolidays.length - 1 ? '1px solid #eee' : 'none' }}>
-                <span>{item.holiday_name || item.name || 'Holiday'}</span>
-                <strong>{new Date(item.date).toLocaleDateString()}</strong>
+                <span style={{ color: 'var(--text)' }}>{item.holiday_name || item.name || 'Holiday'}</span>
+                <strong style={{ color: 'var(--primary-dark)' }}>{new Date(item.date).toLocaleDateString()}</strong>
               </div>
             )) : (
-              <div style={{ color: '#64748b' }}>No upcoming holidays available.</div>
+              <div style={{ color: 'var(--text-light)' }}>No upcoming holidays available.</div>
             )}
           </div>
         </div>
 
         <div className="panel" style={{ margin: 0 }}>
           <div className="panel-head"><div className="panel-title">Assigned Tasks</div></div>
-          <div className="panel-body">
-            <div style={{ color: '#64748b' }}>No tasks assigned</div>
+          <div className="panel-body" style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%)', color: 'var(--text)' }}>
+            <div style={{ fontWeight: 700, color: 'var(--primary-dark)' }}>No tasks assigned</div>
+            <div style={{ marginTop: 6, color: 'var(--text-light)' }}>Assigned work will appear here once it is created.</div>
           </div>
         </div>
       </div>

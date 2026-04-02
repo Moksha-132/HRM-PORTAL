@@ -18,13 +18,13 @@
     .grid-2 { grid-template-columns: 1fr 2fr; }
     .grid-4 { grid-template-columns: repeat(4, 1fr); gap: 24px; }
     .stat-card {
-      background: white; border: 1px solid var(--border); border-radius: var(--radius-md);
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md);
       padding: 24px; display: flex; flex-direction: column; justify-content: space-between;
     }
     .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
     .stat-label { color: var(--text-light); font-size: 0.95rem; font-weight: 500; }
     .hidden { display: none !important; }
-    .panel { background: white; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
+    .panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 24px; }
     .panel-head { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .panel-title { font-weight: 600; font-size: 1.1rem; }
     .panel-body { padding: 24px; }
@@ -42,7 +42,7 @@
     .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text-dark); }
     /* Modal Styles */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-    .modal-content { background: white; padding: 32px; border-radius: var(--radius-md); width: 800px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content { background: var(--card-bg); padding: 32px; border-radius: var(--radius-md); width: 800px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
@@ -476,6 +476,7 @@
   <script type="text/babel" src="chatbot/AdminChatPanel.jsx"></script>
   <script type="text/babel" src="chatbot/UserHistoryPanel.jsx"></script>
   <script type="text/babel" src="chatbot/app.jsx"></script>
+  <script src="themeRuntime.js"></script>
   <script src="employee.js?v=2.0"></script>
   <script src="globalNotifications.js"></script>
 </body>

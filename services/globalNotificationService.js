@@ -40,7 +40,21 @@ class GlobalNotificationService {
     async sendGlobalNotification(notificationData) {
         try {
             console.log('📨 GlobalNotificationService.sendGlobalNotification called with:', notificationData);
-            const { senderRole, senderEmail, message, type, recipientEmails } = notificationData;
+            const {
+                senderRole,
+                senderEmail,
+                message,
+                type,
+                recipientEmails,
+                recipientRole,
+                recipientRolesByEmail = {}
+            } = notificationData;
+
+            const normalizedRecipientEmails = Array.isArray(recipientEmails)
+                ? [...new Set(recipientEmails
+                    .map((email) => String(email || '').trim().toLowerCase())
+                    .filter(Boolean))]
+                : [];
             
             // Fetch company logo
             let logo = '/logo.avif';
@@ -66,7 +80,7 @@ class GlobalNotificationService {
 
                     const notification = await Notification.create({
                         userId: email,
-                        role: resolvedRole,
+                        role: String(resolvedRole || 'employee').toLowerCase(),
                         message,
                         type: type || 'global_message',
                         senderRole,
@@ -100,7 +114,7 @@ class GlobalNotificationService {
                 fullMessage: message,
                 message,
                 type: type || 'global_message',
-                logo, // ✅ INCLUDE LOGO
+                logo,
                 timestamp: new Date(),
                 redirectUrl: this.buildRedirectUrl(senderRole, type, normalizedRecipientEmails)
             };
@@ -136,7 +150,7 @@ class GlobalNotificationService {
 
     buildRedirectUrl(senderRole, type, recipientEmails) {
         // Server-side URL building
-        const baseUrl = 'http://localhost:5001';
+        const baseUrl = `http://localhost:${process.env.PORT || 5000}`;
         const loginUrl = `${baseUrl}/index.html#login`;
 
         const redirectInfo = {

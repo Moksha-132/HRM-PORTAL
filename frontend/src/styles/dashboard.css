@@ -18,10 +18,59 @@
   --text-light: #64748b;
   --border: rgba(226, 232, 240, 0.8);
   --bg: #f8fafc;
-  --card-bg: rgba(255, 255, 255, 0.86);
+  --card-bg: rgba(247, 249, 252, 0.9);
+  --topbar-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.14) 100%), rgba(247, 249, 252, 0.84);
   --topbar-h:     56px;
   --radius: 12px;
   --shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme='arctic'] .dashboard-mode {
+  --primary: #7aa2ff;
+  --primary-dark: #3d6de0;
+  --primary-gradient: linear-gradient(135deg, #1f3c88 0%, #56a8ff 100%);
+  --sidebar-bg: linear-gradient(180deg, rgba(10, 18, 36, 0.96) 0%, rgba(7, 17, 31, 0.92) 100%);
+  --sidebar-text: #a8b7d0;
+  --sidebar-hover: rgba(122, 162, 255, 0.14);
+  --sidebar-active: rgba(122, 162, 255, 0.2);
+  --text: #e2e8f0;
+  --text-light: #94a3b8;
+  --border: rgba(148, 163, 184, 0.18);
+  --bg: #07111f;
+  --card-bg: rgba(12, 22, 40, 0.9);
+  --topbar-bg: linear-gradient(135deg, rgba(26, 51, 96, 0.9) 0%, rgba(10, 18, 36, 0.94) 100%);
+}
+
+body[data-theme='ember'] .dashboard-mode {
+  --primary: #f08a5d;
+  --primary-dark: #c55a2b;
+  --primary-gradient: linear-gradient(135deg, #6b2f1a 0%, #f08a5d 100%);
+  --sidebar-bg: linear-gradient(180deg, rgba(38, 21, 14, 0.96) 0%, rgba(20, 12, 8, 0.94) 100%);
+  --sidebar-text: #d8c2b2;
+  --sidebar-hover: rgba(240, 138, 93, 0.14);
+  --sidebar-active: rgba(240, 138, 93, 0.2);
+  --text: #f8efe6;
+  --text-light: #c9b8aa;
+  --border: rgba(214, 183, 159, 0.16);
+  --bg: #140c08;
+  --card-bg: rgba(32, 18, 13, 0.9);
+  --topbar-bg: linear-gradient(135deg, rgba(90, 44, 23, 0.9) 0%, rgba(24, 13, 9, 0.95) 100%);
+}
+
+body[data-theme='forest'] .dashboard-mode {
+  --primary: #35c17b;
+  --primary-dark: #14985b;
+  --primary-gradient: linear-gradient(135deg, #0f6b41 0%, #35c17b 100%);
+  --sidebar-bg: linear-gradient(180deg, rgba(8, 24, 16, 0.96) 0%, rgba(7, 19, 13, 0.94) 100%);
+  --sidebar-text: #b4c8bf;
+  --sidebar-hover: rgba(53, 193, 123, 0.14);
+  --sidebar-active: rgba(53, 193, 123, 0.2);
+  --text: #e8f6ee;
+  --text-light: #a2b8ad;
+  --border: rgba(153, 204, 177, 0.16);
+  --bg: #07130d;
+  --card-bg: rgba(14, 29, 22, 0.9);
+  --topbar-bg: linear-gradient(135deg, rgba(17, 71, 45, 0.9) 0%, rgba(8, 24, 16, 0.95) 100%);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -277,7 +326,7 @@
   top: 0;
   z-index: 20;
   height: var(--topbar-h);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.08) 100%), rgba(255, 255, 255, 0.78);
+  background: var(--topbar-bg);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -293,7 +342,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-light);
+  color: var(--text);
   padding: 4px 8px;
   border-radius: var(--radius);
   transition: background 0.18s;
@@ -316,9 +365,9 @@
 .dashboard-mode .admin-badge {
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(99, 102, 241, 0.1);
-  color: var(--primary-dark);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--primary) 38%, transparent);
   padding: 3px 10px;
   border-radius: 999px;
 }
@@ -339,8 +388,8 @@
   height: 38px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.75);
-  color: var(--text-light);
+  background: color-mix(in srgb, var(--card-bg) 86%, transparent);
+  color: var(--text);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -674,7 +723,8 @@
 .dashboard-mode .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--primary-gradient); border-radius: 99px; }
 
 .dashboard-mode .filters-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-.dashboard-mode .filter-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 0.85rem; color: var(--text); outline: none; cursor: pointer; }
+.dashboard-mode .filter-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: color-mix(in srgb, var(--primary) 12%, var(--card-bg) 88%); font-size: 0.85rem; color: var(--text); outline: none; cursor: pointer; }
+.dashboard-mode .filter-select option { background: var(--card-bg); color: var(--text); }
 
 /* —— Custom Table Layouts —— */
 .dashboard-mode .leave-table th { background: transparent; color: var(--text); font-weight: 700; border-bottom: 1px solid var(--border); }

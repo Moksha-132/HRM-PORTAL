@@ -57,9 +57,14 @@ const EmployeeCalendarView = () => {
                 holidays.map((holiday) => (
                   <tr key={holiday.id}>
                     <td>
-                      <strong>{holiday.holiday_name}</strong>
+                      <strong>{holiday.holiday_name || holiday.name || holiday.title || 'Holiday'}</strong>
+                      {holiday.description ? (
+                        <div style={{ color: 'var(--text-light)', fontSize: '0.85rem', marginTop: 4 }}>
+                          {holiday.description}
+                        </div>
+                      ) : null}
                     </td>
-                    <td>{holiday.date}</td>
+                    <td>{holiday.date ? new Date(holiday.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</td>
                     <td>{holiday.description || ''}</td>
                   </tr>
                 ))

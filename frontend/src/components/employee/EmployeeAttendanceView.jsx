@@ -56,7 +56,22 @@ const EmployeeAttendanceView = () => {
           <button className="btn btn-solid" style={{ height: 54, padding: '0 48px', fontSize: '1.1rem', borderRadius: 30 }} onClick={handleClockIn} disabled={clocking || !!activeRecord}>
             Clock In
           </button>
-          <button className="btn btn-outline" style={{ height: 54, padding: '0 48px', fontSize: '1.1rem', borderRadius: 30 }} onClick={handleClockOut} disabled={clocking || !activeRecord}>
+          <button
+            className="btn"
+            style={{
+              height: 54,
+              padding: '0 48px',
+              fontSize: '1.1rem',
+              borderRadius: 30,
+              border: '1.5px solid color-mix(in srgb, var(--primary) 55%, #ffffff 45%)',
+              background: 'color-mix(in srgb, var(--primary) 14%, var(--card-bg) 86%)',
+              color: 'var(--text)',
+              fontWeight: 700,
+              opacity: clocking || !activeRecord ? 0.55 : 1,
+            }}
+            onClick={handleClockOut}
+            disabled={clocking || !activeRecord}
+          >
             Clock Out
           </button>
         </div>

@@ -81,11 +81,11 @@ const EmployeeLeavesView = () => {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="page-h1">Leaves</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <select className="filter-select" value={year} onChange={(e) => setYear(e.target.value)}>
+          <select className="filter-select" value={year} onChange={(e) => setYear(e.target.value)} style={{ color: 'var(--text)', background: 'color-mix(in srgb, var(--card-bg) 88%, var(--bg) 12%)', borderColor: 'var(--border)' }}>
             <option value="2026">2026</option>
             <option value="2025">2025</option>
           </select>
-          <select className="filter-select" value={month} onChange={(e) => setMonth(e.target.value)}>
+          <select className="filter-select" value={month} onChange={(e) => setMonth(e.target.value)} style={{ color: 'var(--text)', background: 'color-mix(in srgb, var(--card-bg) 88%, var(--bg) 12%)', borderColor: 'var(--border)' }}>
             <option value="">Select Month</option>
             <option value="January">January</option>
             <option value="February">February</option>
@@ -106,7 +106,7 @@ const EmployeeLeavesView = () => {
       <div style={{ marginBottom: '20px' }}>
         <button 
           className="btn btn-solid" 
-          style={{ padding: '10px 20px', borderRadius: '8px' }}
+          style={{ padding: '10px 20px', borderRadius: '8px', color: '#fff', boxShadow: '0 6px 18px rgba(79, 70, 229, 0.28)' }}
           onClick={() => setShowModal(true)}
         >
           + Add New Leave
@@ -130,12 +130,12 @@ const EmployeeLeavesView = () => {
           <table className="leave-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th>User</th>
-                <th>Leave Type</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-                <th>Total</th>
+                <th style={{ color: 'var(--text-light)' }}>User</th>
+                <th style={{ color: 'var(--text-light)' }}>Leave Type</th>
+                <th style={{ color: 'var(--text-light)' }}>Start Date</th>
+                <th style={{ color: 'var(--text-light)' }}>End Date</th>
+                <th style={{ color: 'var(--text-light)' }}>Status</th>
+                <th style={{ color: 'var(--text-light)' }}>Total</th>
               </tr>
             </thead>
             <tbody>
@@ -165,7 +165,7 @@ const EmployeeLeavesView = () => {
                         {leave.Employee?.employee_name || `Employee #${leave.employee_id}`}
                       </div>
                     </td>
-                    <td>{leave.leave_type}</td>
+                    <td style={{ color: 'var(--text)' }}>{leave.leave_type}</td>
                     <td>{leave.start_date}</td>
                     <td>{leave.end_date}</td>
                     <td>
@@ -194,20 +194,20 @@ const EmployeeLeavesView = () => {
             width: '100%', maxWidth: '480px', margin: 'auto', 
             borderRadius: '20px', overflow: 'hidden', padding: '35px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            background: 'white',
+            background: 'var(--card-bg)',
             animation: 'modalFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
             <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#111827', textAlign: 'center' }}>Apply for Leave</h2>
-              <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>Please fill in the details below</p>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)', textAlign: 'center' }}>Apply for Leave</h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: 'var(--text-light)', textAlign: 'center' }}>Please fill in the details below</p>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: '18px' }}>
-                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Leave Type</label>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Leave Type</label>
                 <select 
                   className="input" 
-                  style={{ height: '44px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', fontSize: '0.9rem' }}
+                  style={{ height: '44px', borderRadius: '10px', border: '1.5px solid var(--border)', background: 'color-mix(in srgb, var(--bg-light) 88%, var(--bg) 12%)', color: 'var(--text)', fontSize: '0.9rem' }}
                   value={form.leave_type} 
                   onChange={(e) => setForm({ ...form, leave_type: e.target.value })}
                   required
@@ -221,11 +221,11 @@ const EmployeeLeavesView = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Start Date</label>
+                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Start Date</label>
                   <input 
                     type="date" 
                     className="input" 
-                    style={{ height: '44px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', fontSize: '0.9rem' }}
+                    style={{ height: '44px', borderRadius: '10px', border: '1.5px solid var(--border)', background: 'color-mix(in srgb, var(--bg-light) 88%, var(--bg) 12%)', color: 'var(--text)', fontSize: '0.9rem' }}
                     min={new Date().toISOString().split('T')[0]}
                     value={form.start_date} 
                     onChange={(e) => {
@@ -241,11 +241,11 @@ const EmployeeLeavesView = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>End Date</label>
+                  <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>End Date</label>
                   <input 
                     type="date" 
                     className="input" 
-                    style={{ height: '44px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', fontSize: '0.9rem' }}
+                    style={{ height: '44px', borderRadius: '10px', border: '1.5px solid var(--border)', background: 'color-mix(in srgb, var(--bg-light) 88%, var(--bg) 12%)', color: 'var(--text)', fontSize: '0.9rem' }}
                     min={form.start_date || new Date().toISOString().split('T')[0]}
                     value={form.end_date} 
                     onChange={(e) => setForm({ ...form, end_date: e.target.value })}
@@ -255,10 +255,10 @@ const EmployeeLeavesView = () => {
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Reason for Leave</label>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '6px' }}>Reason for Leave</label>
                 <textarea 
                   className="input" 
-                  style={{ borderRadius: '10px', border: '1.5px solid #e5e7eb', background: '#fff', padding: '12px', fontSize: '0.9rem', resize: 'none' }}
+                  style={{ borderRadius: '10px', border: '1.5px solid var(--border)', background: 'color-mix(in srgb, var(--bg-light) 88%, var(--bg) 12%)', color: 'var(--text)', padding: '12px', fontSize: '0.9rem', resize: 'none' }}
                   rows="3" 
                   value={form.reason} 
                   onChange={(e) => setForm({ ...form, reason: e.target.value })}
@@ -270,8 +270,8 @@ const EmployeeLeavesView = () => {
                 <button 
                   type="button" 
                   style={{ 
-                    flex: 1, height: '46px', borderRadius: '10px', border: '1.5px solid #e5e7eb', background: 'white', 
-                    color: '#374151', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' 
+                    flex: 1, height: '46px', borderRadius: '10px', border: '1.5px solid var(--border)', background: 'var(--card-bg)', 
+                    color: 'var(--text)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' 
                   }}
                   onClick={() => setShowModal(false)}
                 >
@@ -281,13 +281,11 @@ const EmployeeLeavesView = () => {
                   type="submit" 
                   style={{ 
                     flex: 1, height: '46px', borderRadius: '10px', border: 'none', 
-                    background: '#8b5cf6', 
-                    color: 'white', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-                    boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)'
+                    background: 'var(--primary)', 
+                    color: '#fff', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.3)'
                   }}
                   disabled={submitting}
-                  onMouseOver={(e) => e.target.style.background = '#7c3aed'}
-                  onMouseOut={(e) => e.target.style.background = '#8b5cf6'}
                 >
                   {submitting ? 'Applying...' : 'Apply Leave'}
                 </button>

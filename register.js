@@ -1,5 +1,13 @@
 /* ── register.js – shnoor Registration Logic ── */
 
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.__HRM_API_BASE_URL__) ||
+  (typeof window !== 'undefined' && (window.location.protocol === 'file:' || window.location.port === '5173')
+    ? 'http://127.0.0.1:5000'
+    : '');
+
+const apiUrl = (path) => `${API_BASE_URL}${path}`;
+
 document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('register-form');
   const registerError = document.getElementById('register-error');
@@ -26,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
 
     try {
-      const res = await fetch('/api/v1/auth/register/public', {
+      const res = await fetch(apiUrl('/api/v1/auth/register/public'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -12,35 +12,35 @@ export default defineConfig({
     host: '127.0.0.1',
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/admin.js': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/employee.js': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/manager.js': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/admin.css': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/style.css': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://127.0.0.1:5000',
+        target: backendTarget,
         ws: true,
         changeOrigin: true,
       },

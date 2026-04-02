@@ -72,7 +72,7 @@ const EmployeeRemainingLeavesView = () => {
                 const remaining = TOTALS[type] - (stats.approved + stats.pending);
                 return (
                   <tr key={type} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '18px 16px', fontWeight: 700, color: '#111827' }}>{type}</td>
+                    <td style={{ padding: '18px 16px', fontWeight: 700, color: '#1f2937' }}>{type}</td>
                     <td style={{ padding: '18px 16px', textAlign: 'center', color: '#4b5563' }}>{TOTALS[type]}</td>
                     <td style={{ padding: '18px 16px', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>{stats.approved}</td>
                     <td style={{ padding: '18px 16px', textAlign: 'center', color: '#f59e0b', fontWeight: 600 }}>{stats.pending}</td>

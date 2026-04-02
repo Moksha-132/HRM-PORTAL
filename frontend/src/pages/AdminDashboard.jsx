@@ -12,6 +12,7 @@ import AdminSystemView from '../components/admin/AdminSystemView';
 import AdminChatSupportView from '../components/admin/AdminChatSupportView';
 import AdminManagerTrialView from '../components/admin/AdminManagerTrialView';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+import { normalizeRole } from '../utils/role';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
-    const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+    const role = normalizeRole(sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role'));
     if (!token) {
       navigate('/login', { replace: true });
       return;

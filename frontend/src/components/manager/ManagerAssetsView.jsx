@@ -143,7 +143,14 @@ const ManagerAssetsView = () => {
                         <small>{asset.asset_category}</small>
                       </td>
                       <td>{asset.serial_number || 'N/A'}</td>
-                      <td>{asset.assigned_employee || 'Unassigned'}</td>
+                      <td>
+                        <div style={{ color: 'var(--text)', fontWeight: 600 }}>
+                          {asset.Employee?.employee_name || 'Unassigned'}
+                        </div>
+                        <small style={{ color: 'var(--text-light)' }}>
+                          {asset.assigned_employee ? `ID: ${asset.assigned_employee}` : 'No employee assigned'}
+                        </small>
+                      </td>
                       <td>
                         <span className={`badge ${asset.status === 'Available' ? 'bg-green' : 'bg-yellow'}`}>{asset.status}</span>
                       </td>

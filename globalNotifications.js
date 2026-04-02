@@ -31,9 +31,13 @@ class GlobalNotificationClient {
             // Get user info from session storage
             this.userEmail = sessionStorage.getItem('shnoor_admin_email') || 
                            sessionStorage.getItem('shnoor_email') || 
+                           localStorage.getItem('shnoor_admin_email') ||
+                           localStorage.getItem('shnoor_email') ||
                            'anonymous@user.com';
-            
-            this.userRole = this.inferRoleFromEmail(this.userEmail);
+
+            const persistedRole = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role');
+            this.userRole = (persistedRole || this.inferRoleFromEmail(this.userEmail) || 'employee').toString().toLowerCase();
+            this.userEmail = String(this.userEmail || '').trim().toLowerCase();
 
             // Connect to socket.io
             this.socket = io('/', {
@@ -67,6 +71,7 @@ class GlobalNotificationClient {
     // Register user for global notifications
     registerForNotifications() {
         if (this.socket && this.isConnected) {
+            this.socket.emit('join_room', this.userEmail);
             this.socket.emit('register-global-notifications', {
                 email: this.userEmail,
                 role: this.userRole,
@@ -165,7 +170,7 @@ class GlobalNotificationClient {
         toast.className = 'global-toast';
         toast.style.cssText = `
             position: fixed; top: 20px; right: 20px;
-            background: white; border-radius: 8px;
+            background: var(--card-bg, #f6f8fb); border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             padding: 16px; border-left: 4px solid var(--primary);
             z-index: 9999; display: flex; align-items: start;
@@ -178,7 +183,7 @@ class GlobalNotificationClient {
             </div>
             <div style="flex: 1;">
                 <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;">New Notification</div>
-                <div style="font-size: 0.85rem; color: #4b5563;">${data.preview || data.fullMessage || data.message}</div>
+                <div style="font-size: 0.85rem; color: var(--text, #334155);">${data.preview || data.fullMessage || data.message}</div>
                 <div style="margin-top: 8px; font-size: 0.75rem; color: #9ca3af;">Click to view</div>
             </div>
             <button data-close="1" style="background:none; border:none; cursor:pointer; color: #9ca3af; font-size: 1.2rem;">&times;</button>

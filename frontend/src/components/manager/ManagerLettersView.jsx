@@ -29,7 +29,6 @@ const ManagerLettersView = () => {
   const [employees, setEmployees] = useState([]);
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const logoUrl = useSiteLogo();
 
   const [form, setForm] = useState({ employee_id: '', title: '', content: '' });
@@ -44,13 +43,13 @@ const ManagerLettersView = () => {
 
   const load = async () => {
     setLoading(true);
-    setError('');
     try {
       const [empRes, letterRes] = await Promise.all([getEmployees(), getLetters()]);
       if (empRes.success) setEmployees(empRes.data || []);
       if (letterRes.success) setLetters(letterRes.data || []);
     } catch (e) {
-      setError(e?.message || 'Failed to load letters');
+      console.error('Failed to load letters:', e);
+      setLetters([]);
     } finally {
       setLoading(false);
     }
@@ -68,14 +67,13 @@ const ManagerLettersView = () => {
     e.preventDefault();
     if (!form.employee_id || !form.title.trim() || !form.content.trim()) return;
     setSending(true);
-    setError('');
     try {
       const res = await sendLetter({ ...form, title: form.title.trim(), content: form.content.trim() });
       if (!res.success) throw new Error(res.error || 'Failed to send letter');
       setForm({ employee_id: '', title: '', content: '' });
       load();
     } catch (err) {
-      setError(err?.message || 'Failed to send letter');
+      console.error('Failed to send letter:', err);
     } finally {
       setSending(false);
     }
@@ -91,7 +89,6 @@ const ManagerLettersView = () => {
     if (!editingLetter) return;
     if (!editTitle.trim() || !editContent.trim()) return;
     setSaving(true);
-    setError('');
     try {
       const res = await updateLetter(editingLetter.letter_id, { title: editTitle.trim(), content: editContent.trim() });
       if (!res.success) throw new Error(res.error || 'Update failed');
@@ -100,7 +97,7 @@ const ManagerLettersView = () => {
       setEditContent('');
       load();
     } catch (e) {
-      setError(e?.message || 'Update failed');
+      console.error('Failed to update letter:', e);
     } finally {
       setSaving(false);
     }
@@ -109,13 +106,12 @@ const ManagerLettersView = () => {
   const handleDelete = async (id) => {
     // eslint-disable-next-line no-alert
     if (!window.confirm('Delete this letter?')) return;
-    setError('');
     try {
       const res = await deleteLetter(id);
       if (!res.success) throw new Error(res.error || 'Delete failed');
       load();
     } catch (e) {
-      setError(e?.message || 'Delete failed');
+      console.error('Failed to delete letter:', e);
     }
   };
 
@@ -124,8 +120,6 @@ const ManagerLettersView = () => {
       <div className="page-header">
         <h1 className="page-h1">Letter Management</h1>
       </div>
-
-      {error && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{error}</div>}
 
       <div className="grid grid-2" style={{ padding: 0 }}>
         <div className="panel">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
+import ThemeChooserSection from '../components/theme/ThemeChooserSection';
 import {
   getAboutSettings,
   getFeatures,
@@ -128,7 +129,7 @@ const LandingPage = () => {
           </p>
           
           <div className="grid-2" style={{ marginTop: 60 }}>
-            <div className="card animate-slide-left delay-100" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid var(--primary)' }}>
+            <div className="card animate-slide-left delay-100" style={{ background: 'var(--card-bg)', textAlign: 'left', borderTop: '4px solid var(--primary)' }}>
               <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}><i className="fas fa-bullseye"></i></div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                 Our Mission
@@ -138,7 +139,7 @@ const LandingPage = () => {
               </p>
             </div>
             
-            <div className="card animate-slide-right delay-200" style={{ background: '#fff', textAlign: 'left', borderTop: '4px solid #a855f7' }}>
+            <div className="card animate-slide-right delay-200" style={{ background: 'var(--card-bg)', textAlign: 'left', borderTop: '4px solid var(--primary-dark)' }}>
               <div className="card-icon" style={{ fontSize: '2rem', marginBottom: 20 }}><i className="fas fa-eye"></i></div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
                 Our Vision
@@ -246,6 +247,8 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      <ThemeChooserSection />
     </MainLayout>
   );
 };

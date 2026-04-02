@@ -20,6 +20,7 @@ import EmployeeUnpaidLeavesView from '../components/employee/EmployeeUnpaidLeave
 import EmployeePaidLeavesView from '../components/employee/EmployeePaidLeavesView';
 import EmployeeDashboardAddons from '../components/employee/EmployeeDashboardAddons';
 import { clearAcceptedPolicies } from '../utils/policyAcceptance';
+import { normalizeRole } from '../utils/role';
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     const token = sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token');
-    const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+    const role = normalizeRole(sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role'));
     if (!token) {
       navigate('/login', { replace: true });
       return;

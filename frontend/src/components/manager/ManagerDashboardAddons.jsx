@@ -177,9 +177,12 @@ const ManagerDashboardAddons = () => {
           <div className="panel-head"><div className="panel-title">Upcoming Holidays</div></div>
           <div className="panel-body">
             {upcomingHolidays.length > 0 ? upcomingHolidays.map((item, index) => (
-              <div key={`${item.holiday_id || item.date}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: index < upcomingHolidays.length - 1 ? '1px solid #eee' : 'none' }}>
-                <span>{item.name || item.holiday_name || 'Holiday'}</span>
-                <strong>{new Date(item.date).toLocaleDateString()}</strong>
+              <div key={`${item.holiday_id || item.date}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: index < upcomingHolidays.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <div>
+                  <div style={{ color: 'var(--text)', fontWeight: 700 }}>{item.name || item.holiday_name || item.title || 'Holiday'}</div>
+                  {item.description ? <div style={{ color: 'var(--text-light)', fontSize: '0.82rem', marginTop: 2 }}>{item.description}</div> : null}
+                </div>
+                <strong style={{ color: 'var(--primary-dark)', whiteSpace: 'nowrap' }}>{new Date(item.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</strong>
               </div>
             )) : (
               <div style={{ color: '#64748b' }}>No upcoming holidays available.</div>

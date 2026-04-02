@@ -181,11 +181,11 @@ exports.registerPublic = async (req, res) => {
             status: 'Active'
         };
 
-        // Manager trial logic: 15-day trial period
+        // Manager trial logic: 20-day trial period
         if (normalizedRole === 'Manager') {
             const now = new Date();
             const trialEnd = new Date();
-            trialEnd.setDate(now.getDate() + 15);
+            trialEnd.setDate(now.getDate() + 20);
             
             userData.isTrial = true;
             userData.trialStartDate = now;

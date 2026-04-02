@@ -78,6 +78,23 @@ const AdminManagerTrialView = () => {
     }
   };
 
+  const getActionButtonStyle = (status) => {
+    const isActive = status === 'Active';
+    return {
+      padding: '6px 14px',
+      fontSize: '0.8rem',
+      fontWeight: 700,
+      minWidth: '104px',
+      backgroundColor: isActive ? '#dc2626' : '#2563eb',
+      color: '#ffffff',
+      border: `1px solid ${isActive ? '#b91c1c' : '#1d4ed8'}`,
+      boxShadow: isActive
+        ? '0 4px 10px rgba(220, 38, 38, 0.28)'
+        : '0 4px 10px rgba(37, 99, 235, 0.3)',
+      borderRadius: '8px'
+    };
+  };
+
   return (
     <div className="view">
       <div className="page-header">
@@ -92,13 +109,13 @@ const AdminManagerTrialView = () => {
         <div className="table-wrap">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-                <th style={{ padding: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Manager</th>
-                <th style={{ padding: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Registration</th>
-                <th style={{ padding: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Trial Validity</th>
-                <th style={{ padding: '16px', textAlign: 'center', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Time Left</th>
-                <th style={{ padding: '16px', textAlign: 'center', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Status</th>
-                <th style={{ padding: '16px', textAlign: 'right', color: '#475569', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Management</th>
+              <tr style={{ background: 'var(--card-bg)', textAlign: 'left' }}>
+                <th style={{ padding: '16px', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Manager</th>
+                <th style={{ padding: '16px', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Registration</th>
+                <th style={{ padding: '16px', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Trial Validity</th>
+                <th style={{ padding: '16px', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Time Left</th>
+                <th style={{ padding: '16px', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Status</th>
+                <th style={{ padding: '16px', textAlign: 'right', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase' }}>Management</th>
               </tr>
             </thead>
             <tbody>
@@ -107,16 +124,16 @@ const AdminManagerTrialView = () => {
               ) : (managers.length === 0) ? (
                 <tr><td colSpan="6" style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No managers registered on the platform yet.</td></tr>
               ) : managers.map((m) => (
-                <tr key={m.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
                   <td style={{ padding: '16px' }}>
-                    <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.95rem' }}>{m.name || 'Unnamed'}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>{m.email}</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.95rem' }}>{m.name || 'Unnamed'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '2px' }}>{m.email}</div>
                   </td>
-                  <td style={{ padding: '16px', fontSize: '0.9rem', color: '#475569' }}>
+                  <td style={{ padding: '16px', fontSize: '0.9rem', color: 'var(--text-light)' }}>
                     {m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td style={{ padding: '16px' }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 500, color: '#334155' }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
                       {m.trialStartDate ? new Date(m.trialStartDate).toLocaleDateString() : 'N/A'} 
                       <span style={{ margin: '0 8px', color: '#cbd5e1' }}>→</span>
                       {m.trialEndDate ? new Date(m.trialEndDate).toLocaleDateString() : 'N/A'}
@@ -157,18 +174,10 @@ const AdminManagerTrialView = () => {
                       >
                         Edit Trial
                       </button>
-                      <button 
-                         className={`btn btn-sm`} 
-                         style={{ 
-                            padding: '6px 14px', 
-                            fontSize: '0.8rem', 
-                            fontWeight: 600,
-                            minWidth: '100px',
-                            backgroundColor: m.status === 'Active' ? '#fff1f2' : '#4f46e5',
-                            color: m.status === 'Active' ? '#e11d48' : 'white',
-                            border: `1px solid ${m.status === 'Active' ? '#fecdd3' : '#4f46e5'}`
-                         }}
-                         onClick={() => toggleStatus(m.id, m.status)}
+                      <button
+                        className="btn btn-sm"
+                        style={getActionButtonStyle(m.status)}
+                        onClick={() => toggleStatus(m.id, m.status)}
                       >
                         {m.status === 'Active' ? 'Deactivate' : 'Activate'}
                       </button>
@@ -197,55 +206,54 @@ const AdminManagerTrialView = () => {
           zIndex: 9999,
           padding: '20px'
         }}>
-          {/* ✅ WHITE MODAL PANEL WITH INLINE STYLES FOR VISIBILITY */}
           <div style={{ 
-            backgroundColor: '#ffffff', 
+            backgroundColor: 'var(--card-bg)', 
             maxWidth: '500px', 
             width: '100%', 
             padding: '30px', 
             borderRadius: '16px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border)'
           }}>
             <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Edit Management Settings</h2>
-              <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '6px' }}>
-                Updating control for manager: <b style={{ color: '#334155' }}>{selectedManager?.name || selectedManager?.email}</b>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)', margin: 0 }}>Edit Trial</h2>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginTop: '6px' }}>
+                Updating control for manager: <b style={{ color: 'var(--text)' }}>{selectedManager?.name || selectedManager?.email}</b>
               </p>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: '#475569' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text)' }}>
                     Trial Period Begins
                   </label>
                   <input 
                     type="date" 
                     className="input" 
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', color: 'var(--text)', background: 'color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%)', borderColor: 'var(--border)' }}
                     value={editForm.trialStartDate}
                     onChange={(e) => setEditForm({...editForm, trialStartDate: e.target.value})}
                   />
                 </div>
                 <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: '#475569' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text)' }}>
                     Trial Period Ends
                   </label>
                   <input 
                     type="date" 
                     className="input" 
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', color: 'var(--text)', background: 'color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%)', borderColor: 'var(--border)' }}
                     value={editForm.trialEndDate}
                     onChange={(e) => setEditForm({...editForm, trialEndDate: e.target.value})}
                   />
                 </div>
                 <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: '#475569' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '8px', color: 'var(--text)' }}>
                     System Authorization Status
                   </label>
                   <select 
                     className="input"
-                    style={{ width: '100%', padding: '10px', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', color: 'var(--text)', background: 'color-mix(in srgb, var(--primary) 10%, var(--card-bg) 90%)', borderColor: 'var(--border)' }}
                     value={editForm.status}
                     onChange={(e) => setEditForm({...editForm, status: e.target.value})}
                   >
@@ -258,14 +266,14 @@ const AdminManagerTrialView = () => {
             <div style={{ marginTop: '32px', display: 'flex', gap: '14px' }}>
               <button 
                 className="btn btn-solid" 
-                style={{ flex: 1, padding: '12px', fontWeight: 700 }} 
+                style={{ flex: 1, padding: '12px', fontWeight: 700, background: 'var(--primary)', color: '#fff', borderColor: 'var(--primary-dark)' }} 
                 onClick={handleSaveModal}
               >
                 Apply Changes
               </button>
               <button 
                 className="btn btn-outline" 
-                style={{ flex: 1, padding: '12px', fontWeight: 700 }} 
+                style={{ flex: 1, padding: '12px', fontWeight: 700, color: 'var(--text)', borderColor: 'var(--border)', background: 'color-mix(in srgb, var(--primary) 6%, var(--card-bg) 94%)' }} 
                 onClick={closeModal}
               >
                 Cancel

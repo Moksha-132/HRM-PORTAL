@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import {
   getDesktopNotificationPermission,
+  registerNotificationServiceWorker,
   requestDesktopNotificationPermission,
   showDesktopNotification,
 } from '../../utils/browserNotifications';
@@ -47,6 +48,12 @@ const GlobalNotificationListener = () => {
       return 'employee';
     };
 
+    const storedRole = (
+      sessionStorage.getItem('shnoor_role') ||
+      localStorage.getItem('shnoor_role') ||
+      inferRole(userEmail)
+    ).toLowerCase();
+
     socket.on('connect', () => {
       console.log('[React] Connected to Socket.IO');
       console.log('[React] Socket ID:', socket.id);
@@ -54,7 +61,7 @@ const GlobalNotificationListener = () => {
       socket.emit('join_room', userEmail.toLowerCase());
       socket.emit('register-global-notifications', {
         email: userEmail,
-        role: inferRole(userEmail),
+        role: storedRole,
         timestamp: new Date().toISOString()
       });
     });
@@ -75,6 +82,8 @@ const GlobalNotificationListener = () => {
       console.error('[React] Socket error:', error);
     });
 
+    registerNotificationServiceWorker();
+
     socket.on('global-notification', (data) => {
       if (data.recipientEmails && data.recipientEmails.length > 0) {
         const userEmailLower = userEmail.toLowerCase();
@@ -88,13 +97,7 @@ const GlobalNotificationListener = () => {
       const newToast = { id, message, sender: data.senderRole, logo: data.logo };
       setToasts(prev => [...prev, newToast]);
 
-      // BROWSER DESKTOP NOTIFICATION
-      if (Notification.permission === 'granted') {
-        new Notification("Shnoor HRM", {
-          body: message,
-          icon: data.logo || '/logo.avif' // ✅ Use company logo
-        });
-      }
+      void showDesktopNotification(message, 'Shnoor HRM');
 
       setTimeout(() => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -137,7 +140,11 @@ const GlobalNotificationListener = () => {
           </div>
           <button
             type="button"
-            onClick={enableDesktopNotifications}
+              onClick={async () => {
+                await requestDesktopNotificationPermission();
+                setPermission(getDesktopNotificationPermission());
+                await registerNotificationServiceWorker();
+              }}
             style={{
               background: '#4f46e5',
               color: '#fff',

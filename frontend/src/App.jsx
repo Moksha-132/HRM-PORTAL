@@ -12,19 +12,21 @@ import AdminRegistration from './pages/AdminRegistration';
 import ManagerRegistration from './pages/ManagerRegistration';
 import './index.css';
 import GlobalNotificationListener from './components/common/GlobalNotificationListener.jsx';
+import { normalizeRole } from './utils/role';
 
 import ChatbotApp from './components/chatbot/ChatbotApp.jsx';
 
 const getStoredRole = () =>
-  sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
+  normalizeRole(sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role'));
 
 const getStoredToken = () =>
   sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token') || '';
 
 const getDashboardPath = (role) => {
-  if (role === 'Manager') return '/manager';
-  if (role === 'Employee') return '/employee';
-  if (role === 'Admin' || role === 'Super Admin') return '/admin';
+  const normalizedRole = normalizeRole(role);
+  if (normalizedRole === 'Manager') return '/manager';
+  if (normalizedRole === 'Employee') return '/employee';
+  if (normalizedRole === 'Admin' || normalizedRole === 'Super Admin') return '/admin';
   return '/login';
 };
 

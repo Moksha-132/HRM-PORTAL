@@ -1,9 +1,17 @@
 /* ── main.js – shnoor Landing Page Logic ── */
 
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.__HRM_API_BASE_URL__) ||
+  (typeof window !== 'undefined' && (window.location.protocol === 'file:' || window.location.port === '5173')
+    ? 'http://127.0.0.1:5000'
+    : '');
+
+const apiUrl = (path) => `${API_BASE_URL}${path}`;
+
 // ── Bind Header Settings dynamically ──
 document.addEventListener('DOMContentLoaded', async () => {
   try {
-    const res = await fetch('/api/v1/settings/header');
+    const res = await fetch(apiUrl('/api/v1/settings/header'));
     const data = await res.json();
     if (res.ok && data.success && data.data) {
       const s = data.data;
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Fetch About Settings ---
   try {
-    const res = await fetch('/api/v1/settings/about');
+    const res = await fetch(apiUrl('/api/v1/settings/about'));
     const data = await res.json();
     if (res.ok && data.success && data.data) {
       const a = data.data;
@@ -72,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Fetch Contact and Social Media Settings ---
   try {
-    const res = await fetch('/api/v1/settings/contact');
+    const res = await fetch(apiUrl('/api/v1/settings/contact'));
     const data = await res.json();
     if (res.ok && data.success && data.data) {
       const c = data.data;
@@ -119,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Fetch Features ---
   try {
-    const res = await fetch('/api/v1/settings/features');
+    const res = await fetch(apiUrl('/api/v1/settings/features'));
     const data = await res.json();
     if (res.ok && data.success && data.data) {
       const featureGrid = document.getElementById('features-grid');
@@ -139,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Fetch Pricing ---
   try {
-    const res = await fetch('/api/v1/settings/pricing');
+    const res = await fetch(apiUrl('/api/v1/settings/pricing'));
     const data = await res.json();
     if (res.ok && data.success && data.data) {
       const pricingGrid = document.getElementById('pricing-grid');
@@ -304,7 +312,7 @@ forgotForm?.addEventListener('submit', async (e) => {
   if (forgotSuccess) forgotSuccess.style.display = 'none';
 
   try {
-    const res = await fetch('/api/v1/auth/forgotpassword', {
+    const res = await fetch(apiUrl('/api/v1/auth/forgotpassword'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
@@ -336,7 +344,7 @@ loginForm?.addEventListener('submit', async (e) => {
   const password = document.getElementById('login-password').value;
 
   try {
-    const res = await fetch('/api/v1/auth/login', {
+    const res = await fetch(apiUrl('/api/v1/auth/login'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
