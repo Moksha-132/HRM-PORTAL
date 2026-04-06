@@ -109,13 +109,18 @@ class GlobalNotificationService {
                 redirectUrl: this.buildRedirectUrl(senderRole, type, normalizedRecipientEmails)
             };
 
-            this.io.to('global-notifications').emit('global-notification', notificationPayload);
-            console.log('[GlobalNotificationService] emitted to global-notifications room');
-            console.log('[GlobalNotificationService] sockets in global-notifications room:', this.io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
-
-            for (const email of normalizedRecipientEmails) {
-                this.io.to(email).emit('global-notification', notificationPayload);
-                console.log(`[GlobalNotificationService] emitted to recipient room ${email}`);
+            if (normalizedRecipientEmails.length > 0) {
+                // Targeted notification: Send only to specified recipients
+                const uniqueEmails = [...new Set(normalizedRecipientEmails)];
+                for (const email of uniqueEmails) {
+                    this.io.to(email).emit('global-notification', notificationPayload);
+                    console.log(`[GlobalNotificationService] Targeted emit to recipient room: ${email}`);
+                }
+            } else {
+                // Global notification: Broadcast to everyone
+                this.io.to('global-notifications').emit('global-notification', notificationPayload);
+                console.log(`[GlobalNotificationService] Global broadcast to everyone`);
+                console.log('[GlobalNotificationService] Total in room:', this.io.sockets.adapter.rooms.get('global-notifications')?.size || 0);
             }
 
             return { success: true, notificationsSent: notifications.length };

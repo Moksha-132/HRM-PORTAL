@@ -154,8 +154,8 @@ const ManagerDashboard = () => {
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
       { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
-      { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
+      { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
     ],
     []
   );
@@ -214,10 +214,6 @@ const ManagerDashboard = () => {
     const role = sessionStorage.getItem('shnoor_role') || localStorage.getItem('shnoor_role') || '';
     if (!token) {
       navigate('/login', { replace: true });
-      return;
-    }
-    if (role === 'Admin' || role === 'Super Admin') {
-      navigate('/admin', { replace: true });
       return;
     }
     if (role === 'Employee') {
