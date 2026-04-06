@@ -5,53 +5,76 @@ import MainLayout from '../components/MainLayout';
 const RegisterPage = () => {
   return (
     <MainLayout>
-      <section className="section" style={{ minHeight: 'calc(100vh - 120px)', display: 'flex', alignItems: 'center', background: '#f8fafc' }}>
-        <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div className="center" style={{ marginBottom: '40px' }}>
-            <h2 className="auth-heading" style={{ fontSize: '2.5rem' }}>Join the Platform</h2>
-            <p className="auth-sub-text" style={{ fontSize: '1.1rem' }}>Choose your account type to get started</p>
+      <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 20px' }}>
+        <div style={{ width: '100%', maxWidth: '1000px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <span className="auth-brand">shnoor</span>
+            <h2 className="auth-heading" style={{ fontSize: '2.5rem', marginTop: '16px' }}>Join the Platform</h2>
+            <p className="auth-sub-text" style={{ fontSize: '1.2rem' }}>Choose your account type to get started with HRM</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
             {/* Admin Option */}
-            <div className="auth-card" style={{ padding: '40px 30px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease' }}>
-              <div style={{ fontSize: '3rem', color: '#4f46e5', marginBottom: '20px' }}>
+            <div className="login-card-modern" style={{ textAlign: 'center', padding: '48px 32px', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                background: '#f1f5f9', 
+                borderRadius: '24px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '2.5rem', 
+                color: '#4f46e5', 
+                margin: '0 auto 24px' 
+              }}>
                 <i className="fas fa-user-shield"></i>
               </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Platform Admin</h3>
-              <p style={{ color: '#64748b', marginBottom: '30px', minHeight: '60px' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '12px' }}>Platform Admin</h3>
+              <p style={{ color: '#64748b', marginBottom: '32px', minHeight: '48px', lineHeight: '1.6' }}>
                 Full control over the system, roles, and company settings.
               </p>
-              <Link to="/register/admin" className="btn btn-solid w-full" style={{ display: 'block', textDecoration: 'none' }}>
+              <Link to="/register/admin" className="btn btn-solid btn-block" style={{ textDecoration: 'none' }}>
                 Register as Admin
               </Link>
             </div>
 
             {/* Manager Option */}
-            <div className="auth-card" style={{ padding: '40px 30px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease', borderTop: '4px solid #10b981' }}>
-              <div style={{ position: 'absolute', top: '15px', right: '15px' }}>
-                 <span style={{ background: '#10b981', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>FREE TRIAL</span>
+            <div className="login-card-modern" style={{ textAlign: 'center', padding: '48px 32px', position: 'relative', overflow: 'hidden', borderTop: '6px solid #10b981' }}>
+              <div style={{ position: 'absolute', top: '24px', right: '-35px', transform: 'rotate(45deg)', background: '#10b981', color: 'white', padding: '6px 40px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                FREE TRIAL
               </div>
-              <div style={{ fontSize: '3rem', color: '#10b981', marginBottom: '20px' }}>
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                background: '#ecfdf5', 
+                borderRadius: '24px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '2.5rem', 
+                color: '#10b981', 
+                margin: '0 auto 24px' 
+              }}>
                 <i className="fas fa-users-cog"></i>
               </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '12px' }}>Team Manager</h3>
-              <p style={{ color: '#64748b', marginBottom: '30px', minHeight: '60px' }}>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '12px' }}>Team Manager</h3>
+              <p style={{ color: '#64748b', marginBottom: '32px', minHeight: '48px', lineHeight: '1.6' }}>
                 Manage departments, employees, and team performance with a 15-day free trial.
               </p>
-              <Link to="/register/manager" className="btn btn-solid w-full" style={{ display: 'block', textDecoration: 'none', backgroundColor: '#10b981' }}>
+              <Link to="/register/manager" className="btn btn-solid btn-block" style={{ textDecoration: 'none', backgroundColor: '#10b981' }}>
                 Start Free Trial
               </Link>
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '40px' }}>
-             <p className="auth-foot-text">
-               Already part of our portal? <Link to="/login" className="link-small">Login to your account</Link>
+          <div style={{ textAlign: 'center', marginTop: '48px' }}>
+             <p className="auth-foot-text" style={{ fontSize: '1.1rem' }}>
+               Already part of our portal? <Link to="/login" className="link-small" style={{ fontWeight: 700 }}>Login here</Link>
              </p>
           </div>
         </div>
-      </section>
+      </div>
     </MainLayout>
   );
 };

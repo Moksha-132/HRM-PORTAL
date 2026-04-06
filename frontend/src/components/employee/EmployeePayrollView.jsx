@@ -153,7 +153,7 @@ const EmployeePayrollView = () => {
                           <a
                             className="btn btn-outline"
                             style={{ fontSize: 11, padding: '4px 8px', textDecoration: 'none' }}
-                            href={`/api/v1/employee/payslips/${slip.payslip_id}/download`}
+                            href={`/api/v1/employee/payslips/${slip.payslip_id}/download?token=${sessionStorage.getItem('shnoor_token') || localStorage.getItem('shnoor_token')}`}
                           >
                             Download
                           </a>

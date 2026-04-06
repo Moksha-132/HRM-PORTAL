@@ -18,10 +18,12 @@ const sendGlobalNotification = async (notificationData) => {
         const globalNotificationService = global.globalNotificationService;
         console.log('🔧 Global notification service exists:', !!globalNotificationService);
         if (globalNotificationService) {
-            await globalNotificationService.sendGlobalNotification(notificationData);
+            const result = await globalNotificationService.sendGlobalNotification(notificationData);
             console.log('✅ Global notification sent successfully');
+            return result;
         } else {
             console.error('❌ Global notification service not available');
+            return { success: false, error: 'Service not available' };
         }
     } catch (error) {
         console.error('❌ Error sending global notification:', error);
@@ -567,10 +569,15 @@ exports.updateChatResponse = async (req, res) => {
         const { response } = req.body;
         if (!response) return res.status(400).json({ success: false, error: 'response is required' });
 
-        await chat.update({ 
-            response,
-            status: 'HandledByAdmin'
-        });
+        // 🚀 SMART RESPONSE EDITING
+        if (chat.sender_type === 'Admin') {
+            await chat.update({ message: response });
+        } else {
+            await chat.update({ 
+                response,
+                status: 'HandledByAdmin'
+            });
+        }
 
         // Add Notification for User
         try {
@@ -825,16 +832,16 @@ exports.sendAdminReply = async (req, res) => {
         }
 
         // 🚀 SEND GLOBAL NOTIFICATION TO ALL CONNECTED USERS
-        console.log('🚀 About to call sendGlobalNotification...');
+        console.log(`[Support] Sending reply notification to: ${session_id}`);
         try {
-            await sendGlobalNotification({
+            const notifyResult = await sendGlobalNotification({
                 senderRole: 'admin',
                 senderEmail: req.user?.email || 'admin@shnoor.com',
                 message: content,
                 type: 'admin_message',
                 recipientEmails: [session_id] // Send to specific recipient
             });
-            console.log('✅ Global notification sent for admin message:', content.substring(0, 50) + '...');
+            console.log('[Support] Global notification trigger result:', notifyResult);
         } catch (globalNotifyErr) {
             console.error('❌ Failed to send global notification:', globalNotifyErr);
         }

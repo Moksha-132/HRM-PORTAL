@@ -523,12 +523,43 @@ const AdminChatSupportView = () => {
     setOpenMenuId(null);
   };
 
-  const saveInlineMessageEdit = (messageKey) => {
+  const saveInlineMessageEdit = async (messageKey) => {
     const trimmed = editText.trim();
     if (!trimmed) return;
-    setEditedMessages((current) => ({ ...current, [messageKey]: trimmed }));
-    setEditingId(null);
-    setEditText('');
+
+    // Extract ID from response-ID or message-ID
+    const parts = messageKey.split('-');
+    const recordId = parts.slice(1).join('-');
+    if (!recordId) return;
+
+    setSending(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/admin/chat/${encodeURIComponent(recordId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ response: trimmed }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save edit');
+
+      setEditedMessages((current) => {
+        const next = { ...current };
+        delete next[messageKey]; // Clear the manual override as we'll refresh
+        return next;
+      });
+      setEditingId(null);
+      setEditText('');
+      await fetchChats(); // Refresh thread to see the saved change
+    } catch (err) {
+      setError(err.message || 'Failed to update response');
+    } finally {
+      setSending(false);
+    }
   };
 
   const addReaction = (messageKey, emoji) => {

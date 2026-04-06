@@ -76,10 +76,24 @@ const GlobalNotificationListener = () => {
     });
 
     socket.on('global-notification', (data) => {
+      console.log('🔔 [React] Global Notification Received:', data);
+      
+      // Filter by recipient if targeted
       if (data.recipientEmails && data.recipientEmails.length > 0) {
+        if (!userEmail) {
+          console.log('🔔 [React] Notification dropped: userEmail is missing');
+          return;
+        }
         const userEmailLower = userEmail.toLowerCase();
         const isRecipient = data.recipientEmails.some((email) => email.toLowerCase() === userEmailLower);
-        if (!isRecipient) return;
+        
+        if (!isRecipient) {
+          console.log(`🔔 [React] Notification not for me. Expected one of: ${data.recipientEmails.map(e => String(e).toLowerCase()).join(', ')}`);
+          return;
+        }
+        console.log('🔔 [React] Targeted notification accepted for this user');
+      } else {
+        console.log('🔔 [React] Global broadcast notification accepted');
       }
 
       const id = Date.now();
