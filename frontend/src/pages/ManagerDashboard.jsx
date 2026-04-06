@@ -153,8 +153,8 @@ const ManagerDashboard = () => {
       },
       { id: 'finance', label: 'Finance', icon: 'fas fa-wallet' },
       { id: 'holidays', label: 'Holidays', icon: 'fas fa-calendar-day' },
-      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
       { id: 'letters', label: 'Letters', icon: 'fas fa-envelope-open-text' },
+      { id: 'company-chat', label: 'Company Chat', icon: 'fas fa-comments' },
       { id: 'profile', label: 'My Profile', icon: 'fas fa-user-cog' },
     ],
     []
